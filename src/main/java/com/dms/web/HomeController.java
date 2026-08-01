@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 /**
  * Landing page.
  *
- * <p>View-only controller — no service calls, so it lives on the frontend side of the
- * working agreement. Every other controller is yours; Claude supplies the signatures.
+ * <p>View-only controller: no service calls, no model attributes. Deliberately kept trivial
+ * so the public entry point has nothing that can fail.
  */
 @Controller
 public class HomeController {

@@ -23,18 +23,16 @@ The workflow **will change** as we build. Section 6 is how the design absorbs th
 
 ---
 
-## 2. Working agreement
+## 2. How controllers and templates stay in sync
 
-| Layer | Owner |
-|---|---|
-| Entities, repositories, services, state machines, security config, business rules | **You** |
-| Controllers | **You** — Claude supplies exact signatures |
-| Thymeleaf templates, fragments, CSS, JS | **Claude** |
-| DTO / form objects | **Claude** — they are the contract between us |
+Controllers and templates are coupled by name, not by the compiler. A controller that fails to
+put `topicForm` in the model breaks `topic-form.html` at runtime, and nothing catches it until
+the page is opened.
 
-**View contract** (section 9) is the single source of truth. If a controller does not put
-`topicForm` in the model, the template breaks. Contract is fixed *before* either side writes
-code for a page.
+So the contract in **section 9** — route, view name, model attributes, form object — is fixed
+*before* the controller or the template for a page is written. It is the single source of truth
+for both sides, and it is why the DTO layer exists: templates bind to form objects, never to
+JPA entities, so an entity rename cannot ripple into the HTML.
 
 ---
 
@@ -70,9 +68,9 @@ code for a page.
 ```
 Browser
    |  HTML over HTTP (form POST, no SPA)
-Thymeleaf templates  <-- Claude owns
+Thymeleaf templates
    |  view name + model attributes
-@Controller          <-- you own (Claude gives signatures)
+@Controller
    |  DTO in, DTO out
 @Service             <-- you own: business rules, state transitions, @Transactional
    |  entities
@@ -189,7 +187,7 @@ The flow will keep moving. Seven mechanisms so that costs an edit, not a rewrite
    what lets the two of us work in parallel.
 
 **Change protocol.** Flow changes mid-build → update this file → adjust the view contract →
-re-tick `CHECKLIST.md` → then write code. Doc before code, or the controller/template contract
+then write code. Doc before code, or the controller/template contract
 drifts and we both lose a day.
 
 ---
@@ -244,8 +242,8 @@ Troubleshooting:
 
 ## 9. View contract
 
-Claude produces the full table one phase ahead of you writing controllers, so you are never
-guessing attribute names.
+This table is extended one phase ahead of the controllers that serve it, so attribute names are
+settled before either the controller or the template is written.
 
 | Route | Method | View | Model attributes | Form object |
 |---|---|---|---|---|
@@ -301,7 +299,8 @@ plagiarism detection.
 
 ## 11. Verification
 
-Per phase: `.\mvnw.cmd spring-boot:run`, walk that phase's demo line in `CHECKLIST.md`.
+Per phase: `.\mvnw.cmd spring-boot:run`, then walk the workflow that phase added end to end
+in a browser before moving on.
 
 `.\mvnw.cmd test` — service unit tests for every state machine (illegal transitions **must**
 throw), `@DataJpaTest` for repository queries, `@WebMvcTest` + `spring-security-test` for authz

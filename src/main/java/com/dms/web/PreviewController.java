@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  *
  * <p>Lets the Phase 1 templates be viewed before the real controllers exist. Routes live
  * under {@code /preview/**} on purpose: the real pages are {@code /login},
- * {@code /student/dashboard} and so on, so mapping them here would collide with your
+ * {@code /student/dashboard} and so on, so mapping them here would collide with
  * {@code DashboardController} and fail startup with an ambiguous-mapping error.
  *
  * <p>Note the role dashboards render blank-ish here — {@code sec:authentication="name"}
