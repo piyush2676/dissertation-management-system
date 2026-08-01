@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--
+  Student dashboard.
+
+  Phase 1: no model attributes — renders off the authenticated principal only,
+  so it cannot break before your services exist.
+
+  Phase 2 adds: topic, allocation, milestones, pendingCount  (see docs/guide.md §9)
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Student dashboard</title>
+</head>
+<body>
+<section>
+
+    <div class="page-head">
+        <div>
+            <h1>Student dashboard</h1>
+            <p class="lead">
+                Signed in as <strong sec:authentication="name">student@college.edu</strong>
+            </p>
+        </div>
+        <span class="badge badge-approved">STUDENT</span>
+    </div>
+
+    <div class="card-grid">
+        <article class="card">
+            <h3>My topic</h3>
+            <p>Propose a dissertation topic and track its approval.</p>
+            <p class="phase-tag">Phase 2</p>
+        </article>
+        <article class="card">
+            <h3>My guide</h3>
+            <p>Supervisor allocation and contact details.</p>
+            <p class="phase-tag">Phase 3</p>
+        </article>
+        <article class="card">
+            <h3>Milestones</h3>
+            <p>Deadlines, submission status, and version history.</p>
+            <p class="phase-tag">Phase 4</p>
+        </article>
+        <article class="card">
+            <h3>Feedback</h3>
+            <p>Comments from your guide and requested revisions.</p>
+            <p class="phase-tag">Phase 5</p>
+        </article>
+    </div>
+
+</section>
+</body>
+</html>

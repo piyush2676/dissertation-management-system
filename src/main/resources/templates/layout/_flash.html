@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!--
+  Flash message fragment.
+
+  Controllers set these via RedirectAttributes:
+      redirectAttributes.addFlashAttribute("success", "Topic submitted for approval.");
+      redirectAttributes.addFlashAttribute("error",   "Supervisor is at capacity.");
+
+  Nothing renders when neither attribute is present.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="flash">
+    <div class="alert alert-success" th:if="${success}" role="status">
+        <span th:text="${success}">Saved.</span>
+    </div>
+    <div class="alert alert-error" th:if="${error}" role="alert">
+        <span th:text="${error}">Something went wrong.</span>
+    </div>
+    <div class="alert alert-info" th:if="${info}" role="status">
+        <span th:text="${info}">Note.</span>
+    </div>
+</div>
+
+</body>
+</html>

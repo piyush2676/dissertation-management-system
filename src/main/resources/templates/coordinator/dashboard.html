@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+  Coordinator dashboard.
+
+  Phase 1: no model attributes.
+  Phase 3+ adds: unallocatedCount, supervisorsWithLoad, activeSession, upcomingVivas
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Coordinator dashboard</title>
+</head>
+<body>
+<section>
+
+    <div class="page-head">
+        <div>
+            <h1>Coordinator dashboard</h1>
+            <p class="lead">
+                Signed in as <strong sec:authentication="name">coordinator@college.edu</strong>
+            </p>
+        </div>
+        <span class="badge badge-approved">COORDINATOR</span>
+    </div>
+
+    <div class="card-grid">
+        <article class="card">
+            <h3>Allocate guides</h3>
+            <p>Assign supervisors within capacity limits.</p>
+            <p class="phase-tag">Phase 3</p>
+        </article>
+        <article class="card">
+            <h3>Sessions &amp; milestones</h3>
+            <p>Set deadlines per programme. B.Tech and M.Tech differ only here.</p>
+            <p class="phase-tag">Phase 4</p>
+        </article>
+        <article class="card">
+            <h3>Viva scheduling</h3>
+            <p>Panels, slots, and clash detection.</p>
+            <p class="phase-tag">Phase 6</p>
+        </article>
+        <article class="card">
+            <h3>Reports</h3>
+            <p>Mark sheets and progress summaries for the department.</p>
+            <p class="phase-tag">Phase 8</p>
+        </article>
+    </div>
+
+</section>
+</body>
+</html>

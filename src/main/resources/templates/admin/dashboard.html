@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+  Admin dashboard.
+
+  Phase 1: no model attributes.
+  Phase 8 adds: userCount, recentAuditEntries
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Admin dashboard</title>
+</head>
+<body>
+<section>
+
+    <div class="page-head">
+        <div>
+            <h1>Admin dashboard</h1>
+            <p class="lead">
+                Signed in as <strong sec:authentication="name">admin@college.edu</strong>
+            </p>
+        </div>
+        <span class="badge badge-approved">ADMIN</span>
+    </div>
+
+    <div class="card-grid">
+        <article class="card">
+            <h3>Users &amp; roles</h3>
+            <p>Create accounts, assign roles, enable and disable users.</p>
+            <p class="phase-tag">Phase 1</p>
+        </article>
+        <article class="card">
+            <h3>Audit log</h3>
+            <p>Every state change, with actor and timestamp.</p>
+            <p class="phase-tag">Phase 8</p>
+        </article>
+    </div>
+
+</section>
+</body>
+</html>

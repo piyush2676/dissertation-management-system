@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Dissertation Management System</title>
+</head>
+<body>
+<section>
+
+    <div class="hero">
+        <h1>Dissertation Management System</h1>
+        <p class="lead">
+            Topic approval, guide allocation, milestone submissions, review and evaluation
+            for B.Tech and M.Tech dissertation work — in one place, with a full audit trail.
+        </p>
+        <a th:href="@{/login}" class="btn btn-primary">Sign in</a>
+    </div>
+
+    <div class="card-grid">
+        <article class="card">
+            <h3>Students</h3>
+            <p>Propose a topic, track milestone deadlines, upload each version, read guide
+                feedback and resubmit — without chasing anyone over email.</p>
+        </article>
+        <article class="card">
+            <h3>Supervisors</h3>
+            <p>See only your own students. Approve topics, comment on submissions, request
+                revisions, and score against the rubric.</p>
+        </article>
+        <article class="card">
+            <h3>Coordinators</h3>
+            <p>Allocate guides within capacity limits, set milestones per programme, schedule
+                vivas, and export mark sheets.</p>
+        </article>
+    </div>
+
+    <p class="status-note">
+        <strong>Phase 0.</strong> Scaffold only — authentication arrives in Phase 1.
+        Progress is tracked in <code>docs/CHECKLIST.md</code>.
+    </p>
+
+</section>
+</body>
+</html>

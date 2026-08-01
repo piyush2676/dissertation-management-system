@@ -1,0 +1,10 @@
+# Copy this file to application-local.properties and fill in your own values.
+#   cp application-local.properties.example application-local.properties
+#
+# application-local.properties is gitignored; this .example file is committed
+# so anyone cloning the repo knows what they need to provide.
+
+spring.datasource.password=your-postgres-password
+
+# Phase 7 only -- Spring AI. Prefer the ANTHROPIC_API_KEY environment variable.
+# spring.ai.anthropic.api-key=sk-ant-...

@@ -1,0 +1,336 @@
+/* ==========================================================================
+   Dissertation Management System — application stylesheet
+   No CDN, no framework. Everything ships with the jar, so a lab demo works
+   with the network unplugged.
+   ========================================================================== */
+
+:root {
+    --ink:        #1c2430;
+    --ink-soft:   #55617a;
+    --ink-faint:  #8792a8;
+    --line:       #dfe4ed;
+    --surface:    #ffffff;
+    --canvas:     #f4f6fa;
+    --brand:      #1f4b8f;
+    --brand-dark: #16386b;
+    --ok:         #1c7a4a;
+    --ok-bg:      #e6f4ec;
+    --warn:       #8a5a00;
+    --warn-bg:    #fdf3e0;
+    --danger:     #a32a26;
+    --danger-bg:  #fbeceb;
+    --radius:     8px;
+    --shadow:     0 1px 2px rgba(20, 30, 50, .06), 0 4px 14px rgba(20, 30, 50, .05);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+
+/* ---------- Navbar ------------------------------------------------------- */
+
+.navbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+}
+
+.navbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 60px;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+
+.brand-mark {
+    background: var(--brand);
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.brand-text { font-weight: 600; }
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a { color: var(--ink-soft); text-decoration: none; }
+.nav-links a:hover { color: var(--brand); }
+
+.nav-user { color: var(--ink-soft); font-size: 14px; }
+.inline-form { display: inline; margin: 0; }
+
+/* ---------- Layout ------------------------------------------------------- */
+
+main.container { flex: 1; padding-top: 32px; padding-bottom: 48px; }
+
+.site-footer {
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-faint);
+    font-size: 14px;
+    padding: 18px 0;
+}
+
+/* ---------- Typography --------------------------------------------------- */
+
+h1 { font-size: 30px; line-height: 1.25; margin: 0 0 12px; }
+h2 { font-size: 22px; margin: 0 0 10px; }
+h3 { font-size: 17px; margin: 0 0 8px; }
+
+.lead { color: var(--ink-soft); font-size: 17px; max-width: 62ch; margin: 0 0 20px; }
+
+code {
+    background: #eef1f6;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: .9em;
+}
+
+/* ---------- Hero --------------------------------------------------------- */
+
+.hero {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 36px;
+    margin-bottom: 24px;
+}
+
+/* ---------- Cards -------------------------------------------------------- */
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+}
+
+.card p { color: var(--ink-soft); margin: 0; font-size: 15px; }
+
+/* ---------- Buttons ------------------------------------------------------ */
+
+.btn {
+    display: inline-block;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 9px 18px;
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.btn-sm { padding: 6px 12px; font-size: 14px; }
+
+.btn-primary { background: var(--brand); color: #fff; }
+.btn-primary:hover { background: var(--brand-dark); }
+
+.btn-ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); }
+.btn-ghost:hover { border-color: var(--ink-faint); color: var(--ink); }
+
+/* ---------- Forms -------------------------------------------------------- */
+
+.field { margin-bottom: 16px; }
+
+.field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.field input[type="text"],
+.field input[type="email"],
+.field input[type="password"],
+.field input[type="date"],
+.field input[type="number"],
+.field select,
+.field textarea {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font: inherit;
+    background: var(--surface);
+    color: var(--ink);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    outline: 2px solid rgba(31, 75, 143, .35);
+    outline-offset: 1px;
+    border-color: var(--brand);
+}
+
+.field-error { color: var(--danger); font-size: 13px; margin-top: 5px; display: block; }
+.field-hint  { color: var(--ink-faint); font-size: 13px; margin-top: 5px; display: block; }
+
+/* ---------- Alerts ------------------------------------------------------- */
+
+.alert {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    font-size: 15px;
+}
+
+.alert-success { background: var(--ok-bg);     border-color: #bfe0cd; color: var(--ok); }
+.alert-error   { background: var(--danger-bg); border-color: #f0c8c6; color: var(--danger); }
+.alert-info    { background: var(--warn-bg);   border-color: #f0dcb4; color: var(--warn); }
+
+/* ---------- Status badges (state machines) ------------------------------- */
+
+.badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.badge-draft    { background: #eef1f6;         color: var(--ink-soft);  border-color: var(--line); }
+.badge-pending  { background: var(--warn-bg);   color: var(--warn);      border-color: #f0dcb4; }
+.badge-approved { background: var(--ok-bg);     color: var(--ok);        border-color: #bfe0cd; }
+.badge-rejected { background: var(--danger-bg); color: var(--danger);    border-color: #f0c8c6; }
+
+/* ---------- Tables ------------------------------------------------------- */
+
+.table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+
+th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+
+th {
+    background: #f8fafc;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-soft);
+}
+
+tbody tr:last-child td { border-bottom: none; }
+
+/* ---------- AI advisory panel (Phase 7) ----------------------------------
+   Every AI-generated output renders inside this. Deliberately distinct from
+   normal content: the reader must always be able to tell a model wrote it.
+   -------------------------------------------------------------------------- */
+
+.ai-panel {
+    background: #f7f4fd;
+    border: 1px solid #d9cdf2;
+    border-left: 3px solid #6b4bb8;
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin: 18px 0;
+}
+
+.ai-panel-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #6b4bb8;
+    margin-bottom: 8px;
+}
+
+.status-note {
+    color: var(--ink-faint);
+    font-size: 14px;
+    margin-top: 28px;
+}
+
+/* ---------- Auth ---------------------------------------------------------- */
+
+.auth-wrap { display: flex; justify-content: center; padding-top: 12px; }
+
+.auth-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-card h1 { font-size: 24px; }
+.auth-card .lead { font-size: 15px; margin-bottom: 20px; }
+
+.btn-block { display: block; width: 100%; text-align: center; }
+
+/* ---------- Page header --------------------------------------------------- */
+
+.page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.page-head .lead { margin-bottom: 0; font-size: 15px; }
+
+/* ---------- Phase tag (scaffold placeholder, removed as phases land) ------ */
+
+.phase-tag {
+    margin-top: 10px !important;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+}
+
+/* ---------- Small screens ------------------------------------------------ */
+
+@media (max-width: 620px) {
+    .hero { padding: 24px; }
+    h1 { font-size: 24px; }
+    .navbar-inner { min-height: 54px; }
+    .brand-text { display: none; }
+}

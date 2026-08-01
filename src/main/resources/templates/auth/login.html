@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+  Login page.
+
+  Posts to /login, which Spring Security handles itself — you do NOT write a
+  POST /login controller method. In SecurityConfig:
+
+      .formLogin(form -> form
+              .loginPage("/login")
+              .defaultSuccessUrl("/dashboard", true)
+              .permitAll())
+      .logout(logout -> logout
+              .logoutSuccessUrl("/login?logout")
+              .permitAll())
+
+  Field names must stay "username" and "password" unless you override
+  .usernameParameter() / .passwordParameter().
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Sign in — Dissertation Management System</title>
+</head>
+<body>
+<section>
+
+    <div class="auth-wrap">
+        <div class="auth-card">
+
+            <h1>Sign in</h1>
+            <p class="lead">Use your institute email address.</p>
+
+            <div class="alert alert-error" th:if="${param.error}" role="alert">
+                Incorrect email or password.
+            </div>
+            <div class="alert alert-success" th:if="${param.logout}" role="status">
+                You have been signed out.
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="field">
+                    <label for="username">Email</label>
+                    <input type="email" id="username" name="username"
+                           autocomplete="username" required autofocus
+                           placeholder="you@college.edu">
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password"
+                           autocomplete="current-password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+            </form>
+
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

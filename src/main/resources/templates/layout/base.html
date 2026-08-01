@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--
+  Base page shell. Every page calls it like this:
+
+    <html th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+      <head><title>My page</title></head>
+      <body><section> ...page content... </section></body>
+    </html>
+
+  The page supplies its own <title> and a <section>; this file supplies
+  everything around them. Change the chrome here once, not in 30 files.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:replace="${title}">Dissertation Management System</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<div th:replace="~{layout/_navbar :: navbar}"></div>
+
+<main class="container">
+    <div th:replace="~{layout/_flash :: flash}"></div>
+    <div th:replace="${content}"></div>
+</main>
+
+<footer class="site-footer">
+    <div class="container">
+        Dissertation Management System
+    </div>
+</footer>
+
+</body>
+</html>

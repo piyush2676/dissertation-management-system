@@ -1,0 +1,327 @@
+# Dissertation Management System — Guide
+
+Living design document. **Update this file before writing code that changes a decision here.**
+
+---
+
+## 1. Why this exists
+
+B.Tech and M.Tech dissertation work is run manually: topics by email, guide allocation in a
+spreadsheet, deadlines over WhatsApp, reports as `report_final_FINAL_v2.docx` on pen drives,
+feedback on printed copies, marks totalled in Excel. Nobody can answer *"who approved this,
+and when"*.
+
+Goals, in priority order:
+
+1. **Interview artefact** — real domain modelling, state machines, ownership authorisation,
+   an AI feature that is not a bolted-on chatbot.
+2. **College submission** — demoable end to end on one laptop with seeded data.
+3. **Adoptable** by the department next session — production seams stay in place even though
+   we build demo-grade.
+
+The workflow **will change** as we build. Section 6 is how the design absorbs that.
+
+---
+
+## 2. Working agreement
+
+| Layer | Owner |
+|---|---|
+| Entities, repositories, services, state machines, security config, business rules | **You** |
+| Controllers | **You** — Claude supplies exact signatures |
+| Thymeleaf templates, fragments, CSS, JS | **Claude** |
+| DTO / form objects | **Claude** — they are the contract between us |
+
+**View contract** (section 9) is the single source of truth. If a controller does not put
+`topicForm` in the model, the template breaks. Contract is fixed *before* either side writes
+code for a page.
+
+---
+
+## 3. Stack — as verified on this machine
+
+| Thing | Version | Note |
+|---|---|---|
+| Java | 21 (`jdk-21.0.10`) | LTS, installed |
+| Spring Boot | **4.1.0** | Verified: `mvnw clean compile` → BUILD SUCCESS |
+| Spring AI | **2.0.0** (Phase 7) | `spring-ai-starter-model-anthropic:2.0.0` depends on `spring-boot-starter:4.1.0` |
+| PostgreSQL | 18 | Service `postgresql-x64-18`, already running |
+| Flyway | 12.4.0 | via `spring-boot-starter-flyway` |
+| Thymeleaf security extras | `thymeleaf-extras-springsecurity6` 3.1.5 | what Initializr pairs with Boot 4 |
+| Build | Maven wrapper | `.\mvnw.cmd` — no global Maven needed |
+
+### Boot 4 renamed the starters — do not copy 3.x tutorials blindly
+
+| Boot 3.x | Boot 4.x (what we use) |
+|---|---|
+| `spring-boot-starter-web` | `spring-boot-starter-webmvc` |
+| `spring-boot-starter-test` | per-module: `spring-boot-starter-webmvc-test`, `-data-jpa-test`, `-security-test`, … |
+| — | `spring-boot-starter-flyway` (Flyway now has its own starter) |
+
+> **Version history, so we don't relitigate it.** The plan originally locked Boot **3.5.4**, to
+> protect the Spring AI phase — correct for Spring AI 1.x, which targets Boot 3.4/3.5. But
+> Spring Initializr no longer serves 3.5.x, and Spring AI **2.0.0 GA** is built against Boot
+> **4.1.0**. The constraint reversed. Boot 4.1.0 is now the version that *protects* Phase 7.
+
+---
+
+## 4. Architecture
+
+```
+Browser
+   |  HTML over HTTP (form POST, no SPA)
+Thymeleaf templates  <-- Claude owns
+   |  view name + model attributes
+@Controller          <-- you own (Claude gives signatures)
+   |  DTO in, DTO out
+@Service             <-- you own: business rules, state transitions, @Transactional
+   |  entities
+@Repository (Spring Data JPA)
+   |
+PostgreSQL 18  +  pgvector (Phase 7)
+   |
+StorageService -> local disk (uploads/)
+```
+
+Cross-cutting: Spring Security filter chain, `@ControllerAdvice` for global errors, `AuditLog`
+written by `@EventListener` on domain events, `JavaMailSender` for notifications.
+
+### Package layout — by feature, not by layer
+
+```
+com.dms
+├── DissertationManagementSystemApplication.java
+├── common/          BaseEntity, exceptions, GlobalExceptionHandler, AuditLog, DomainEvent
+├── user/            User, Role, StudentProfile, SupervisorProfile, repos, UserService
+├── security/        SecurityConfig, CustomUserDetailsService, AuthzService
+├── session/         AcademicSession, Milestone
+├── topic/           Topic, TopicService, TopicController, TopicForm
+├── allocation/      Allocation, AllocationService, capacity rules
+├── submission/      Submission, SubmissionVersion, SubmissionService, StorageService
+├── review/          ReviewComment, ReviewService
+├── evaluation/      RubricCriterion, Evaluation, ScoreCalculator
+├── viva/            VivaSchedule, PanelMember, VivaService
+├── notification/    Notification, NotificationService
+└── ai/              VectorIngestService, SimilarityService, TopicNoveltyService, RagChatService
+```
+
+Rationale: `com.dms.topic` holding its own controller/service/repo localises the blast radius
+when a flow changes. Four giant `controller/`/`service/` folders do not.
+
+---
+
+## 5. Domain model
+
+```
+User (id, email UQ, passwordHash, fullName, enabled, createdAt)
+  └─ roles: Set<Role>   [STUDENT, SUPERVISOR, REVIEWER, COORDINATOR, ADMIN]
+
+StudentProfile    (user 1:1, rollNo UQ, programme[BTECH|MTECH], department, batch, semester)
+SupervisorProfile (user 1:1, designation, department, researchInterests, maxStudents)
+
+AcademicSession (id, label "2025-26", programme, startDate, endDate, active)
+Milestone       (session, name, dueDate, weightage, sequenceNo)
+        -- B.Tech and M.Tech differ ONLY here. Same code, different rows.
+
+Topic      (student, title, abstractText, keywords, proposedSupervisor, status)
+Allocation (student, supervisor, session, status, allocatedOn, allocatedBy)
+        -- unique (student, session). Supervisor capacity enforced in service.
+
+Submission        (allocation, milestone, currentVersionNo, status, lateFlag)
+SubmissionVersion (submission, versionNo, storagePath, sha256, sizeBytes, submittedAt)
+        -- immutable, append-only. Never overwrite.
+
+ReviewComment   (submissionVersion, reviewer, pageNo, body, resolved, createdAt)
+RubricCriterion (session, name, maxMarks, weightage)
+Evaluation      (submission, examiner, scores JSONB, total, remarks, submittedAt)
+VivaSchedule    (allocation, scheduledAt, venue, status)
+PanelMember     (vivaSchedule, user, role)
+Notification    (recipient, type, payload, readAt, createdAt)
+AuditLog        (actor, action, entityType, entityId, oldValue, newValue, at)
+```
+
+**Why `Submission` and `SubmissionVersion` are separate.** `Submission` is the logical slot
+("Interim Report for Ravi"). `SubmissionVersion` is each physical upload. That split is what
+makes "guide always sees the latest, history stays intact" work. Best single thing in this
+model to defend in an interview.
+
+### State machines
+
+Transitions declared once as `Map<State, Set<State>>`, validated in the service. Illegal moves
+throw `InvalidStateTransitionException` → 409 page. Not scattered `if` statements.
+
+```
+Topic:       DRAFT -> PROPOSED -> APPROVED
+                               -> CHANGES_REQUESTED -> PROPOSED
+                               -> REJECTED
+
+Allocation:  REQUESTED -> ACCEPTED     (capacity permitting)
+                       -> DECLINED     (falls back to coordinator)
+             COORDINATOR_ASSIGNED      (override, bypasses supervisor accept)
+
+Submission:  DRAFT -> SUBMITTED -> UNDER_REVIEW -> APPROVED
+                                                -> REVISION_REQUESTED -> SUBMITTED (new version)
+                                                -> REJECTED
+```
+
+---
+
+## 6. Designed for change
+
+The flow will keep moving. Seven mechanisms so that costs an edit, not a rewrite.
+
+1. **Workflow is data.** Milestones are rows keyed to `(AcademicSession, Programme)`, not an
+   enum. Inserting "Pre-submission Seminar" is an INSERT plus a `sequenceNo` renumber. Also how
+   B.Tech and M.Tech share one codebase.
+2. **State machines are declarative.** One transition map per aggregate. A new legal path is
+   one line. A flow change can never silently corrupt data.
+3. **Rubric is configurable.** `RubricCriterion` rows with weights, scoped to a session.
+   `Evaluation.scores` is JSONB keyed by criterion id — adding a criterion needs no migration.
+4. **Additive migrations only.** Flyway `V1`, `V2`… An applied migration is *never* edited;
+   changes go in a new file. Schema evolves forward and rebuilds from zero on demand.
+5. **Interface seams at every external dependency.** `StorageService`, `NotificationSender`,
+   `SimilarityProvider`, `AiAdvisor`. One impl today, another later, callers untouched.
+6. **Domain events for side effects.** `TopicApprovedEvent`, `SubmissionUploadedEvent`. Audit,
+   notification, and vector indexing are `@EventListener`s. New side effect = new listener,
+   never an edit to `TopicService`.
+7. **DTOs isolate UI from entities.** Templates bind to form/view objects, never JPA entities.
+   Entity rename does not ripple into HTML; UI change does not force an entity change. This is
+   what lets the two of us work in parallel.
+
+**Change protocol.** Flow changes mid-build → update this file → adjust the view contract →
+re-tick `CHECKLIST.md` → then write code. Doc before code, or the controller/template contract
+drifts and we both lose a day.
+
+---
+
+## 7. Security model
+
+Role alone is insufficient — a `SUPERVISOR` must not read a submission from a student they do
+not supervise. Two layers:
+
+1. **URL rules** in `SecurityConfig` — `/student/**` requires `ROLE_STUDENT`, etc.
+2. **Ownership checks** via a named bean in `@PreAuthorize`:
+
+```java
+@PreAuthorize("@authz.supervises(#studentId, authentication)")
+@PreAuthorize("@authz.ownsSubmission(#submissionId, authentication)")
+```
+
+Passwords BCrypt. CSRF on — Thymeleaf injects the token into `th:action` forms automatically.
+File downloads go through a controller that re-checks ownership; `uploads/` is **never** exposed
+as a static resource directory.
+
+---
+
+## 8. Local setup
+
+```powershell
+# 1. Create the database (run once, as the postgres superuser)
+#    psql is not on PATH — use pgAdmin, or add C:\Program Files\PostgreSQL\18\bin to PATH
+CREATE DATABASE dms;
+
+# 2. Point the app at it — edit src/main/resources/application.properties
+spring.datasource.password=<your postgres password>
+
+# 3. Run
+.\mvnw.cmd spring-boot:run
+
+# 4. Open
+http://localhost:8080
+```
+
+Troubleshooting:
+
+| Symptom | Cause |
+|---|---|
+| `Non-resolvable parent POM ... 4.1.0.RELEASE` | Initializr writes its internal id. Parent version must be `4.1.0`. |
+| `Cannot load driver class: org.postgresql.Driver` | DB `dms` not created, or credentials wrong |
+| `FATAL: password authentication failed` | `spring.datasource.password` not set |
+| Lombok getters "not found" in IntelliJ | Settings → Build → Compiler → Annotation Processors → **Enable** |
+| `spring-boot-starter-web` not found | Boot 4 renamed it to `spring-boot-starter-webmvc` |
+
+---
+
+## 9. View contract
+
+Claude produces the full table one phase ahead of you writing controllers, so you are never
+guessing attribute names.
+
+| Route | Method | View | Model attributes | Form object |
+|---|---|---|---|---|
+| `/` | GET | `home` | — | — |
+| `/login` | GET | `auth/login` | — | — |
+| `/dashboard` | GET | redirect by role | — | — |
+| `/student/dashboard` | GET | `student/dashboard` | `topic`, `allocation`, `milestones`, `pendingCount` | — |
+| `/student/topic` | GET | `student/topic-form` | `topicForm`, `supervisors` | `TopicForm` |
+| `/student/topic` | POST | redirect `/student/dashboard` | — | `TopicForm` |
+| `/supervisor/topics` | GET | `supervisor/topic-approvals` | `pendingTopics` | — |
+| `/supervisor/topics/{id}/decide` | POST | redirect | — | `TopicDecisionForm` |
+| `/coordinator/allocate` | GET | `coordinator/allocate` | `unallocated`, `supervisorsWithLoad` | — |
+
+Template tree:
+
+```
+templates/
+├── layout/base.html, _navbar.html, _flash.html
+├── home.html
+├── auth/login.html
+├── student/     dashboard, topic-form, milestones, submit, submission-detail, feedback
+├── supervisor/  dashboard, my-students, topic-approvals, review, evaluate
+├── coordinator/ dashboard, allocate, sessions, milestones, viva-schedule, reports
+├── admin/       users, audit-log
+├── archive/     search, thesis-detail
+└── error/       403, 404, 409, 500
+```
+
+---
+
+## 10. Spring AI design (Phase 7)
+
+Added last, on a working system. One vector store, five features.
+
+| Feature | How | Model |
+|---|---|---|
+| Archive semantic search | Embed approved theses into pgvector; search by meaning | embedding model |
+| Topic novelty check | RAG: retrieve top-k similar theses, LLM reports overlap and gaps | `claude-opus-5` |
+| Supervisor matching | Cosine similarity: topic embedding vs `researchInterests` | embedding model |
+| Regulations Q&A | RAG over the department handbook PDF | `claude-sonnet-5` |
+| Chapter summary for reviewer | 200-word summary + draft review checklist | `claude-sonnet-5` |
+
+Cost per million tokens (in/out): `claude-opus-5` $5/$25 · `claude-sonnet-5` $3/$15 ·
+`claude-haiku-4-5` $1/$5. Key from `ANTHROPIC_API_KEY` env var — **never committed**.
+
+**Hard constraint, designed in from the start:** the LLM never assigns a final grade or an
+approve/reject decision. Every AI output is advisory, rendered in a visually distinct panel
+labelled *AI-generated — verify before acting*, and persisted with `aiGenerated = true`.
+Similarity is reported honestly as *overlap with department archive*, never as web-wide
+plagiarism detection.
+
+---
+
+## 11. Verification
+
+Per phase: `.\mvnw.cmd spring-boot:run`, walk that phase's demo line in `CHECKLIST.md`.
+
+`.\mvnw.cmd test` — service unit tests for every state machine (illegal transitions **must**
+throw), `@DataJpaTest` for repository queries, `@WebMvcTest` + `spring-security-test` for authz
+(assert a supervisor gets 403 on another supervisor's student).
+
+Flyway: drop the schema and re-migrate from scratch to prove migrations are replayable.
+
+**End-to-end acceptance** (Phase 8): student proposes topic → guide approves → coordinator
+allocates → student uploads v1 → guide requests revision → student uploads v2 → guide approves
+→ viva scheduled → examiners score → mark sheet generated → thesis appears in searchable archive.
+
+**Definition of done:** that chain completes without touching the database by hand, and every
+step leaves an `AuditLog` row.
+
+---
+
+## 12. Interview talking points
+
+1. **Immutable version history** — why `Submission` and `SubmissionVersion` are separate tables.
+2. **State machines as data** — transitions declared once, illegal moves rejected at the service layer.
+3. **Ownership authorisation** — why `hasRole('SUPERVISOR')` is not enough, and how `@authz` fixes it.
+4. **Designed for change** — section 6: workflow in rows not enums, additive migrations, event listeners.
+5. **Bounded AI** — a model that advises and is labelled as such, never one that grades.

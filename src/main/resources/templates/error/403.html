@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!--
+  403 — Spring Boot resolves templates/error/403.html automatically.
+
+  This is the page a supervisor hits when they request another supervisor's
+  student. If it never appears during testing, the ownership checks in
+  AuthzService are not wired up. See docs/guide.md §7.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Access denied</title>
+</head>
+<body>
+<section>
+    <div class="hero">
+        <span class="badge badge-rejected">403</span>
+        <h1>Access denied</h1>
+        <p class="lead">
+            You are signed in, but this record does not belong to you. If you believe it
+            should, contact the project coordinator.
+        </p>
+        <a th:href="@{/dashboard}" class="btn btn-primary">Back to dashboard</a>
+    </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+  Supervisor dashboard.
+
+  Phase 1: no model attributes.
+  Phase 2+ adds: pendingTopics, myStudents, submissionsAwaitingReview
+
+  Note: every query behind this page must be scoped to the signed-in supervisor.
+  hasRole('SUPERVISOR') alone is not enough — see AuthzService and docs/guide.md §7.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Supervisor dashboard</title>
+</head>
+<body>
+<section>
+
+    <div class="page-head">
+        <div>
+            <h1>Supervisor dashboard</h1>
+            <p class="lead">
+                Signed in as <strong sec:authentication="name">guide@college.edu</strong>
+            </p>
+        </div>
+        <span class="badge badge-approved">SUPERVISOR</span>
+    </div>
+
+    <div class="card-grid">
+        <article class="card">
+            <h3>Topic approvals</h3>
+            <p>Proposals waiting on your decision.</p>
+            <p class="phase-tag">Phase 2</p>
+        </article>
+        <article class="card">
+            <h3>My students</h3>
+            <p>Students allocated to you, and your remaining capacity.</p>
+            <p class="phase-tag">Phase 3</p>
+        </article>
+        <article class="card">
+            <h3>Submissions to review</h3>
+            <p>Latest version of each milestone submission.</p>
+            <p class="phase-tag">Phase 5</p>
+        </article>
+        <article class="card">
+            <h3>Evaluation</h3>
+            <p>Score against the rubric and record viva remarks.</p>
+            <p class="phase-tag">Phase 6</p>
+        </article>
+    </div>
+
+</section>
+</body>
+</html>
