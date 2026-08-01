@@ -2,31 +2,34 @@ package com.dms.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-/**
- * PHASE 0 SHIM — replace this entire class in Phase 1.
- *
- * <p>Adding {@code spring-boot-starter-security} to the classpath locks every endpoint behind
- * a generated password, which would make the Phase 0 landing page undemoable. This opens it
- * up so the scaffold can be verified, and nothing else.
- *
- * <p>In Phase 1 this becomes the real configuration: form login at {@code /login}, a
- * {@code BCryptPasswordEncoder} bean, {@code CustomUserDetailsService}, and URL rules —
- * {@code /student/**} requiring {@code ROLE_STUDENT}, and so on. See {@code docs/guide.md} §7.
- * Ownership checks ({@code @authz.supervises(...)}) go in {@code AuthzService}, because role
- * alone is not enough: a supervisor must not read another supervisor's student.
- */
-@Configuration
-public class SecurityConfig {
 
+@Configuration
+@EnableMethodSecurity
+public class SecurityConfig {
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll())
-                .csrf(csrf -> csrf.disable());
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth ->
+                auth.requestMatchers("/","/login","/css/**","/js/**","/error")
+                        .permitAll().requestMatchers("/student/**").hasRole("STUDENT").
+                        requestMatchers("/supervisor/**").hasRole("SUPERVISOR")
+                        .requestMatchers("/coordinator/**").hasRole("COORDINATOR").
+                        requestMatchers("/admin/**").hasRole("ADMIN").anyRequest().
+                        authenticated()).formLogin(form -> form.loginPage("/login").
+                defaultSuccessUrl("/dashboard",true).failureUrl("/login?error").permitAll())
+                .logout(logout -> logout.logoutSuccessUrl("/login?logout").permitAll()).exceptionHandling(
+                        ex -> ex.accessDeniedPage("/error/403")
+                );
         return http.build();
     }
+
 }
