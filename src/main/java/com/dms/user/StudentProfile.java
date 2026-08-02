@@ -21,7 +21,7 @@ public class StudentProfile {
     @Column(name = "roll_no",nullable = false,unique = true,length = 32)
     private String rollNo;
     @Enumerated(EnumType.STRING) //not ordinal
-    @Column(nullable = false,length = 16)
+    @Column(nullable = false,length = 32) // widened in V2 for BTECH_MTECH_INTEGRATED
     private Programme programme;
     @Column(length = 32)
     private String department;

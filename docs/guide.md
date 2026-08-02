@@ -86,12 +86,22 @@ written by `@EventListener` on domain events, `JavaMailSender` for notifications
 
 ### Package layout — by feature, not by layer
 
+Built so far (Phase 1):
+
 ```
 com.dms
 ├── DissertationManagementSystemApplication.java
-├── common/          BaseEntity, exceptions, GlobalExceptionHandler, AuditLog, DomainEvent
-├── user/            User, Role, StudentProfile, SupervisorProfile, repos, UserService
 ├── security/        SecurityConfig, CustomUserDetailsService, AuthzService
+├── user/            User, Role, Programme, StudentProfile, SupervisorProfile,
+│                    UserRepository, StudentProfileRepository,
+│                    SupervisorProfileRepository, DataSeeder
+└── web/             HomeController, DashboardController
+```
+
+Planned as later phases land:
+
+```
+├── common/          BaseEntity, exceptions, GlobalExceptionHandler, AuditLog, DomainEvent
 ├── session/         AcademicSession, Milestone
 ├── topic/           Topic, TopicService, TopicController, TopicForm
 ├── allocation/      Allocation, AllocationService, capacity rules
@@ -106,6 +116,11 @@ com.dms
 Rationale: `com.dms.topic` holding its own controller/service/repo localises the blast radius
 when a flow changes. Four giant `controller/`/`service/` folders do not.
 
+Two deviations worth noting rather than pretending otherwise. `DataSeeder` sits in `user/`
+rather than a `config/` package — it only touches user data, so it stays with what it seeds.
+And `web/` holds the view controllers that span features (the landing page, the role
+dispatcher); feature-specific controllers still belong in their own package.
+
 ---
 
 ## 5. Domain model
@@ -114,12 +129,15 @@ when a flow changes. Four giant `controller/`/`service/` folders do not.
 User (id, email UQ, passwordHash, fullName, enabled, createdAt)
   └─ roles: Set<Role>   [STUDENT, SUPERVISOR, REVIEWER, COORDINATOR, ADMIN]
 
-StudentProfile    (user 1:1, rollNo UQ, programme[BTECH|MTECH], department, batch, semester)
+StudentProfile    (user 1:1, rollNo UQ, programme, department, batch, semester)
+        -- programme: BTECH | MTECH | BTECH_MTECH_INTEGRATED (5-year dual degree)
 SupervisorProfile (user 1:1, designation, department, researchInterests, maxStudents)
 
 AcademicSession (id, label "2025-26", programme, startDate, endDate, active)
 Milestone       (session, name, dueDate, weightage, sequenceNo)
-        -- B.Tech and M.Tech differ ONLY here. Same code, different rows.
+        -- Programmes differ ONLY here. Same code, different rows.
+        -- BTECH_MTECH_INTEGRATED was added with no logic change at all:
+        -- one enum value plus V2 widening the column. That is section 6 working.
 
 Topic      (student, title, abstractText, keywords, proposedSupervisor, status)
 Allocation (student, supervisor, session, status, allocatedOn, allocatedBy)
@@ -170,13 +188,21 @@ The flow will keep moving. Seven mechanisms so that costs an edit, not a rewrite
 
 1. **Workflow is data.** Milestones are rows keyed to `(AcademicSession, Programme)`, not an
    enum. Inserting "Pre-submission Seminar" is an INSERT plus a `sequenceNo` renumber. Also how
-   B.Tech and M.Tech share one codebase.
+   every programme shares one codebase — adding the five-year integrated B.Tech+M.Tech degree
+   cost one enum value and one `ALTER TABLE`, with no change to any logic.
 2. **State machines are declarative.** One transition map per aggregate. A new legal path is
    one line. A flow change can never silently corrupt data.
 3. **Rubric is configurable.** `RubricCriterion` rows with weights, scoped to a session.
    `Evaluation.scores` is JSONB keyed by criterion id — adding a criterion needs no migration.
 4. **Additive migrations only.** Flyway `V1`, `V2`… An applied migration is *never* edited;
    changes go in a new file. Schema evolves forward and rebuilds from zero on demand.
+
+   > This one has teeth. Flyway stores a checksum of each applied file — **comments
+   > included** — in `flyway_schema_history`. Editing an applied migration makes the next
+   > startup fail with `Migration checksum mismatch`, before any application code runs.
+   > Locally the fix is `DELETE FROM flyway_schema_history WHERE version = 'N';` and let it
+   > re-apply. Once a migration has run somewhere you cannot reset, there is no clean fix —
+   > which is the whole reason corrections go forward instead of backward.
 5. **Interface seams at every external dependency.** `StorageService`, `NotificationSender`,
    `SimilarityProvider`, `AiAdvisor`. One impl today, another later, callers untouched.
 6. **Domain events for side effects.** `TopicApprovedEvent`, `SubmissionUploadedEvent`. Audit,
@@ -213,29 +239,61 @@ as a static resource directory.
 
 ## 8. Local setup
 
-```powershell
-# 1. Create the database (run once, as the postgres superuser)
-#    psql is not on PATH — use pgAdmin, or add C:\Program Files\PostgreSQL\18\bin to PATH
+```sql
+-- 1. Create the database (once, as the postgres superuser).
+--    psql is not on PATH by default -- use pgAdmin, or add
+--    C:\Program Files\PostgreSQL\18\bin to PATH.
 CREATE DATABASE dms;
+```
 
-# 2. Point the app at it — edit src/main/resources/application.properties
+```properties
+# 2. Supply the password. Copy the example file, then fill it in.
+#    application-local.properties is gitignored: no credential enters git history.
+#      cp application-local.properties.example application-local.properties
 spring.datasource.password=<your postgres password>
+```
 
-# 3. Run
+```powershell
+# 3. Run. Flyway applies V1 and V2, then DataSeeder creates the demo accounts.
 .\mvnw.cmd spring-boot:run
 
 # 4. Open
 http://localhost:8080
 ```
 
-Troubleshooting:
+### Demo accounts
+
+Seeded on first startup only — `DataSeeder` no-ops when the users table is non-empty.
+**Demo credentials, never for a deployment.**
+
+| Email | Password | Roles |
+|---|---|---|
+| `admin@college.edu` | `admin123` | ADMIN |
+| `coordinator@college.edu` | `coord123` | COORDINATOR |
+| `guide1@college.edu` | `guide123` | SUPERVISOR + REVIEWER (capacity 5) |
+| `guide2@college.edu` | `guide123` | SUPERVISOR (capacity 3) |
+| `student1@college.edu` | `student123` | STUDENT — B.Tech |
+| `student2@college.edu` | `student123` | STUDENT — M.Tech |
+| `student3@college.edu` | `student123` | STUDENT — B.Tech |
+| `student4@gmail.com` | `student123` | STUDENT — integrated B.Tech+M.Tech |
+
+`guide1` holding two roles is the case worth demonstrating: one account, two link groups in
+the navbar, driven entirely by `sec:authorize`.
+
+### Troubleshooting
 
 | Symptom | Cause |
 |---|---|
 | `Non-resolvable parent POM ... 4.1.0.RELEASE` | Initializr writes its internal id. Parent version must be `4.1.0`. |
+| `Migration checksum mismatch` | An applied migration was edited. See section 6, item 4. |
 | `Cannot load driver class: org.postgresql.Driver` | DB `dms` not created, or credentials wrong |
-| `FATAL: password authentication failed` | `spring.datasource.password` not set |
+| `FATAL: password authentication failed` | `application-local.properties` missing or wrong password |
+| `Schema-validation: missing column ...` | Entity and migration disagree. `ddl-auto=validate` catching drift — read the named column. |
+| `LazyInitializationException` at login | `User.roles` must be `EAGER`; `open-in-view` is false |
+| Login always fails, no useful log | Password stored unhashed — `password_hash` must start `$2a$` |
+| `hasRole('X')` never matches | Authority must be `ROLE_X`. That is what `Role.authority()` is for. |
 | Lombok getters "not found" in IntelliJ | Settings → Build → Compiler → Annotation Processors → **Enable** |
+| `illegal character: '\ufeff'` or nulls between chars | File saved as UTF-16 or UTF-8-BOM. Settings → Editor → File Encodings → UTF-8. |
 | `spring-boot-starter-web` not found | Boot 4 renamed it to `spring-boot-starter-webmvc` |
 
 ---
