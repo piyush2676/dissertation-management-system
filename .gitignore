@@ -40,3 +40,6 @@ uploads/*
 # Local secrets -- never commit. The .example file IS committed.
 application-local.properties
 !application-local.properties.example
+
+# Word lock files created while a .docx in docs/ is open
+~$*

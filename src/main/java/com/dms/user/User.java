@@ -33,7 +33,6 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    /** BCrypt hash. Never holds a plaintext password. */
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 

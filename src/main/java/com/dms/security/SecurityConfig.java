@@ -26,9 +26,7 @@ public class SecurityConfig {
                         requestMatchers("/admin/**").hasRole("ADMIN").anyRequest().
                         authenticated()).formLogin(form -> form.loginPage("/login").
                 defaultSuccessUrl("/dashboard",true).failureUrl("/login?error").permitAll())
-                .logout(logout -> logout.logoutSuccessUrl("/login?logout").permitAll()).exceptionHandling(
-                        ex -> ex.accessDeniedPage("/error/403")
-                );
+                .logout(logout -> logout.logoutSuccessUrl("/login?logout").permitAll());
         return http.build();
     }
 
