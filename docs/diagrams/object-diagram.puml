@@ -1,0 +1,139 @@
+@startuml DMS-Object-Diagram
+' Dissertation Management System -- object diagram.
+' One frozen instant: Piyush is mid-revision on his interim report.
+' Render at: http://www.plantuml.com/plantuml  or the IntelliJ PlantUML plugin.
+
+title Dissertation Management System — Object Diagram\n(one runtime snapshot: interim report under review, revision 2)
+
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam object {
+  BackgroundColor White
+  BorderColor #4A6572
+  ArrowColor #4A6572
+}
+
+object "piyush : User" as piyush {
+  id = 8
+  email = "student4@college.edu"
+  fullName = "Piyush Pandey"
+  roles = { STUDENT }
+  enabled = true
+}
+
+object "piyushProfile : StudentProfile" as piyushProfile {
+  id = 4
+  rollNo = "21INT015"
+  programme = BTECH_MTECH_INTEGRATED
+  department = "CSE"
+  batch = "2021-2026"
+  semester = 9
+}
+
+object "sharma : User" as sharma #FFF8E1 {
+  id = 3
+  email = "guide1@college.edu"
+  fullName = "Dr A Sharma"
+  roles = { SUPERVISOR, REVIEWER }
+  enabled = true
+}
+
+object "sharmaProfile : SupervisorProfile" as sharmaProfile #FFF8E1 {
+  id = 1
+  designation = "Associate Professor"
+  department = "CSE"
+  maxStudents = 5
+}
+
+object "session2526 : AcademicSession" as session2526 {
+  id = 1
+  label = "2025-26"
+  programme = BTECH_MTECH_INTEGRATED
+  active = true
+}
+
+object "interim : Milestone" as interim {
+  id = 12
+  name = "Interim Report"
+  dueDate = 2025-11-30
+  weightage = 30.00
+  sequenceNo = 2
+}
+
+object "topic101 : Topic" as topic101 {
+  id = 101
+  title = "Federated Learning for\nPrivacy-Preserving Health Records"
+  status = APPROVED
+  version = 2
+}
+
+object "alloc55 : Allocation" as alloc55 {
+  id = 55
+  status = ACCEPTED
+  allocatedOn = 2025-08-12
+}
+
+object "sub900 : Submission" as sub900 {
+  id = 900
+  currentVersionNo = 2
+  status = UNDER_REVIEW
+  lateFlag = false
+}
+
+object "v1 : SubmissionVersion" as v1 #EEEEEE {
+  versionNo = 1
+  storagePath = "uploads/2025-26/900/v1.pdf"
+  sha256 = "a91f3c...", sizeBytes = 2411008
+  submittedAt = 2025-11-28T21:04
+}
+
+object "v2 : SubmissionVersion" as v2 {
+  versionNo = 2
+  storagePath = "uploads/2025-26/900/v2.pdf"
+  sha256 = "7c30be...", sizeBytes = 2698441
+  submittedAt = 2025-12-05T18:37
+}
+
+object "comment1 : ReviewComment" as comment1 {
+  pageNo = 14
+  body = "Expand the evaluation section"
+  resolved = false
+  createdAt = 2025-12-02T10:15
+}
+
+piyush -- piyushProfile
+sharma -- sharmaProfile
+
+piyushProfile -- topic101 : proposes
+topic101 --> sharmaProfile : proposedSupervisor
+
+piyushProfile -- alloc55
+alloc55 -- sharmaProfile
+alloc55 --> session2526
+session2526 -- interim
+
+alloc55 -- sub900
+sub900 --> interim
+sub900 -- v1
+sub900 -- v2
+v1 -- comment1
+comment1 --> sharma : reviewer
+
+note bottom of v1
+  Version 1 still exists after the
+  revision. currentVersionNo moved
+  to 2; nothing was overwritten, so
+  the comment anchored to page 14
+  of v1 still points at the file it
+  was written against.
+end note
+
+note right of sharma
+  One account, two roles. The same
+  professor supervises this student
+  and sits on review panels, which
+  is why roles is a Set and not a
+  single column.
+end note
+
+@enduml

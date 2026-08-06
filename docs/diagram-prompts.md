@@ -104,6 +104,18 @@ EVALUATION, VIVA_SCHEDULE, PANEL_MEMBER, AUDIT_LOG. Show attributes and cardinal
 
 ## 3. Class diagram — UML
 
+> **Napkin renders these two badly.** Napkin is an infographic generator, not a UML
+> renderer — it has no notion of a compartment box, a multiplicity label, or a
+> composition diamond, so a class diagram comes out as decorative boxes. Use
+> **PlantUML** instead: `docs/diagrams/class-diagram.puml` and
+> `docs/diagrams/object-diagram.puml` are ready to render. Paste either into
+> <http://www.plantuml.com/plantuml>, or install the PlantUML Integration plugin in
+> IntelliJ and open the file for a live preview. Export SVG.
+>
+> The Napkin prompt below is kept only as a fallback if you want a looser,
+> more illustrative version for a non-technical slide.
+
+
 ```
 Draw a UML class diagram for a Java Spring Boot Dissertation Management System.
 Show class names, fields with types, key methods, and the associations between classes.

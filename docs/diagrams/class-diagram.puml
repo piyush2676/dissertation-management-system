@@ -1,0 +1,249 @@
+@startuml DMS-Class-Diagram
+' Dissertation Management System -- domain class diagram
+' Render at: http://www.plantuml.com/plantuml  or the IntelliJ PlantUML plugin.
+' If the layout comes out too wide for a slide, comment out the "left to right"
+' line below and let PlantUML stack it vertically instead.
+
+title Dissertation Management System — Domain Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam class {
+  BackgroundColor White
+  BorderColor #4A6572
+  ArrowColor #4A6572
+}
+skinparam package {
+  BackgroundColor #F7F9FA
+  BorderColor #B0BEC5
+}
+hide empty members
+
+package "com.dms.user" #F7F9FA {
+
+  class User {
+    - Long id
+    - String email {unique}
+    - String passwordHash
+    - String fullName
+    - boolean enabled
+    - Instant createdAt
+    - Set<Role> roles
+  }
+
+  enum Role {
+    STUDENT
+    SUPERVISOR
+    REVIEWER
+    COORDINATOR
+    ADMIN
+    --
+    + String authority()
+  }
+
+  enum Programme {
+    BTECH
+    MTECH
+    BTECH_MTECH_INTEGRATED
+  }
+
+  class StudentProfile {
+    - Long id
+    - String rollNo {unique}
+    - Programme programme
+    - String department
+    - String batch
+    - Integer semester
+  }
+
+  class SupervisorProfile {
+    - Long id
+    - String designation
+    - String department
+    - String researchInterests
+    - int maxStudents
+  }
+}
+
+package "com.dms.session" #F7F9FA {
+
+  class AcademicSession {
+    - Long id
+    - String label
+    - Programme programme
+    - LocalDate startDate
+    - LocalDate endDate
+    - boolean active
+  }
+
+  class Milestone {
+    - Long id
+    - String name
+    - LocalDate dueDate
+    - BigDecimal weightage
+    - int sequenceNo
+  }
+}
+
+package "com.dms.topic" #F7F9FA {
+
+  class Topic {
+    - Long id
+    - String title
+    - String abstractText
+    - String keywords
+    - TopicStatus status
+    - int version
+  }
+
+  enum TopicStatus {
+    DRAFT
+    PROPOSED
+    APPROVED
+    CHANGES_REQUESTED
+    REJECTED
+  }
+}
+
+package "com.dms.allocation" #F7F9FA {
+
+  class Allocation {
+    - Long id
+    - AllocationStatus status
+    - LocalDate allocatedOn
+    - User allocatedBy
+  }
+
+  enum AllocationStatus {
+    REQUESTED
+    ACCEPTED
+    DECLINED
+    COORDINATOR_ASSIGNED
+  }
+}
+
+package "com.dms.submission" #F7F9FA {
+
+  class Submission {
+    - Long id
+    - int currentVersionNo
+    - SubmissionStatus status
+    - boolean lateFlag
+  }
+
+  enum SubmissionStatus {
+    DRAFT
+    SUBMITTED
+    UNDER_REVIEW
+    APPROVED
+    REVISION_REQUESTED
+    REJECTED
+  }
+
+  class SubmissionVersion {
+    - Long id
+    - int versionNo
+    - String storagePath
+    - String sha256
+    - long sizeBytes
+    - Instant submittedAt
+  }
+}
+
+package "com.dms.review" #F7F9FA {
+
+  class ReviewComment {
+    - Long id
+    - int pageNo
+    - String body
+    - boolean resolved
+    - Instant createdAt
+  }
+}
+
+package "com.dms.evaluation" #F7F9FA {
+
+  class RubricCriterion {
+    - Long id
+    - String name
+    - BigDecimal maxMarks
+    - BigDecimal weightage
+  }
+
+  class Evaluation {
+    - Long id
+    - Map<Long, BigDecimal> scores
+    - BigDecimal total
+    - String remarks
+    - Instant submittedAt
+  }
+}
+
+package "com.dms.viva" #F7F9FA {
+
+  class VivaSchedule {
+    - Long id
+    - Instant scheduledAt
+    - String venue
+    - VivaStatus status
+  }
+
+  class PanelMember {
+    - Long id
+    - String role
+  }
+}
+
+' ---------- identity ----------
+User "1" *-- "1..*" Role : roles
+User "1" -- "0..1" StudentProfile : profile
+User "1" -- "0..1" SupervisorProfile : profile
+StudentProfile --> Programme
+AcademicSession --> Programme
+
+' ---------- session setup ----------
+AcademicSession "1" *-- "0..*" Milestone : milestones
+AcademicSession "1" *-- "0..*" RubricCriterion : rubric
+
+' ---------- topic ----------
+StudentProfile "1" -- "0..*" Topic : proposes
+Topic "0..*" --> "0..1" SupervisorProfile : proposedSupervisor
+Topic --> TopicStatus
+
+' ---------- allocation ----------
+StudentProfile "1" -- "0..*" Allocation
+SupervisorProfile "1" -- "0..*" Allocation
+Allocation "0..*" --> "1" AcademicSession
+Allocation --> AllocationStatus
+
+' ---------- submission ----------
+Allocation "1" -- "0..*" Submission
+Submission "0..*" --> "1" Milestone
+Submission "1" *-- "1..*" SubmissionVersion : immutable history
+Submission --> SubmissionStatus
+SubmissionVersion "1" -- "0..*" ReviewComment
+ReviewComment "0..*" --> "1" User : reviewer
+
+' ---------- evaluation and viva ----------
+Submission "1" -- "0..*" Evaluation
+Evaluation "0..*" --> "1" User : examiner
+Allocation "1" -- "0..1" VivaSchedule
+VivaSchedule "1" *-- "1..*" PanelMember
+PanelMember "0..*" --> "1" User
+
+note bottom of SubmissionVersion
+  Versions are append-only.
+  A revision creates a new row;
+  the previous upload is never
+  overwritten or deleted.
+end note
+
+note right of Milestone
+  B.Tech, M.Tech and the integrated
+  degree share one codebase and differ
+  only in Milestone rows. Adding a
+  milestone is an INSERT, not a release.
+end note
+
+@enduml
