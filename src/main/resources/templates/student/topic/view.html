@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+  Student's topic page — GET /student/topic  (StudentTopicController.view)
+
+  Model attributes read here:
+      hasTopic      boolean          always present
+      topic         Topic            null when hasTopic is false
+      canEdit       boolean          only added when a topic exists
+      canSubmit     boolean          only added when a topic exists
+      isTerminal    boolean          only added when a topic exists
+
+  topic.proposedSupervisor and .proposedSupervisor.user are fetched by the
+  entity graph on findFirstByStudentOrderByCreatedAtDesc, so reading the guide's
+  name here is safe with open-in-view off. topic.student is NOT in that graph —
+  do not touch it on this page.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>My topic</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div class="page-head">
+        <div>
+            <h1>My topic</h1>
+            <p class="lead">Propose a dissertation topic and track the guide's decision.</p>
+        </div>
+        <a th:if="${!hasTopic or isTerminal}" th:href="@{/student/topic/new}"
+           class="btn btn-primary btn-sm">Propose a topic</a>
+    </div>
+
+    <!-- ---------- Empty state ------------------------------------------- -->
+    <div th:unless="${hasTopic}" class="hero">
+        <span class="eyebrow">Nothing proposed yet</span>
+        <h2>Start with a title and an abstract</h2>
+        <p class="lead">
+            Pick the guide you want to work under, describe the problem you intend to solve,
+            and send it for approval. You can keep it as a draft until you are happy with it.
+        </p>
+        <a th:href="@{/student/topic/new}" class="btn btn-gradient">Propose a topic</a>
+    </div>
+
+    <!-- ---------- The topic --------------------------------------------- -->
+    <div th:if="${hasTopic}" class="hero">
+
+        <div class="page-head" style="margin-bottom:14px">
+            <div>
+                <h2 th:text="${topic.title}">Topic title</h2>
+                <p class="lead" style="margin:0">
+                    Round <span th:text="${topic.version}">1</span>
+                    · created
+                    <span th:text="${#temporals.format(topic.createdAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</span>
+                </p>
+            </div>
+            <span class="badge"
+                  th:classappend="${topic.status.name() == 'APPROVED'} ? 'badge-approved'
+                                : (${topic.status.name() == 'REJECTED'} ? 'badge-rejected'
+                                : (${topic.status.name() == 'DRAFT'} ? 'badge-draft' : 'badge-pending'))"
+                  th:text="${#strings.replace(topic.status, '_', ' ')}">PROPOSED</span>
+        </div>
+
+        <!--
+          Rendered whenever the guide wrote something: the reason is the whole
+          point of CHANGES_REQUESTED, so it must not be buried below the fold.
+        -->
+        <div th:if="${topic.decisionReason != null}"
+             th:classappend="${topic.status.name() == 'REJECTED'} ? 'alert-error' : 'alert-info'"
+             class="alert">
+            <strong>Guide's note:</strong>
+            <span th:text="${topic.decisionReason}">Narrow the scope.</span>
+        </div>
+
+        <div class="field">
+            <label>Proposed guide</label>
+            <p style="margin:0" th:if="${topic.proposedSupervisor != null}">
+                <span th:text="${topic.proposedSupervisor.user.fullName}">Dr Sharma</span>
+                <span class="field-hint" style="display:inline"
+                      th:text="'· ' + ${topic.proposedSupervisor.designation} + ', ' + ${topic.proposedSupervisor.department}">
+                    · Professor, CSE</span>
+            </p>
+            <p style="margin:0" th:if="${topic.proposedSupervisor == null}" class="field-hint">Not chosen</p>
+        </div>
+
+        <div class="field">
+            <label>Abstract</label>
+            <p style="margin:0; white-space:pre-wrap" th:text="${topic.abstractText}">Abstract text</p>
+        </div>
+
+        <div class="field" th:if="${topic.keywords != null and !topic.keywords.isEmpty()}">
+            <label>Keywords</label>
+            <p style="margin:0" th:text="${topic.keywords}">machine learning, scheduling</p>
+        </div>
+
+        <div class="field" th:if="${topic.decidedAt != null}">
+            <label>Decided</label>
+            <p style="margin:0"
+               th:text="${#temporals.format(topic.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</p>
+        </div>
+
+        <div class="btn-row" style="justify-content:flex-start; margin-top:24px">
+            <a th:if="${canEdit}" th:href="@{/student/topic/{id}/edit(id=${topic.id})}"
+               class="btn btn-ghost">Edit</a>
+
+            <!-- POST, not a link: this changes state, so it must not be reachable by GET. -->
+            <form th:if="${canSubmit}" th:action="@{/student/topic/{id}/submit(id=${topic.id})}"
+                  method="post" class="inline-form">
+                <button type="submit" class="btn btn-gradient">Send for approval</button>
+            </form>
+        </div>
+
+        <p class="status-note" th:if="${topic.status.name() == 'APPROVED'}">
+            Approved. Guide allocation follows in the next stage.
+        </p>
+        <p class="status-note" th:if="${topic.status.name() == 'PROPOSED'}">
+            Waiting on your guide. You cannot edit a topic while it is under review.
+        </p>
+    </div>
+
+</section>
+</body>
+</html>

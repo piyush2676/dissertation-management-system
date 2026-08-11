@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!--
+  Topic form — GET /student/topic/new, GET /student/topic/{id}/edit,
+  and re-rendered by POST /student/topic/save and /student/topic/submit
+  when validation fails.
+
+  Model attributes read here:
+      form            TopicForm       bound with th:object
+      mode            "new" | "edit"  always present
+      supervisors     List<SupervisorProfile>   @ModelAttribute on the controller
+      status          TopicStatus     edit only; absent on a validation re-render
+      decisionReason  String          edit only
+
+  One <form>, two submit buttons. formaction picks the endpoint, so "Save draft"
+  and "Submit for approval" post the same fields to different handlers instead of
+  duplicating the markup.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Propose a topic</title>
+</head>
+<body>
+<section>
+
+    <div class="page-head">
+        <div>
+            <h1 th:text="${mode == 'edit'} ? 'Edit topic' : 'Propose a topic'">Propose a topic</h1>
+            <p class="lead">
+                A draft is private. Nothing reaches your guide until you submit it for approval.
+            </p>
+        </div>
+        <span th:if="${status != null}" class="badge"
+              th:classappend="${status.name() == 'DRAFT'} ? 'badge-draft' : 'badge-pending'"
+              th:text="${#strings.replace(status, '_', ' ')}">DRAFT</span>
+    </div>
+
+    <!-- The guide's reason for sending it back, kept beside the fields being fixed. -->
+    <div th:if="${decisionReason != null}" class="alert alert-info">
+        <strong>Changes requested:</strong>
+        <span th:text="${decisionReason}">Narrow the scope.</span>
+    </div>
+
+    <div class="hero">
+        <form th:action="@{/student/topic/save}" th:object="${form}" method="post" novalidate>
+
+            <!-- Carries the id on an edit; null on a new topic, which is how the
+                 service decides between insert and update. -->
+            <input type="hidden" th:field="*{id}">
+
+            <div class="field">
+                <label for="title">Title</label>
+                <input type="text" id="title" th:field="*{title}" maxlength="255"
+                       placeholder="Adaptive load balancing for edge inference clusters">
+                <span class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Title error</span>
+            </div>
+
+            <div class="field">
+                <label for="proposedSupervisorId">Proposed guide</label>
+                <select id="proposedSupervisorId" th:field="*{proposedSupervisorId}">
+                    <option value="">— choose a guide —</option>
+                    <option th:each="s : ${supervisors}"
+                            th:value="${s.id}"
+                            th:text="${s.user.fullName} + ' — ' + ${s.designation} + ', ' + ${s.department}">
+                        Dr Sharma — Professor, CSE
+                    </option>
+                </select>
+                <span class="field-error" th:if="${#fields.hasErrors('proposedSupervisorId')}"
+                      th:errors="*{proposedSupervisorId}">Supervisor error</span>
+                <span class="field-hint">Your guide sees the proposal and approves, rejects, or asks for changes.</span>
+            </div>
+
+            <div class="field">
+                <label for="abstractText">Abstract</label>
+                <textarea id="abstractText" th:field="*{abstractText}" rows="10"
+                          placeholder="State the problem, why it matters, and how you intend to approach it."></textarea>
+                <span class="field-error" th:if="${#fields.hasErrors('abstractText')}"
+                      th:errors="*{abstractText}">Abstract error</span>
+                <span class="field-hint">Between 120 and 4000 characters.</span>
+            </div>
+
+            <div class="field">
+                <label for="keywords">Keywords</label>
+                <input type="text" id="keywords" th:field="*{keywords}" maxlength="512"
+                       placeholder="edge computing, load balancing, inference">
+                <span class="field-error" th:if="${#fields.hasErrors('keywords')}" th:errors="*{keywords}">Keyword error</span>
+                <span class="field-hint">Comma separated. Optional, but they drive archive search later.</span>
+            </div>
+
+            <div class="btn-row" style="justify-content:flex-start; margin-top:26px">
+                <button type="submit" class="btn btn-ghost">Save draft</button>
+                <button type="submit" class="btn btn-gradient"
+                        th:formaction="@{/student/topic/submit}">Submit for approval</button>
+                <a th:href="@{/student/topic}" class="btn btn-ghost">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+
+</section>
+</body>
+</html>

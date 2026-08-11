@@ -5,6 +5,10 @@
   sec:authorize takes a Spring Security expression, so a user holding two roles
   (a faculty member who is both SUPERVISOR and REVIEWER) sees both link groups.
   That is why User.roles is a Set, not a single column.
+
+  Layout note: <li class="nav-spacer"> splits the list. Everything before it
+  hugs the brand; everything after it (identity, sign in / sign out) is pushed
+  to the right edge.
 -->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
@@ -45,6 +49,18 @@
                 <a th:href="@{/admin/users}">Users</a>
             </li>
 
+            <li sec:authorize="isAnonymous()">
+                <a th:href="@{/#steps}">How it works</a>
+            </li>
+            <li sec:authorize="isAnonymous()">
+                <a th:href="@{/#roles}">Roles</a>
+            </li>
+            <li sec:authorize="isAnonymous()">
+                <a th:href="@{/#numbers}">In numbers</a>
+            </li>
+
+            <li class="nav-spacer"></li>
+
             <li sec:authorize="isAuthenticated()">
                 <span class="nav-user" sec:authentication="name">user</span>
             </li>
@@ -55,7 +71,10 @@
             </li>
 
             <li sec:authorize="isAnonymous()">
-                <a th:href="@{/login}" class="btn btn-primary btn-sm">Sign in</a>
+                <a th:href="@{/login}" class="btn btn-ghost btn-sm">Log in</a>
+            </li>
+            <li sec:authorize="isAnonymous()">
+                <a th:href="@{/login}" class="btn btn-primary btn-sm">Get started</a>
             </li>
 
         </ul>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!--
+  Footer fragment. Pure chrome: no model attributes, no security expressions,
+  so it renders identically on the login page and on an authenticated page.
+
+  Links point only at routes that exist today. Add a column entry when the
+  matching controller lands, not before — a 404 in the footer looks worse
+  than a missing link.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<footer class="site-footer" th:fragment="footer">
+    <div class="container">
+
+        <div class="footer-grid">
+
+            <div class="footer-col footer-brand">
+                <span class="brand-mark">DMS</span>
+                <p class="footer-tagline">
+                    Topic approval, guide allocation, milestones and evaluation —
+                    one system, one audit trail.
+                </p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Product</h4>
+                <ul>
+                    <li><a th:href="@{/}">Home</a></li>
+                    <li><a th:href="@{/login}">Sign in</a></li>
+                    <li><a th:href="@{/dashboard}">Dashboard</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Roles</h4>
+                <ul>
+                    <li><a th:href="@{/student/dashboard}">Students</a></li>
+                    <li><a th:href="@{/supervisor/dashboard}">Supervisors</a></li>
+                    <li><a th:href="@{/coordinator/dashboard}">Coordinators</a></li>
+                    <li><a th:href="@{/admin/dashboard}">Admin</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Workflow</h4>
+                <ul>
+                    <li><a th:href="@{/#steps}">How it works</a></li>
+                    <li><a th:href="@{/#roles}">Built for every role</a></li>
+                    <li><a th:href="@{/#numbers}">In numbers</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Institute</h4>
+                <ul>
+                    <li><a th:href="@{/}">B.Tech programme</a></li>
+                    <li><a th:href="@{/}">M.Tech programme</a></li>
+                    <li><a th:href="@{/}">Examination cell</a></li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <span>&copy; Dissertation Management System</span>
+            <span>Built with Spring Boot and Thymeleaf</span>
+        </div>
+
+    </div>
+</footer>
+
+</body>
+</html>

@@ -27,5 +27,8 @@ public interface TopicRepository extends JpaRepository<Topic,Long> {
 
     @EntityGraph(attributePaths = {"student", "student.user"})
     List<Topic> findByProposedSupervisorOrderByCreatedAtDesc(SupervisorProfile supervisor);
-
+    @EntityGraph(attributePaths = {"student","student.user","proposedSupervisor","proposedSupervisor.user"})
+    Optional<Topic> findWithGraphById(Long id);
+    @EntityGraph(attributePaths = {"proposedSupervisor","proposedSupervisor.user"})
+    Optional<Topic> findFirstByStudentOrderByCreatedAtDesc(StudentProfile student);
 }

@@ -11,7 +11,6 @@ import java.util.Optional;
 @Service("authz")
 @RequiredArgsConstructor
 public class AuthzService {
-
     private final UserRepository userRepository;
     public boolean isSelf(Long userId, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {

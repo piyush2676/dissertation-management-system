@@ -6,4 +6,5 @@ import java.util.Optional;
 
 public interface SupervisorProfileRepository extends JpaRepository<SupervisorProfile, Long> {
     Optional<SupervisorProfile> findByUser(User user);
+    Optional<SupervisorProfile> findByUserEmail(String email);
 }

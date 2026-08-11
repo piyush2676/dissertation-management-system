@@ -15,7 +15,6 @@ import static com.dms.user.Role.*;
 @Component
 @RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SupervisorProfileRepository supervisorProfileRepository;

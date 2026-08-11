@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Set;
 
 public enum TopicStatus {
-
     DRAFT,
 
     PROPOSED,

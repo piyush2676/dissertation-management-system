@@ -1,4 +1,12 @@
 <!DOCTYPE html>
+<!--
+  Public landing page. Anonymous visitors only ever see this and /login, so it
+  carries the whole story: what the system does, who it is for, and where the
+  numbers come from.
+
+  Section ids (#steps, #roles, #numbers) are linked from the navbar and footer.
+  Rename one here and you rename it in layout/_navbar.html and layout/_footer.html.
+-->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
@@ -7,36 +15,151 @@
 <body>
 <section>
 
-    <div class="hero">
-        <h1>Dissertation Management System</h1>
+    <!-- ---------- Hero ------------------------------------------------- -->
+
+    <div class="hero-wash">
+        <span class="eyebrow">B.Tech &amp; M.Tech dissertations</span>
+
+        <h1 class="display">Build something <span class="grad-text">defensible</span></h1>
+
         <p class="lead">
-            Topic approval, guide allocation, milestone submissions, review and evaluation
-            for B.Tech and M.Tech dissertation work — in one place, with a full audit trail.
+            Propose, supervise, review and evaluate dissertation work in one place —
+            with a full audit trail behind every decision.
         </p>
-        <a th:href="@{/login}" class="btn btn-primary">Sign in</a>
+
+        <div class="prompt-box">
+            <p class="prompt-box-text">Propose a topic on federated learning for medical imaging&hellip;</p>
+            <div class="prompt-box-bar">
+                <span class="prompt-chip">Draft topic</span>
+                <a th:href="@{/login}" class="prompt-send" aria-label="Sign in to start">&uarr;</a>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <a th:href="@{/login}" class="btn btn-primary btn-lg">Sign in</a>
+            <a href="#steps" class="btn btn-ghost btn-lg">See how it works</a>
+        </div>
     </div>
 
-    <div class="card-grid">
-        <article class="card">
-            <h3>Students</h3>
-            <p>Propose a topic, track milestone deadlines, upload each version, read guide
-                feedback and resubmit — without chasing anyone over email.</p>
-        </article>
-        <article class="card">
-            <h3>Supervisors</h3>
-            <p>See only your own students. Approve topics, comment on submissions, request
-                revisions, and score against the rubric.</p>
-        </article>
-        <article class="card">
-            <h3>Coordinators</h3>
-            <p>Allocate guides within capacity limits, set milestones per programme, schedule
-                vivas, and export mark sheets.</p>
-        </article>
+    <!-- ---------- Trust strip ------------------------------------------ -->
+
+    <div class="logo-strip">
+        <span>B.Tech</span>
+        <span>M.Tech</span>
+        <span>Supervisors</span>
+        <span>Coordinators</span>
+        <span>Examination cell</span>
     </div>
 
-    <p class="status-note">
-        <strong>Phase 0.</strong> Scaffold only — authentication arrives in Phase 1.
-    </p>
+    <!-- ---------- Three steps ------------------------------------------ -->
+
+    <div class="section" id="steps">
+        <div class="split">
+            <div class="split-media">Topic &rarr; guide &rarr; milestones &rarr; viva</div>
+
+            <ol class="steps">
+                <li class="step">
+                    <h3>Start with a topic</h3>
+                    <p>A student drafts a proposal; the guide approves, rejects with a
+                        reason, or asks for a revision. Every transition is recorded.</p>
+                </li>
+                <li class="step">
+                    <h3>Watch it progress</h3>
+                    <p>Milestones carry deadlines per programme. Each submission keeps its
+                        own version history, so nothing is overwritten.</p>
+                </li>
+                <li class="step">
+                    <h3>Review and ship</h3>
+                    <p>Score against the rubric, schedule the viva, export the mark sheet —
+                        without a single spreadsheet passed over email.</p>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- ---------- Roles ------------------------------------------------- -->
+
+    <div class="section" id="roles">
+        <div class="section-head">
+            <h2>Built for every role</h2>
+            <p class="lead">One workflow, four vantage points. Authorisation is scoped per
+                user, not just per role.</p>
+        </div>
+
+        <div class="card-grid">
+
+            <article class="tile">
+                <div class="tile-thumb tile-thumb-1">Students</div>
+                <h3>Students</h3>
+                <p>Propose a topic, track milestone deadlines, upload each version, read
+                    guide feedback and resubmit — without chasing anyone over email.</p>
+            </article>
+
+            <article class="tile">
+                <div class="tile-thumb tile-thumb-2">Supervisors</div>
+                <h3>Supervisors</h3>
+                <p>See only your own students. Approve topics, comment on submissions,
+                    request revisions, and score against the rubric.</p>
+            </article>
+
+            <article class="tile">
+                <div class="tile-thumb tile-thumb-3">Coordinators</div>
+                <h3>Coordinators</h3>
+                <p>Allocate guides within capacity limits, set milestones per programme,
+                    schedule vivas, and export mark sheets.</p>
+            </article>
+
+            <article class="tile">
+                <div class="tile-thumb tile-thumb-4">Admin</div>
+                <h3>Admin</h3>
+                <p>Create accounts, assign roles, disable users, and read the audit log —
+                    every state change with actor and timestamp.</p>
+            </article>
+
+        </div>
+    </div>
+
+    <!-- ---------- Numbers ----------------------------------------------- -->
+
+    <div class="section" id="numbers">
+        <div class="section-head">
+            <h2>The system in numbers</h2>
+            <p class="lead">What one department cycle moves through the workflow.</p>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat">
+                <span class="stat-value">2</span>
+                <span class="stat-label">Programmes: B.Tech and M.Tech</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">4</span>
+                <span class="stat-label">Roles with scoped authorisation</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">5</span>
+                <span class="stat-label">Milestones per dissertation</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">100%</span>
+                <span class="stat-label">State changes written to the audit log</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------- Closing call to action -------------------------------- -->
+
+    <div class="section">
+        <div class="cta">
+            <h2>Ready when your cycle starts</h2>
+            <p class="lead">Sign in with your institute email address. Your role decides
+                what you see next.</p>
+            <div class="btn-row">
+                <a th:href="@{/login}" class="btn btn-primary btn-lg">Sign in</a>
+                <a href="#roles" class="btn btn-ghost btn-lg">Explore roles</a>
+            </div>
+        </div>
+    </div>
 
 </section>
 </body>

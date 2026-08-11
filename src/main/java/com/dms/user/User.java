@@ -20,12 +20,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users") // "user" is a reserved word in PostgreSQL
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
