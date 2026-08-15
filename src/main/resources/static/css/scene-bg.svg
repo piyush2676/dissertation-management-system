@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900"
+     preserveAspectRatio="xMidYMax slice" role="img"
+     aria-label="Institute frontage, far plane">
+  <title>Institute frontage, far plane</title>
+
+  <!--
+    Far depth plane: sky, distant roofline, the facade, the awning, the notice
+    board and the ground. Everything that should barely move when the viewer
+    does. The near plane lives in scene-fg.svg.
+
+    Split into two files rather than one, because parallax needs two planes to
+    move at different rates. Drawing the foreground in both would ghost.
+  -->
+
+  <rect width="1600" height="900" fill="#efe3d0"/>
+  <rect width="1600" height="360" fill="#e8dcc6"/>
+  <circle cx="292" cy="188" r="86" fill="#e6c98f" opacity=".55"/>
+
+  <g fill="#d9c9ae">
+    <rect x="0" y="250" width="210" height="330"/>
+    <rect x="196" y="292" width="150" height="288"/>
+    <rect x="1330" y="238" width="270" height="342"/>
+    <rect x="1252" y="300" width="96" height="280"/>
+  </g>
+  <g fill="#cbb896">
+    <rect x="0" y="250" width="210" height="14"/>
+    <rect x="1330" y="238" width="270" height="14"/>
+  </g>
+  <g fill="#b6a284">
+    <rect x="30" y="300" width="36" height="46"/><rect x="92" y="300" width="36" height="46"/>
+    <rect x="30" y="382" width="36" height="46"/><rect x="92" y="382" width="36" height="46"/>
+    <rect x="1380" y="290" width="40" height="50"/><rect x="1452" y="290" width="40" height="50"/>
+    <rect x="1380" y="378" width="40" height="50"/><rect x="1452" y="378" width="40" height="50"/>
+  </g>
+
+  <rect x="330" y="196" width="946" height="404" fill="#d6342a"/>
+  <rect x="330" y="196" width="946" height="26" fill="#a8241c"/>
+  <rect x="330" y="574" width="946" height="26" fill="#a8241c"/>
+
+  <rect x="386" y="248" width="834" height="96" fill="#f4ece0"/>
+  <rect x="386" y="248" width="834" height="6" fill="#1c1712" opacity=".22"/>
+  <g fill="#d6342a">
+    <rect x="432" y="278" width="86" height="20"/><rect x="432" y="308" width="54" height="12"/>
+    <rect x="546" y="278" width="120" height="20"/><rect x="546" y="308" width="88" height="12"/>
+    <rect x="694" y="278" width="70" height="20"/><rect x="694" y="308" width="46" height="12"/>
+    <rect x="792" y="278" width="140" height="20"/><rect x="792" y="308" width="96" height="12"/>
+    <rect x="960" y="278" width="104" height="20"/><rect x="960" y="308" width="70" height="12"/>
+  </g>
+  <g fill="#2f5d8a">
+    <rect x="1092" y="278" width="82" height="20"/><rect x="1092" y="308" width="58" height="12"/>
+  </g>
+
+  <rect x="596" y="382" width="404" height="218" fill="#2b2018"/>
+  <g fill="#3b2e22">
+    <rect x="596" y="382" width="404" height="8"/>
+    <rect x="596" y="404" width="404" height="6"/>
+    <rect x="596" y="424" width="404" height="6"/>
+  </g>
+  <rect x="678" y="452" width="106" height="82" fill="#c8912a" opacity=".5"/>
+
+  <rect x="404" y="392" width="140" height="150" fill="#2b2018"/>
+  <g stroke="#d6342a" stroke-width="5">
+    <line x1="440" y1="392" x2="440" y2="542"/>
+    <line x1="474" y1="392" x2="474" y2="542"/>
+    <line x1="508" y1="392" x2="508" y2="542"/>
+  </g>
+  <rect x="1052" y="392" width="140" height="150" fill="#2b2018"/>
+  <g stroke="#d6342a" stroke-width="5">
+    <line x1="1088" y1="392" x2="1088" y2="542"/>
+    <line x1="1122" y1="392" x2="1122" y2="542"/>
+    <line x1="1156" y1="392" x2="1156" y2="542"/>
+  </g>
+
+  <path d="M556 344 L1040 344 L1094 424 L502 424 Z" fill="#f4ece0"/>
+  <g fill="#d6342a">
+    <path d="M596 344 L640 344 L618 424 L558 424 Z"/>
+    <path d="M700 344 L744 344 L738 424 L678 424 Z"/>
+    <path d="M804 344 L848 344 L858 424 L798 424 Z"/>
+    <path d="M908 344 L952 344 L978 424 L918 424 Z"/>
+  </g>
+  <g fill="#a8241c">
+    <circle cx="516" cy="424" r="13"/><circle cx="562" cy="424" r="13"/>
+    <circle cx="608" cy="424" r="13"/><circle cx="654" cy="424" r="13"/>
+    <circle cx="700" cy="424" r="13"/><circle cx="746" cy="424" r="13"/>
+    <circle cx="792" cy="424" r="13"/><circle cx="838" cy="424" r="13"/>
+    <circle cx="884" cy="424" r="13"/><circle cx="930" cy="424" r="13"/>
+    <circle cx="976" cy="424" r="13"/><circle cx="1022" cy="424" r="13"/>
+    <circle cx="1068" cy="424" r="13"/>
+  </g>
+
+  <g>
+    <rect x="150" y="404" width="196" height="176" fill="#7a5c3a"/>
+    <rect x="162" y="416" width="172" height="152" fill="#e8dcc6"/>
+    <g fill="#f4ece0" stroke="#c3b294" stroke-width="2">
+      <rect x="176" y="430" width="60" height="46"/>
+      <rect x="248" y="430" width="70" height="34"/>
+      <rect x="176" y="492" width="48" height="58"/>
+      <rect x="238" y="480" width="80" height="70"/>
+    </g>
+    <g fill="#8b7d6c">
+      <rect x="182" y="440" width="46" height="4"/><rect x="182" y="450" width="38" height="4"/>
+      <rect x="182" y="460" width="42" height="4"/>
+      <rect x="254" y="440" width="56" height="4"/><rect x="254" y="450" width="44" height="4"/>
+      <rect x="182" y="502" width="34" height="4"/><rect x="182" y="512" width="30" height="4"/>
+      <rect x="182" y="522" width="34" height="4"/>
+      <rect x="246" y="492" width="64" height="4"/><rect x="246" y="502" width="52" height="4"/>
+      <rect x="246" y="512" width="60" height="4"/><rect x="246" y="522" width="40" height="4"/>
+    </g>
+    <g fill="#d6342a">
+      <circle cx="206" cy="434" r="4"/><circle cx="283" cy="434" r="4"/>
+      <circle cx="200" cy="496" r="4"/><circle cx="278" cy="484" r="4"/>
+    </g>
+    <rect x="150" y="580" width="196" height="10" fill="#5d4529"/>
+  </g>
+
+  <rect x="0" y="580" width="1600" height="320" fill="#d9c9ae"/>
+  <rect x="0" y="580" width="1600" height="16" fill="#c3b294"/>
+  <rect x="0" y="700" width="1600" height="200" fill="#cbb896"/>
+  <rect x="0" y="694" width="1600" height="8" fill="#b6a284"/>
+</svg>

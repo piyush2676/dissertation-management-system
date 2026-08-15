@@ -22,13 +22,18 @@
 <body>
 <section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
 
-    <div class="page-head">
+    <div th:replace="~{layout/_pagehero :: hero(
+            'शोध विषय',
+            'My topic',
+            'Propose a dissertation topic and follow the decision on it.',
+            'STUDENT')}"></div>
+
+    <div class="page-head" th:if="${!hasTopic or isTerminal}">
         <div>
-            <h1>My topic</h1>
-            <p class="lead">Propose a dissertation topic and track the guide's decision.</p>
+            <h2>Start a proposal</h2>
+            <p class="lead">A draft stays private until you send it for approval.</p>
         </div>
-        <a th:if="${!hasTopic or isTerminal}" th:href="@{/student/topic/new}"
-           class="btn btn-primary btn-sm">Propose a topic</a>
+        <a th:href="@{/student/topic/new}" class="btn btn-primary btn-sm">Propose a topic</a>
     </div>
 
     <!-- ---------- Empty state ------------------------------------------- -->
@@ -54,10 +59,22 @@
                     <span th:text="${#temporals.format(topic.createdAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</span>
                 </p>
             </div>
-            <span class="badge"
-                  th:classappend="${topic.status.name() == 'APPROVED'} ? 'badge-approved'
-                                : (${topic.status.name() == 'REJECTED'} ? 'badge-rejected'
-                                : (${topic.status.name() == 'DRAFT'} ? 'badge-draft' : 'badge-pending'))"
+            <!--
+              A ruled decision gets a stamp, not a badge: it is the clerk's
+              gesture, and it makes the state machine visible in one glance.
+              DRAFT and PROPOSED are not decisions, so they stay as badges.
+            -->
+            <span th:if="${topic.decidedAt != null}" class="stamp"
+                  th:classappend="${topic.status.name() == 'APPROVED'} ? 'stamp-approved'
+                                : (${topic.status.name() == 'REJECTED'} ? 'stamp-rejected' : 'stamp-pending')">
+                <span th:text="${#strings.replace(topic.status, '_', ' ')}">APPROVED</span>
+                <span class="stamp-hi" lang="hi"
+                      th:text="${topic.status.name() == 'APPROVED'} ? 'स्वीकृत'
+                             : (${topic.status.name() == 'REJECTED'} ? 'अस्वीकृत' : 'संशोधन')">स्वीकृत</span>
+            </span>
+
+            <span th:if="${topic.decidedAt == null}" class="badge"
+                  th:classappend="${topic.status.name() == 'DRAFT'} ? 'badge-draft' : 'badge-pending'"
                   th:text="${#strings.replace(topic.status, '_', ' ')}">PROPOSED</span>
         </div>
 
@@ -85,7 +102,9 @@
 
         <div class="field">
             <label>Abstract</label>
-            <p style="margin:0; white-space:pre-wrap" th:text="${topic.abstractText}">Abstract text</p>
+            <div class="paper">
+                <p class="paper-note" th:text="${topic.abstractText}">Abstract text</p>
+            </div>
         </div>
 
         <div class="field" th:if="${topic.keywords != null and !topic.keywords.isEmpty()}">
@@ -99,7 +118,7 @@
                th:text="${#temporals.format(topic.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</p>
         </div>
 
-        <div class="btn-row" style="justify-content:flex-start; margin-top:24px">
+        <div class="btn-row no-print" style="justify-content:flex-start; margin-top:24px">
             <a th:if="${canEdit}" th:href="@{/student/topic/{id}/edit(id=${topic.id})}"
                class="btn btn-ghost">Edit</a>
 
@@ -108,6 +127,52 @@
                   method="post" class="inline-form">
                 <button type="submit" class="btn btn-gradient">Send for approval</button>
             </form>
+
+            <!-- Prints the record below. No PDF library and no server round trip:
+                 the print stylesheet already knows what a filed sheet looks like. -->
+            <button type="button" class="btn btn-ghost" data-print
+                    th:if="${topic.decidedAt != null}">Print record</button>
+        </div>
+
+        <!--
+          The filed copy. display:none on screen, block in print. It carries the
+          letterhead, the reference line and the signatures a screen layout has
+          no business showing — so what comes out of the printer reads as a
+          department record rather than a screenshot of a web page.
+        -->
+        <div class="record-print" th:if="${topic.decidedAt != null}">
+            <div class="record-head">
+                <h2 lang="hi">शोध प्रबंध कार्यालय</h2>
+                <p>Dissertation Management System &middot; Topic decision record</p>
+            </div>
+
+            <div class="record-meta">
+                <span th:text="'Ref: TOP/' + ${topic.id} + '/R' + ${topic.version}">Ref: TOP/10/R1</span>
+                <span th:text="'Decided: ' + ${#temporals.format(topic.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">
+                    Decided: 01 Jan 2026</span>
+            </div>
+
+            <p><strong>Title:</strong> <span th:text="${topic.title}">Title</span></p>
+            <p><strong>Status:</strong> <span th:text="${#strings.replace(topic.status, '_', ' ')}">APPROVED</span></p>
+            <p th:if="${topic.decisionReason != null}">
+                <strong>Reason recorded:</strong> <span th:text="${topic.decisionReason}">—</span>
+            </p>
+
+            <div class="sign-row">
+                <div class="sign-slot">
+                    <div class="sign-line"></div>
+                    <span class="sign-label">Supervisor</span>
+                </div>
+                <div class="sign-slot">
+                    <div class="sign-line"></div>
+                    <span class="sign-label">Coordinator</span>
+                </div>
+                <div class="seal">
+                    <span>Dissertation</span>
+                    <span>Cell</span>
+                    <span th:text="${#temporals.format(topic.decidedAt.atZone(zone), 'yyyy')}">2026</span>
+                </div>
+            </div>
         </div>
 
         <p class="status-note" th:if="${topic.status.name() == 'APPROVED'}">

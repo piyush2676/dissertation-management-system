@@ -1,5 +1,6 @@
 package com.dms.common;
 
+import com.dms.allocation.CapacityExceededException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
@@ -22,6 +23,22 @@ public class GlobalExceptionHandler {
     public String conflict(InvalidStateTransitionException ex, Model model){
         log.warn("409: {}",ex.getMessage());
         model.addAttribute("reason",ex.getMessage());
+        return "error/409";
+    }
+
+    @ExceptionHandler(CapacityExceededException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String capacity(CapacityExceededException ex, Model model){
+        log.warn("409 capacity: {} at {}/{}", ex.getSupervisorName(), ex.getTaken(), ex.getMax());
+        model.addAttribute("reason", ex.getMessage());
+        return "error/409";
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String illegalState(IllegalStateException ex, Model model){
+        log.warn("409 state: {}", ex.getMessage());
+        model.addAttribute("reason", ex.getMessage());
         return "error/409";
     }
 }

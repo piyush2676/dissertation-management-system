@@ -17,10 +17,20 @@
 
     <!-- ---------- Hero ------------------------------------------------- -->
 
+    <!--
+      The display line is Devanagari, set as a painted signboard would be: the
+      script carries the institution, the Latin subtitle carries the meaning.
+      No webfont is loaded for it -- the stack in app.css uses the Devanagari
+      face the operating system already ships, so this renders offline.
+    -->
     <div class="hero-wash">
         <span class="eyebrow">B.Tech &amp; M.Tech dissertations</span>
 
-        <h1 class="display">Build something <span class="grad-text">defensible</span></h1>
+        <h1 class="display" lang="hi">
+            <span class="display-hi">शोध प्रबंध</span>
+            <span class="display-hi">कार्यालय</span>
+            <span class="display-sub" lang="en">Dissertation Management System</span>
+        </h1>
 
         <p class="lead">
             Propose, supervise, review and evaluate dissertation work in one place —
@@ -28,7 +38,7 @@
         </p>
 
         <div class="prompt-box">
-            <p class="prompt-box-text">Propose a topic on federated learning for medical imaging&hellip;</p>
+            <p class="prompt-box-text">&gt; Propose a topic on federated learning for medical imaging&hellip;</p>
             <div class="prompt-box-bar">
                 <span class="prompt-chip">Draft topic</span>
                 <a th:href="@{/login}" class="prompt-send" aria-label="Sign in to start">&uarr;</a>
@@ -53,7 +63,7 @@
 
     <!-- ---------- Three steps ------------------------------------------ -->
 
-    <div class="section" id="steps">
+    <div class="section reveal" id="steps">
         <div class="split">
             <div class="split-media">Topic &rarr; guide &rarr; milestones &rarr; viva</div>
 
@@ -79,7 +89,7 @@
 
     <!-- ---------- Roles ------------------------------------------------- -->
 
-    <div class="section" id="roles">
+    <div class="section reveal" id="roles">
         <div class="section-head">
             <h2>Built for every role</h2>
             <p class="lead">One workflow, four vantage points. Authorisation is scoped per
@@ -121,7 +131,7 @@
 
     <!-- ---------- Numbers ----------------------------------------------- -->
 
-    <div class="section" id="numbers">
+    <div class="section reveal" id="numbers">
         <div class="section-head">
             <h2>The system in numbers</h2>
             <p class="lead">What one department cycle moves through the workflow.</p>

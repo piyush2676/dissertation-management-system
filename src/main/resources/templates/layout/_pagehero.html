@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--
+  Page hero fragment — the landing page's poster band, reused by every page in
+  the system so a dashboard, an inbox and an error page all read as the same
+  office.
+
+  Call it like this:
+
+      <div th:replace="~{layout/_pagehero :: hero(
+              'विद्यार्थी पटल',
+              'Student dashboard',
+              'Track your topic, milestones and feedback.',
+              'STUDENT')}"></div>
+
+  Parameters, in order:
+      hi     Devanagari desk name, set as the display line
+      title  English title, set as the subtitle beneath it
+      lead   one sentence of context, or null to omit
+      badge  small eyebrow chip (usually the role), or null to omit
+
+  The signed-in line renders itself from the security context rather than being
+  passed in, so no page has to remember to supply it. On an anonymous page
+  (an error page reached while logged out) it simply does not appear.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<div th:fragment="hero(hi, title, lead, badge)" class="hero-wash page-hero">
+
+    <span th:if="${badge != null}" class="eyebrow" th:text="${badge}">ROLE</span>
+
+    <h1 class="display">
+        <span class="display-hi" lang="hi" th:text="${hi}">पटल</span>
+        <span class="display-sub" lang="en" th:text="${title}">Title</span>
+    </h1>
+
+    <p class="lead" th:if="${lead != null}" th:text="${lead}">One line of context.</p>
+
+    <p class="hero-user" sec:authorize="isAuthenticated()">
+        <span class="presence-dot"></span>
+        Signed in as <strong sec:authentication="name">user@college.edu</strong>
+    </p>
+
+</div>
+
+</body>
+</html>

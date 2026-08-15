@@ -24,11 +24,14 @@
 <body>
 <section>
 
+    <div th:replace="~{layout/_pagehero :: hero(
+            'प्रवेश',
+            'Sign in',
+            'Use your institute email address. Your role decides what you see next.',
+            null)}"></div>
+
     <div class="auth-wrap">
         <div class="auth-card">
-
-            <h1>Sign in</h1>
-            <p class="lead">Use your institute email address.</p>
 
             <div class="alert alert-error" th:if="${param.error}" role="alert">
                 Incorrect email or password.

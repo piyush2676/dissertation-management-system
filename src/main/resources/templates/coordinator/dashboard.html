@@ -14,17 +14,13 @@
 <body>
 <section>
 
-    <div class="page-head">
-        <div>
-            <h1>Coordinator dashboard</h1>
-            <p class="lead">
-                Signed in as <strong sec:authentication="name">coordinator@college.edu</strong>
-            </p>
-        </div>
-        <span class="badge badge-approved">COORDINATOR</span>
-    </div>
+    <div th:replace="~{layout/_pagehero :: hero(
+            'समन्वयक पटल',
+            'Coordinator dashboard',
+            'Allocation, milestones, viva scheduling and the mark sheet for the cohort.',
+            'COORDINATOR')}"></div>
 
-    <div class="card-grid">
+    <div class="card-grid reveal">
         <article class="card">
             <h3>Allocate guides</h3>
             <p>Assign supervisors within capacity limits.</p>

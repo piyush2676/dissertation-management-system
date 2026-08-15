@@ -13,14 +13,23 @@
 </head>
 <body>
 <section>
-    <div class="hero">
-        <span class="badge badge-rejected">403</span>
-        <h1>Access denied</h1>
+    <div class="hero-wash">
+        <span class="eyebrow">This record is not yours</span>
+
+        <h1 class="display">
+            <span class="error-code">403</span>
+            <span class="display-hi" lang="hi">प्रवेश निषेध</span>
+            <span class="display-sub" lang="en">Access denied</span>
+        </h1>
+
         <p class="lead">
             You are signed in, but this record does not belong to you. If you believe it
             should, contact the project coordinator.
         </p>
-        <a th:href="@{/dashboard}" class="btn btn-primary">Back to dashboard</a>
+
+        <div class="btn-row">
+            <a th:href="@{/dashboard}" class="btn btn-primary btn-lg">Back to dashboard</a>
+        </div>
     </div>
 </section>
 </body>

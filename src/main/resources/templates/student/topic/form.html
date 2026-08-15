@@ -23,14 +23,18 @@
 <body>
 <section>
 
-    <div class="page-head">
+    <div th:replace="~{layout/_pagehero :: hero(
+            'आवेदन पत्र',
+            ${mode == 'edit'} ? 'Edit topic' : 'Propose a topic',
+            'A draft is private. Nothing reaches your guide until you submit it for approval.',
+            'STUDENT')}"></div>
+
+    <div class="page-head" th:if="${status != null}">
         <div>
-            <h1 th:text="${mode == 'edit'} ? 'Edit topic' : 'Propose a topic'">Propose a topic</h1>
-            <p class="lead">
-                A draft is private. Nothing reaches your guide until you submit it for approval.
-            </p>
+            <h2>Current state</h2>
+            <p class="lead">Only a draft or a returned proposal can be edited.</p>
         </div>
-        <span th:if="${status != null}" class="badge"
+        <span class="badge"
               th:classappend="${status.name() == 'DRAFT'} ? 'badge-draft' : 'badge-pending'"
               th:text="${#strings.replace(status, '_', ' ')}">DRAFT</span>
     </div>
@@ -42,7 +46,20 @@
     </div>
 
     <div class="hero">
-        <form th:action="@{/student/topic/save}" th:object="${form}" method="post" novalidate>
+
+        <!--
+          Drawn as the printed application it replaces: a ruled header block and
+          a reference line. The field numbers come from a CSS counter on
+          .form-sheet, so inserting a field in the middle never means
+          renumbering the rest by hand.
+        -->
+        <div class="form-sheet-head">
+            <h2 lang="hi">शोध विषय आवेदन</h2>
+            <p lang="en">Form DMS/T-1 &middot; Topic proposal</p>
+        </div>
+
+        <form class="form-sheet" th:action="@{/student/topic/save}" th:object="${form}"
+              method="post" novalidate>
 
             <!-- Carries the id on an edit; null on a new topic, which is how the
                  service decides between insert and update. -->

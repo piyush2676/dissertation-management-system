@@ -10,14 +10,23 @@
 </head>
 <body>
 <section>
-    <div class="hero">
-        <span class="badge badge-rejected">500</span>
-        <h1>Something went wrong</h1>
+    <div class="hero-wash">
+        <span class="eyebrow">The office could not complete this</span>
+
+        <h1 class="display">
+            <span class="error-code">500</span>
+            <span class="display-hi" lang="hi">त्रुटि</span>
+            <span class="display-sub" lang="en">Something went wrong</span>
+        </h1>
+
         <p class="lead">
             The request could not be completed. The error has been logged — nothing you
             submitted was saved.
         </p>
-        <a th:href="@{/}" class="btn btn-primary">Go home</a>
+
+        <div class="btn-row">
+            <a th:href="@{/}" class="btn btn-primary btn-lg">Go home</a>
+        </div>
     </div>
 </section>
 </body>

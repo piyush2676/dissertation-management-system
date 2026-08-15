@@ -39,7 +39,7 @@ public class TopicService {
 
     @Transactional(readOnly = true)
     public List<SupervisorProfile> selectableSupervisors() {
-        return supervisorProfileRepository.findAll();
+        return supervisorProfileRepository.findAllBy();
     }
 
     public Topic saveDraft(String studentEmail, TopicForm form) {

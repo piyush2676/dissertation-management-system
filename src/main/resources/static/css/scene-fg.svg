@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900"
+     preserveAspectRatio="xMidYMax slice" role="presentation">
+  <title>Institute frontage, near plane</title>
+
+  <!--
+    Near depth plane: the tree, the cart, the bicycles and the figures.
+    Transparent everywhere else, so it can be translated over scene-bg.svg at a
+    faster rate and read as closer to the viewer.
+
+    Nothing here overlaps the far plane's geometry, which is what keeps the two
+    files from ghosting when they separate.
+  -->
+
+  <defs>
+    <clipPath id="canopy-clip"><rect x="1120" y="0" width="480" height="520"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#canopy-clip)">
+    <g fill="#4b7a3f">
+      <ellipse cx="1330" cy="150" rx="190" ry="120"/>
+      <ellipse cx="1206" cy="222" rx="130" ry="88"/>
+      <ellipse cx="1466" cy="228" rx="150" ry="96"/>
+      <ellipse cx="1352" cy="286" rx="164" ry="86"/>
+    </g>
+    <g fill="#3d6634" opacity=".75">
+      <ellipse cx="1240" cy="176" rx="82" ry="52"/>
+      <ellipse cx="1436" cy="150" rx="92" ry="56"/>
+      <ellipse cx="1310" cy="290" rx="96" ry="46"/>
+    </g>
+    <g fill="#4b7a3f">
+      <ellipse cx="1188" cy="318" rx="34" ry="13" transform="rotate(-18 1188 318)"/>
+      <ellipse cx="1262" cy="344" rx="38" ry="13" transform="rotate(10 1262 344)"/>
+      <ellipse cx="1350" cy="356" rx="42" ry="14" transform="rotate(-6 1350 356)"/>
+      <ellipse cx="1444" cy="340" rx="38" ry="13" transform="rotate(16 1444 340)"/>
+      <ellipse cx="1520" cy="312" rx="34" ry="12" transform="rotate(-12 1520 312)"/>
+    </g>
+  </g>
+  <path d="M1362 300 L1386 300 L1400 600 L1352 600 Z" fill="#5d4529"/>
+  <path d="M1372 372 L1424 330 L1430 344 L1378 392 Z" fill="#5d4529"/>
+
+  <g fill="#1c1712" opacity=".12">
+    <ellipse cx="470" cy="700" rx="120" ry="16"/>
+    <ellipse cx="800" cy="712" rx="180" ry="18"/>
+    <ellipse cx="1180" cy="700" rx="90" ry="14"/>
+  </g>
+
+  <g>
+    <rect x="392" y="596" width="230" height="18" fill="#7a5c3a"/>
+    <rect x="404" y="614" width="16" height="86" fill="#5d4529"/>
+    <rect x="594" y="614" width="16" height="86" fill="#5d4529"/>
+    <g fill="#c8912a">
+      <circle cx="424" cy="584" r="13"/><circle cx="452" cy="584" r="13"/>
+      <circle cx="480" cy="584" r="13"/><circle cx="508" cy="584" r="13"/>
+      <circle cx="438" cy="566" r="13"/><circle cx="466" cy="566" r="13"/>
+      <circle cx="494" cy="566" r="13"/>
+    </g>
+    <g fill="#b4531f">
+      <circle cx="546" cy="584" r="12"/><circle cx="572" cy="584" r="12"/>
+      <circle cx="558" cy="566" r="12"/>
+    </g>
+    <circle cx="452" cy="700" r="26" fill="#2b2018"/>
+    <circle cx="452" cy="700" r="9" fill="#d9c9ae"/>
+    <circle cx="574" cy="700" r="26" fill="#2b2018"/>
+    <circle cx="574" cy="700" r="9" fill="#d9c9ae"/>
+  </g>
+
+  <g stroke="#2b2018" stroke-width="6" fill="none">
+    <circle cx="1120" cy="672" r="38"/>
+    <circle cx="1216" cy="672" r="38"/>
+    <path d="M1120 672 L1160 610 L1216 672 M1160 610 L1188 672 M1160 610 L1146 596"/>
+    <path d="M1132 596 L1160 596" stroke-width="5"/>
+  </g>
+  <g stroke="#2f5d8a" stroke-width="6" fill="none" opacity=".9">
+    <circle cx="1268" cy="678" r="32"/>
+    <circle cx="1348" cy="678" r="32"/>
+    <path d="M1268 678 L1302 626 L1348 678 M1302 626 L1326 678 M1302 626 L1290 614"/>
+  </g>
+
+  <g>
+    <rect x="686" y="556" width="46" height="118" fill="#f4ece0"/>
+    <rect x="686" y="556" width="46" height="10" fill="#e8dcc6"/>
+    <circle cx="709" cy="538" r="22" fill="#5d4529"/>
+    <rect x="692" y="674" width="14" height="30" fill="#2b2018"/>
+    <rect x="712" y="674" width="14" height="30" fill="#2b2018"/>
+  </g>
+  <g>
+    <rect x="856" y="600" width="52" height="62" fill="#2f5d8a"/>
+    <circle cx="882" cy="582" r="20" fill="#5d4529"/>
+    <rect x="856" y="662" width="72" height="16" fill="#2b2018"/>
+  </g>
+  <g>
+    <rect x="962" y="562" width="46" height="112" fill="#c8912a"/>
+    <circle cx="985" cy="544" r="21" fill="#5d4529"/>
+    <rect x="1004" y="596" width="30" height="40" fill="#f4ece0" stroke="#8b7d6c" stroke-width="3"/>
+    <rect x="966" y="674" width="14" height="30" fill="#2b2018"/>
+    <rect x="990" y="674" width="14" height="30" fill="#2b2018"/>
+  </g>
+  <g opacity=".9">
+    <rect x="120" y="606" width="34" height="82" fill="#b4531f"/>
+    <circle cx="137" cy="592" r="16" fill="#5d4529"/>
+    <rect x="66" y="614" width="32" height="74" fill="#f4ece0"/>
+    <circle cx="82" cy="600" r="15" fill="#5d4529"/>
+  </g>
+</svg>

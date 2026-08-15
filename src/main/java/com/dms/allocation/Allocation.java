@@ -1,5 +1,6 @@
 package com.dms.allocation;
 
+import com.dms.session.AcademicSession;
 import com.dms.topic.Topic;
 import com.dms.user.StudentProfile;
 import com.dms.user.SupervisorProfile;
@@ -24,10 +25,10 @@ public class Allocation {
     Long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id",nullable = false)
-    StudentProfile  studentProfile;
+    StudentProfile  student;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supervisor_id",nullable = false)
-    SupervisorProfile supervisorProfile;
+    SupervisorProfile supervisor;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id")
     Topic topic;
@@ -40,7 +41,10 @@ public class Allocation {
     @JoinColumn(name = "allocated_by")
     User allocatedBy;
     @Column(name = "requested_at",nullable = false,updatable = false)
-    Instant requestedAt;
+    Instant requestedAt = Instant.now();
     @Column(name = "decided_at")
     Instant decidedAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "session_id",nullable = false)
+    AcademicSession session;
 }

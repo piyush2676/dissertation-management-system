@@ -17,17 +17,13 @@
 <body>
 <section>
 
-    <div class="page-head">
-        <div>
-            <h1>Supervisor dashboard</h1>
-            <p class="lead">
-                Signed in as <strong sec:authentication="name">guide@college.edu</strong>
-            </p>
-        </div>
-        <span class="badge badge-approved">SUPERVISOR</span>
-    </div>
+    <div th:replace="~{layout/_pagehero :: hero(
+            'मार्गदर्शक पटल',
+            'Supervisor dashboard',
+            'Your students, their topics, and everything waiting on your decision.',
+            'SUPERVISOR')}"></div>
 
-    <div class="card-grid">
+    <div class="card-grid reveal">
         <article class="card">
             <h3>Topic approvals</h3>
             <p>Proposals waiting on your decision.</p>

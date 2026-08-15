@@ -14,11 +14,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="dark">
+    <meta name="color-scheme" content="light">
     <title th:replace="${title}">Dissertation Management System</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/js/app.js}" defer></script>
 </head>
 <body>
+
+<!--
+  Reading rule: a red line across the top that tracks scroll position. Driven
+  by CSS scroll-timeline, so there is no scroll listener behind it and nothing
+  runs on the main thread. Purely decorative, hence aria-hidden.
+-->
+<div class="scroll-rule" aria-hidden="true"></div>
+
+<!--
+  Ambient strip: local time on the left, session note on the right. Printed on
+  the paper rather than presented as UI, which is why it sits above the
+  masthead and carries no border of its own. The clock is filled in by
+  /js/app.js; without JS it simply stays blank rather than showing a wrong time.
+-->
+<div class="container">
+    <div class="ambient">
+        <span class="ambient-clock" data-clock aria-hidden="true"></span>
+        <span class="ambient-note">Dissertation cell &middot; established record</span>
+    </div>
+</div>
 
 <div th:replace="~{layout/_navbar :: navbar}"></div>
 

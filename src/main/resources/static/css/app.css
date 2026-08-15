@@ -1,45 +1,226 @@
 /* ==========================================================================
    Dissertation Management System — application stylesheet
-   Dark product-marketing theme: near-black canvas, a gradient hero wash,
-   pill navigation, soft rounded surfaces.
-   No CDN, no framework. Everything ships with the jar, so a lab demo works
-   with the network unplugged.
+
+   Aged-register theme. Paper canvas, printer's ink, one shopfront red, film
+   grain over everything. The reference is a small-town Indian signboard and a
+   college attendance register, not a SaaS dashboard.
+
+   Two zones, one vocabulary:
+     front of house  landing, login, errors     poster treatment, big type
+     back office     dashboards, forms, tables  paper documents, ruled, calm
+
+   No CDN, no framework, no downloaded font files. The display face is whatever
+   Devanagari the machine already has, so a lab demo works with the network
+   unplugged and nothing 404s.
    ========================================================================== */
 
 :root {
-    /* Canvas + surfaces */
-    --bg:          #0d0d0e;
-    --bg-elev:     #131315;
-    --surface:     #1a1a1c;
-    --surface-2:   #242427;
-    --surface-3:   #2e2e32;
+    /* Paper and ink */
+    --paper:       #f4ece0;   /* aged register page */
+    --paper-2:     #ede2d2;   /* a shade deeper, for wells and headers */
+    --paper-3:     #e3d5c0;   /* deepest, for pressed states */
+    --ink:         #1c1712;   /* printer's black, warm */
+    --ink-soft:    #5b5044;
+    --ink-faint:   #8b7d6c;
 
-    /* Hairlines */
-    --line:        rgba(255, 255, 255, .09);
-    --line-strong: rgba(255, 255, 255, .18);
+    /* Rules and hairlines */
+    --line:        rgba(28, 23, 18, .18);
+    --line-strong: rgba(28, 23, 18, .42);
+    --rule:        rgba(47, 93, 138, .22);   /* the blue feint of ruled paper */
 
-    /* Text */
-    --ink:         #f5f5f6;
-    --ink-soft:    #a2a2aa;
-    --ink-faint:   #71717a;
+    /* Signboard palette, straight off the shopfront */
+    --red:         #d6342a;
+    --red-dark:    #a8241c;
+    --blue:        #2f5d8a;
+    --leaf:        #4b7a3f;
+    --rust:        #b4531f;
+    --mustard:     #c8912a;
 
-    /* Brand */
-    --brand:       #ff5c8a;
-    --brand-dark:  #e04872;
-    --grad:        linear-gradient(115deg, #ff8a3d 0%, #ff4d8d 42%, #7b5bff 100%);
+    /* Semantic, mapped onto the signboard palette */
+    --ok:          #3d6634;
+    --ok-bg:       rgba(75, 122, 63, .13);
+    --warn:        #8a6110;
+    --warn-bg:     rgba(200, 145, 42, .16);
+    --danger:      #96301f;
+    --danger-bg:   rgba(180, 83, 31, .13);
 
-    /* Semantic */
-    --ok:          #4ade80;
-    --ok-bg:       rgba(74, 222, 128, .12);
-    --warn:        #fbbf24;
-    --warn-bg:     rgba(251, 191, 36, .12);
-    --danger:      #f87171;
-    --danger-bg:   rgba(248, 113, 113, .12);
+    --radius:      3px;       /* paper does not have rounded corners */
+    --radius-sm:   2px;
+    --shadow:      2px 3px 0 rgba(28, 23, 18, .10);
+    --shadow-lift: 3px 5px 0 rgba(28, 23, 18, .16);
 
-    --radius:      16px;
-    --radius-sm:   10px;
-    --radius-pill: 999px;
-    --shadow:      0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .28);
+    /* Devanagari carries the nostalgia. Latin alone reads as a startup logo,
+       so the display face is the script the institute actually uses. All three
+       families ship with an OS; no webfont, no download, no fallback box. */
+    --font-display: "Nirmala UI", "Noto Sans Devanagari", "Mangal",
+                    "Kohinoor Devanagari", "Devanagari Sangam MN", serif;
+    --font-serif:   "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+                    "Times New Roman", serif;
+    --font-sans:    "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    --font-mono:    "Courier New", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+/* ---------- Time of day ------------------------------------------------------
+   The illustration answers to the ambient clock. /js/app.js writes
+   data-daypart onto <html>; these four blocks are the whole implementation.
+
+   Three layers sit over the artwork, in this order: a lamp glow (only after
+   dark, positioned over the shop's opening), a scrim for text legibility, and
+   a flat colour tint for the hour. Daylight is the default and adds nothing.
+
+   Paper surfaces never change. The room outside gets dark; the register on the
+   desk stays readable.
+   ------------------------------------------------------------------------------ */
+
+:root {
+    --scene-lamp: linear-gradient(transparent, transparent);
+    --scene-tint: linear-gradient(transparent, transparent);
+    --scene-scrim: linear-gradient(180deg,
+        rgba(28, 23, 18, .52) 0%,
+        rgba(28, 23, 18, .20) 30%,
+        rgba(28, 23, 18, .16) 58%,
+        rgba(28, 23, 18, .62) 100%);
+}
+
+:root[data-daypart="dawn"] {
+    --scene-tint: linear-gradient(180deg,
+        rgba(255, 148, 120, .30) 0%,
+        rgba(255, 196, 140, .16) 60%,
+        rgba(120, 96, 150, .18) 100%);
+    --scene-scrim: linear-gradient(180deg,
+        rgba(28, 23, 18, .46) 0%,
+        rgba(28, 23, 18, .14) 32%,
+        rgba(28, 23, 18, .14) 58%,
+        rgba(28, 23, 18, .58) 100%);
+}
+
+:root[data-daypart="dusk"] {
+    --scene-lamp: radial-gradient(circle at 49% 60%,
+        rgba(255, 190, 96, .42) 0%,
+        rgba(255, 190, 96, 0) 16%);
+    --scene-tint: linear-gradient(180deg,
+        rgba(96, 52, 120, .26) 0%,
+        rgba(214, 108, 42, .28) 55%,
+        rgba(70, 40, 30, .34) 100%);
+}
+
+:root[data-daypart="night"] {
+    /* Two lamps: the shop interior, and the bare bulb over the notice board. */
+    --scene-lamp:
+        radial-gradient(circle at 49% 59%, rgba(255, 196, 104, .58) 0%, rgba(255, 196, 104, 0) 15%),
+        radial-gradient(circle at 15% 55%, rgba(255, 214, 150, .34) 0%, rgba(255, 214, 150, 0) 11%);
+    --scene-tint: linear-gradient(180deg,
+        rgba(16, 26, 62, .74) 0%,
+        rgba(20, 30, 66, .62) 55%,
+        rgba(12, 18, 40, .74) 100%);
+    --scene-scrim: linear-gradient(180deg,
+        rgba(6, 8, 18, .48) 0%,
+        rgba(6, 8, 18, .18) 34%,
+        rgba(6, 8, 18, .20) 60%,
+        rgba(6, 8, 18, .60) 100%);
+}
+
+/* ---------- Cross-document view transitions ----------------------------------
+   This is a server-rendered multi-page app: every navigation is a fresh
+   document from Spring. That normally means a white flash between pages.
+
+   One at-rule opts both documents in, and the browser then snapshots the old
+   page, swaps in the new one and animates between them. Named elements morph
+   rather than cross-fade -- the masthead and the hero band are the same object
+   on both sides of a navigation, so they stay put while the content changes.
+
+   No JavaScript, no router, no framework. Browsers without support simply
+   navigate the old way, which is the behaviour we already had.
+   ------------------------------------------------------------------------------ */
+
+@view-transition {
+    navigation: auto;
+}
+
+/* Names must be unique per document. Each of these appears exactly once on
+   every page, which is what makes them safe to name. */
+.navbar      { view-transition-name: masthead; }
+.ambient     { view-transition-name: ambient-strip; }
+.hero-wash   { view-transition-name: page-band; }
+.site-footer { view-transition-name: site-foot; }
+
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root) {
+        animation: page-out .18s cubic-bezier(.4, 0, 1, 1) both;
+    }
+
+    ::view-transition-new(root) {
+        animation: page-in .26s cubic-bezier(0, 0, .2, 1) both;
+    }
+
+    /* The band morphs between pages rather than fading: same object, new
+       contents, like a sign being repainted while you stand in front of it. */
+    ::view-transition-group(page-band) {
+        animation-duration: .32s;
+        animation-timing-function: cubic-bezier(.2, .8, .3, 1);
+    }
+}
+
+/* A page turning: the outgoing sheet lifts slightly, the incoming one settles. */
+@keyframes page-out {
+    to { opacity: 0; transform: translateY(-6px) scale(.995); }
+}
+
+@keyframes page-in {
+    from { opacity: 0; transform: translateY(10px) scale(.995); }
+}
+
+/* ---------- Scroll-driven animation -------------------------------------------
+   Reveals and the reading rule are driven by scroll position itself, not by a
+   scroll listener or an IntersectionObserver. The browser runs them on the
+   compositor, so they cost nothing on the main thread and cannot jank.
+
+   Both are wrapped in @supports on purpose. .reveal starts at opacity 0, so
+   without the guard a browser that does not understand view() would hide the
+   page's content permanently -- a decoration must never be able to take the
+   content down with it.
+   -------------------------------------------------------------------------------- */
+
+.scroll-rule {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    background: var(--red);
+    z-index: 60;
+    pointer-events: none;
+}
+
+@supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .scroll-rule {
+            animation: rule-grow linear both;
+            animation-timeline: scroll(root block);
+        }
+    }
+}
+
+@keyframes rule-grow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+
+@supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .reveal {
+            animation: reveal-rise linear both;
+            animation-timeline: view();
+            animation-range: entry 8% cover 26%;
+        }
+    }
+}
+
+@keyframes reveal-rise {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -48,42 +229,99 @@ html { scroll-behavior: smooth; }
 
 body {
     margin: 0;
-    background: var(--bg);
+    background: var(--paper);
     color: var(--ink);
-    font-family: Inter, "Segoe UI Variable Text", system-ui, -apple-system,
-                 "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
+    font-family: var(--font-serif);
+    font-size: 17px;
+    line-height: 1.62;
     -webkit-font-smoothing: antialiased;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-x: clip;
 }
 
-a { color: inherit; }
+/* Film grain over the whole page.
+   An inline SVG turbulence filter, so it costs one data URI and no request.
+   Fixed and pointer-events:none, so it never intercepts a click and never
+   scrolls with content — the grain sits on the screen, not on the page. */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: .38;
+    background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'>\
+<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/>\
+<feColorMatrix type='saturate' values='0'/></filter>\
+<rect width='140' height='140' filter='url(%23n)' opacity='.55'/></svg>");
+}
 
-::selection { background: rgba(255, 77, 141, .35); }
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
 
-.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-.container-narrow { max-width: 880px; }
+a { color: var(--blue); text-underline-offset: 3px; }
+a:hover { color: var(--red); }
 
-/* ---------- Navbar ------------------------------------------------------- */
+::selection { background: rgba(214, 52, 42, .22); }
+
+.container { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+.container-narrow { max-width: 820px; }
+
+/* ---------- Ambient strip -------------------------------------------------
+   Bare text at the top of the shell: local time on the left, presence on the
+   right. Deliberately not a card and not a nav item — it should read as
+   printed on the paper rather than as software.
+   -------------------------------------------------------------------------- */
+
+.ambient {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 10px 0 0;
+}
+
+.ambient-clock { font-variant-numeric: tabular-nums; }
+.ambient-note  { color: var(--ink-soft); }
+
+.presence { display: inline-flex; align-items: center; gap: 7px; }
+
+.presence-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--leaf);
+    box-shadow: 0 0 0 3px rgba(75, 122, 63, .18);
+}
+
+/* ---------- Navbar --------------------------------------------------------
+   A masthead, not a floating pill bar: sits on the paper, separated by a
+   double rule the way a printed header is.
+   -------------------------------------------------------------------------- */
 
 .navbar {
     position: sticky;
     top: 0;
     z-index: 40;
-    background: rgba(13, 13, 14, .72);
-    backdrop-filter: saturate(160%) blur(14px);
-    -webkit-backdrop-filter: saturate(160%) blur(14px);
-    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+    border-bottom: 3px double var(--line-strong);
 }
 
 .navbar-inner {
     display: flex;
     align-items: center;
-    gap: 20px;
-    min-height: 66px;
+    gap: 18px;
+    min-height: 62px;
 }
 
 .brand {
@@ -92,26 +330,32 @@ a { color: inherit; }
     gap: 10px;
     text-decoration: none;
     color: inherit;
-    margin-right: 8px;
+    margin-right: 6px;
 }
 
 .brand-mark {
-    background: var(--grad);
-    color: #fff;
+    background: var(--red);
+    color: var(--paper);
+    font-family: var(--font-sans);
     font-weight: 800;
-    letter-spacing: .04em;
-    padding: 6px 10px;
-    border-radius: 8px;
+    letter-spacing: .1em;
+    padding: 5px 9px;
     font-size: 13px;
     line-height: 1;
+    box-shadow: var(--shadow);
 }
 
-.brand-text { font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
+.brand-text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: .01em;
+}
 
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     list-style: none;
     margin: 0;
     padding: 0;
@@ -119,239 +363,355 @@ a { color: inherit; }
     flex-wrap: wrap;
 }
 
-/* everything after the spacer sits on the right edge */
 .nav-spacer { flex: 1 1 auto; }
 
 .nav-links a {
     color: var(--ink-soft);
     text-decoration: none;
-    font-size: 15px;
-    font-weight: 500;
-    padding: 7px 12px;
-    border-radius: var(--radius-pill);
-    transition: color .15s ease, background .15s ease;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-bottom: 2px solid transparent;
+    transition: color .12s ease, border-color .12s ease;
 }
 
-.nav-links a:hover { color: var(--ink); background: var(--surface-2); }
+.nav-links a:hover { color: var(--red); border-bottom-color: var(--red); }
 
-.nav-links a.btn-primary { color: #0d0d0e; }
-.nav-links a.btn-primary:hover { background: #e6e6e8; }
-.nav-links a.btn-ghost { color: var(--ink); }
-.nav-links a.btn-ghost:hover { background: var(--surface-2); }
+.nav-links a.btn-primary,
+.nav-links a.btn-ghost { border-bottom: none; }
 
 .nav-user {
+    font-family: var(--font-mono);
+    font-size: 12px;
     color: var(--ink-soft);
-    font-size: 14px;
-    padding: 6px 12px;
+    padding: 4px 10px;
     border: 1px solid var(--line);
-    border-radius: var(--radius-pill);
+    background: var(--paper-2);
 }
 
 .inline-form { display: inline; margin: 0; }
 
-/* ---------- Layout ------------------------------------------------------- */
+/* ---------- Layout --------------------------------------------------------- */
 
-main.container { flex: 1; padding-top: 40px; padding-bottom: 72px; }
+main.container { flex: 1; padding-top: 30px; padding-bottom: 64px; }
 
-/* ---------- Footer ------------------------------------------------------- */
-
-.site-footer {
-    margin: 0 24px 24px;
-    background: var(--bg-elev);
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    color: var(--ink-soft);
-    font-size: 14px;
-    padding: 44px 0 28px;
-}
-
-.footer-grid {
-    display: grid;
-    grid-template-columns: 1.4fr repeat(4, 1fr);
-    gap: 28px;
-}
-
-.footer-tagline { color: var(--ink-faint); margin: 14px 0 0; max-width: 30ch; }
-
-.footer-col h4 {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-    margin: 0 0 12px;
-    letter-spacing: .01em;
-}
-
-.footer-col ul { list-style: none; margin: 0; padding: 0; }
-.footer-col li { margin-bottom: 9px; }
-.footer-col a { color: var(--ink-soft); text-decoration: none; }
-.footer-col a:hover { color: var(--ink); }
-
-.footer-bottom {
-    margin-top: 36px;
-    padding-top: 20px;
-    border-top: 1px solid var(--line);
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    color: var(--ink-faint);
-    font-size: 13px;
-}
-
-/* ---------- Typography --------------------------------------------------- */
+/* ---------- Typography ------------------------------------------------------ */
 
 h1 {
-    font-size: 40px;
-    line-height: 1.1;
-    letter-spacing: -.03em;
+    font-family: var(--font-display);
+    font-size: 38px;
+    line-height: 1.15;
     font-weight: 700;
-    margin: 0 0 14px;
+    margin: 0 0 12px;
 }
 
 h2 {
-    font-size: 30px;
-    line-height: 1.15;
-    letter-spacing: -.025em;
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 1.2;
     font-weight: 700;
-    margin: 0 0 12px;
+    margin: 0 0 10px;
 }
 
-h3 { font-size: 17px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 8px; }
+h3 {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: .01em;
+    margin: 0 0 6px;
+}
 
-.lead { color: var(--ink-soft); font-size: 17px; max-width: 62ch; margin: 0 0 22px; }
+.lead { color: var(--ink-soft); font-size: 17px; max-width: 64ch; margin: 0 0 20px; }
 
+/* The Devanagari poster line. Set enormous, tight, and slightly loose in the
+   tracking so the matras have room. */
 .display {
-    font-size: clamp(44px, 7vw, 76px);
-    line-height: 1.02;
-    letter-spacing: -.04em;
+    font-family: var(--font-display);
+    font-size: clamp(40px, 8vw, 92px);
+    line-height: 1.06;
     font-weight: 700;
-    margin: 0 0 16px;
+    margin: 0 0 6px;
+    color: var(--ink);
 }
 
-.grad-text {
-    background: var(--grad);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+.display-hi {
+    display: block;
+    color: var(--red);
+    text-shadow: 2px 3px 0 rgba(28, 23, 18, .13);
 }
+
+.display-sub {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: clamp(15px, 2vw, 20px);
+    font-weight: 700;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 10px;
+}
+
+/* Kept for compatibility with existing markup; on paper a gradient would be
+   wrong, so the accent is simply the shopfront red. */
+.grad-text { color: var(--red); }
 
 .eyebrow {
     display: inline-block;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: .1em;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .18em;
     text-transform: uppercase;
-    color: var(--ink-soft);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    padding: 6px 14px;
-    border-radius: var(--radius-pill);
-    margin-bottom: 22px;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    background: var(--paper-2);
+    padding: 5px 12px;
+    margin-bottom: 18px;
 }
 
 code {
-    background: var(--surface-2);
-    color: #ffd7e4;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-size: .9em;
+    font-family: var(--font-mono);
+    background: var(--paper-3);
+    color: var(--ink);
+    padding: 1px 5px;
+    font-size: .92em;
 }
 
-/* ---------- Hero --------------------------------------------------------- */
+/* ---------- Ruled paper -----------------------------------------------------
+   The single texture that carries the whole theme. Feint blue horizontal rules
+   at the body line height, plus one red margin rule down the left, exactly as
+   on a college register.
+   ---------------------------------------------------------------------------- */
 
-/* Full-bleed gradient wash behind landing and error pages. */
-.hero-wash {
+.paper {
     position: relative;
-    margin: -40px -24px 40px;
-    padding: 96px 24px 108px;
-    overflow: hidden;
-    text-align: center;
-    isolation: isolate;
+    background-color: var(--paper);
+    background-image: repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 27px,
+            var(--rule) 27px,
+            var(--rule) 28px);
+    background-position: 0 6px;
+    border: 1px solid var(--line-strong);
+    box-shadow: var(--shadow);
 }
 
-.hero-wash::before {
+.paper::before {
     content: "";
     position: absolute;
-    inset: -40% -10% 0;
-    z-index: -2;
-    background:
-        radial-gradient(60% 60% at 50% 118%, #ff3b3b 0%, rgba(255, 59, 59, 0) 62%),
-        radial-gradient(52% 52% at 50% 88%,  #ff36a3 0%, rgba(255, 54, 163, 0) 66%),
-        radial-gradient(58% 46% at 22% 62%,  #7b5bff 0%, rgba(123, 91, 255, 0) 70%),
-        radial-gradient(58% 46% at 80% 58%,  #2f6bff 0%, rgba(47, 107, 255, 0) 70%);
-    filter: blur(28px);
+    top: 0;
+    bottom: 0;
+    left: 34px;
+    width: 1px;
+    background: rgba(214, 52, 42, .34);
 }
 
+/* Ruled paper carrying prose: text starts to the right of the red margin rule,
+   and the line height must match the rule spacing in .paper or the words drift
+   off the lines. Both are 28px. Do not change one without the other. */
+.paper-note {
+    padding: 14px 20px 16px 48px;
+    margin: 0;
+    line-height: 28px;
+    white-space: pre-wrap;
+}
+
+/* ---------- Hero ------------------------------------------------------------ */
+
+/* Full-bleed poster band: breaks out of the container to touch both window
+   edges. left:50% + translateX(-50%) rather than a negative viewport margin,
+   because a transform on the band itself cannot break position:sticky on the
+   masthead the way overflow:hidden on an ancestor would. body has overflow-x:
+   clip (not hidden, same reason) to swallow the scrollbar's width. */
+.hero-wash {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    margin: -30px 0 34px;
+    padding: 104px 24px 116px;
+    text-align: center;
+    overflow: hidden;
+    border-bottom: 3px double var(--line-strong);
+
+    /* The painted scene, drawn as vector so it scales to any window and costs
+       one file. It lives under /css/ rather than /img/ because SecurityConfig
+       permits /css/** to anonymous users and the landing page must render its
+       own background before anyone logs in.
+
+       The scrim on top is what makes the type legible: dark at the edges,
+       clearing in the middle where the illustration is worth seeing. Without
+       it, cream text over a cream sky disappears. */
+    /* Two depth planes rather than one flat image. ::before is the far plane
+       (sky, facade, notice board), ::after is the near plane (tree, cart,
+       bicycles, figures) plus the scrim and lamps that must sit above both.
+
+       --px / --py are written by app.js from the pointer position, in the range
+       -1..1. The planes translate at different rates, which is the whole trick:
+       parallax is what the eye reads as depth. Both are transform-only, so the
+       browser keeps them on the compositor and never re-lays-out the page. */
+    perspective: 900px;
+    --px: 0;
+    --py: 0;
+}
+
+.hero-wash::before,
 .hero-wash::after {
     content: "";
     position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: linear-gradient(180deg,
-                rgba(13, 13, 14, .92) 0%,
-                rgba(13, 13, 14, .18) 34%,
-                rgba(13, 13, 14, .82) 100%);
+    inset: -6%;
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    will-change: transform;
+    transition: transform .35s cubic-bezier(.2, .8, .3, 1), background-image .6s linear;
 }
 
-.hero-wash .lead { margin-left: auto; margin-right: auto; }
+/* Far plane: barely moves, sits behind everything. */
+.hero-wash::before {
+    background-image: var(--scene-tint), url("scene-bg.svg");
+    transform: translate3d(calc(var(--px) * 10px), calc(var(--py) * 7px), 0) scale(1.03);
+}
 
-/* Card hero, used by inner pages. */
+/* Near plane: moves twice as far, and carries the scrim and the lamps so that
+   both planes sit under the same light. */
+.hero-wash::after {
+    background-image: var(--scene-lamp), var(--scene-scrim), url("scene-fg.svg");
+    transform: translate3d(calc(var(--px) * 26px), calc(var(--py) * 16px), 0) scale(1.05);
+}
+
+/* Type is the nearest plane of all, and leads the parallax by moving against
+   the artwork rather than with it. */
+.hero-wash > * {
+    position: relative;
+    z-index: 1;
+    transform: translate3d(calc(var(--px) * -9px), calc(var(--py) * -6px), 0);
+    transition: transform .35s cubic-bezier(.2, .8, .3, 1);
+}
+
+/* A pointer is the only input that can drive parallax; touch and keyboard
+   users get the same picture, held still. */
+@media (hover: none), (prefers-reduced-motion: reduce) {
+    .hero-wash::before,
+    .hero-wash::after,
+    .hero-wash > * { transform: none; }
+}
+
+/* Inner pages get the identical band, shorter: the landing page is selling,
+   an inner page is working, and a dashboard should not spend a whole screen
+   on its own title. Same scene, same parallax, same type — less of it. */
+.page-hero { padding: 46px 24px 52px; margin-bottom: 30px; }
+
+.page-hero .display { font-size: clamp(30px, 5vw, 56px); }
+.page-hero .display-sub { font-size: clamp(13px, 1.5vw, 17px); letter-spacing: .2em; }
+.page-hero .lead { font-size: 16px; margin-bottom: 12px; }
+.page-hero .eyebrow { margin-bottom: 14px; }
+
+.hero-user {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: rgba(244, 236, 224, .82);
+    margin: 0;
+}
+
+.hero-user strong { color: var(--paper); font-weight: 700; }
+.hero-user .presence-dot { display: inline-block; vertical-align: middle; margin-right: 6px; }
+
+@media (max-width: 620px) {
+    .page-hero { padding: 32px 16px 36px; }
+}
+
+/* Type reverses out over the artwork, as it does on a painted signboard. */
+.hero-wash .display      { color: var(--paper); }
+.hero-wash .display-hi   { color: #ff5a4d; text-shadow: 3px 4px 0 rgba(28, 23, 18, .55); }
+.hero-wash .display-sub  { color: rgba(244, 236, 224, .86); }
+.hero-wash .lead         { color: rgba(244, 236, 224, .92); margin-left: auto; margin-right: auto; }
+
+.hero-wash .eyebrow {
+    color: var(--paper);
+    border-color: rgba(244, 236, 224, .7);
+    background: rgba(28, 23, 18, .38);
+}
+
+.hero-wash .prompt-box {
+    background: rgba(244, 236, 224, .93);
+    border-color: rgba(28, 23, 18, .8);
+    box-shadow: 4px 5px 0 rgba(28, 23, 18, .3);
+}
+
+.hero-wash .btn-ghost { color: var(--paper); border-color: rgba(244, 236, 224, .75); }
+.hero-wash .btn-ghost:hover { background: rgba(244, 236, 224, .16); }
+
+/* Card hero, used by inner pages: a filed document. */
 .hero {
     position: relative;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 40px;
-    margin-bottom: 28px;
-    overflow: hidden;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    box-shadow: var(--shadow-lift);
+    padding: 30px 32px;
+    margin-bottom: 24px;
 }
 
-.hero::before {
+/* Corner tick marks, like a form printed with crop registration. */
+.hero::before,
+.hero::after {
     content: "";
     position: absolute;
-    inset: -60% 30% 40% -20%;
-    background: radial-gradient(50% 50% at 30% 70%, rgba(255, 77, 141, .22), rgba(255, 77, 141, 0) 70%);
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--line-strong);
     pointer-events: none;
 }
 
+.hero::before { top: 6px;    left: 6px;   border-right: none; border-bottom: none; }
+.hero::after  { bottom: 6px; right: 6px;  border-left: none;  border-top: none; }
+
 .hero > * { position: relative; }
 
-/* ---------- Prompt box (landing centrepiece) ----------------------------- */
+/* ---------- Notice slip (landing centrepiece) -------------------------------- */
 
 .prompt-box {
-    max-width: 640px;
-    margin: 30px auto 26px;
-    background: var(--surface-2);
-    border: 1px solid var(--line-strong);
-    border-radius: 22px;
-    box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
-    padding: 18px 18px 14px;
+    max-width: 620px;
+    margin: 28px auto 24px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    box-shadow: var(--shadow-lift);
+    padding: 16px 18px 13px;
     text-align: left;
 }
 
-.prompt-box-text { color: var(--ink); font-size: 16px; margin: 0 0 26px; }
+.prompt-box-text {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--ink);
+    margin: 0 0 22px;
+}
 
 .prompt-box-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    border-top: 1px dashed var(--line-strong);
+    padding-top: 12px;
 }
 
 .prompt-chip {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    background: var(--surface-3);
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
     color: var(--ink-soft);
-    border-radius: var(--radius-pill);
-    padding: 6px 13px;
-    font-size: 13px;
-    text-decoration: none;
+    border: 1px dashed var(--line-strong);
+    padding: 4px 10px;
 }
-
-.prompt-chip:hover { color: var(--ink); }
 
 .prompt-send {
     display: inline-flex;
@@ -359,203 +719,282 @@ code {
     justify-content: center;
     width: 34px;
     height: 34px;
-    border-radius: 50%;
-    background: #fff;
-    color: #111;
-    font-size: 16px;
+    background: var(--red);
+    color: var(--paper);
     text-decoration: none;
     font-weight: 700;
+    box-shadow: var(--shadow);
 }
 
-.prompt-send:hover { background: #e6e6e8; }
+.prompt-send:hover { background: var(--red-dark); color: var(--paper); }
 
-/* ---------- Logo / trust strip ------------------------------------------- */
+/* ---------- Trust strip ------------------------------------------------------ */
 
 .logo-strip {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 42px;
+    gap: 34px;
     flex-wrap: wrap;
-    padding: 6px 0 56px;
+    padding: 4px 0 44px;
+    font-family: var(--font-mono);
     color: var(--ink-faint);
     font-weight: 700;
-    letter-spacing: .06em;
-    font-size: 14px;
+    letter-spacing: .14em;
+    font-size: 12px;
     text-transform: uppercase;
-    opacity: .75;
 }
 
-/* ---------- Section scaffolding ------------------------------------------ */
+/* ---------- Section scaffolding ---------------------------------------------- */
 
-.section { padding: 64px 0; }
-.section-head { max-width: 62ch; margin-bottom: 34px; }
+.section { padding: 48px 0; }
+.section-head { max-width: 64ch; margin-bottom: 28px; }
 .section-head .lead { margin-bottom: 0; }
 
-/* Two-column "media beside steps" block. */
 .split {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 48px;
+    gap: 44px;
     align-items: center;
 }
 
+/* A painted placard rather than an image well. */
 .split-media {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    aspect-ratio: 16 / 11;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--ink-faint);
-    font-size: 14px;
-    text-align: center;
+    aspect-ratio: 16 / 11;
     padding: 24px;
-    background-image: radial-gradient(60% 60% at 50% 50%, rgba(123, 91, 255, .16), rgba(123, 91, 255, 0) 70%);
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--paper);
+    background: var(--red);
+    border: 1px solid var(--ink);
+    box-shadow: 5px 6px 0 rgba(28, 23, 18, .18);
+    outline: 2px solid var(--paper);
+    outline-offset: -9px;
 }
 
-.steps { list-style: none; margin: 0; padding: 0; }
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
 
-.step { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.step {
+    position: relative;
+    padding: 16px 0 16px 46px;
+    border-bottom: 1px dashed var(--line);
+    counter-increment: step;
+}
+
 .step:last-child { border-bottom: none; }
-.step h3 { font-size: 26px; letter-spacing: -.02em; margin-bottom: 6px; }
+
+.step::before {
+    content: counter(step, decimal);
+    position: absolute;
+    left: 0;
+    top: 18px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--paper);
+    background: var(--ink);
+}
+
+.step h3 { font-family: var(--font-display); font-size: 22px; margin-bottom: 4px; }
 .step p { color: var(--ink-soft); margin: 0; }
 
-/* ---------- Cards -------------------------------------------------------- */
+/* ---------- Cards ------------------------------------------------------------- */
 
 .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
 }
 
 .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
     box-shadow: var(--shadow);
-    padding: 22px;
-    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    padding: 20px;
+    transition: transform .12s ease, box-shadow .12s ease;
 }
 
-.card:hover { transform: translateY(-2px); border-color: var(--line-strong); background: var(--surface-2); }
+/* Lifts toward the viewer inside the grid's perspective, rather than sliding
+   flat. Same gesture as the poster tiles, dialled down: a dashboard card is
+   read, not admired. */
+.card:hover {
+    transform: translate3d(-1px, -2px, 12px) rotateX(3deg);
+    box-shadow: var(--shadow-lift);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card:hover { transform: translate(-1px, -1px); }
+}
 
 .card p { color: var(--ink-soft); margin: 0; font-size: 15px; }
 
-/* Gallery card: gradient thumbnail on top, label underneath. */
+/* Gallery card: a flat poster block with the label reversed out.
+   The grid establishes the 3D context so each poster can tilt in it on hover,
+   like a board being turned toward you. */
+.card-grid { perspective: 1200px; }
+
 .tile { text-decoration: none; color: inherit; display: block; }
 
 .tile-thumb {
-    border-radius: 14px;
-    aspect-ratio: 16 / 10;
-    border: 1px solid var(--line);
+    transform-style: preserve-3d;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 15px;
-    color: rgba(255, 255, 255, .94);
-    text-align: center;
-    padding: 12px;
+    aspect-ratio: 16 / 10;
     margin-bottom: 12px;
-    transition: transform .18s ease;
+    padding: 12px;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--paper);
+    border: 1px solid var(--ink);
+    box-shadow: var(--shadow);
+    outline: 2px solid var(--paper);
+    outline-offset: -8px;
+    transition: transform .22s cubic-bezier(.2, .8, .3, 1), box-shadow .22s ease;
 }
 
-.tile:hover .tile-thumb { transform: translateY(-3px); }
+.tile:hover .tile-thumb,
+.tile:focus-visible .tile-thumb {
+    transform: rotateX(7deg) rotateY(-9deg) translateZ(18px);
+    box-shadow: 10px 12px 0 rgba(28, 23, 18, .16);
+}
 
-.tile-thumb-1 { background: linear-gradient(135deg, #ff8a3d, #ff4d8d); }
-.tile-thumb-2 { background: linear-gradient(135deg, #7b5bff, #2f6bff); }
-.tile-thumb-3 { background: linear-gradient(135deg, #12b981, #0ea5e9); }
-.tile-thumb-4 { background: linear-gradient(135deg, #f43f5e, #7b5bff); }
+@media (prefers-reduced-motion: reduce) {
+    .tile:hover .tile-thumb,
+    .tile:focus-visible .tile-thumb { transform: translate(-2px, -2px); }
+}
+
+.tile-thumb-1 { background: var(--red); }
+.tile-thumb-2 { background: var(--blue); }
+.tile-thumb-3 { background: var(--leaf); }
+.tile-thumb-4 { background: var(--rust); }
 
 .tile h3 { margin-bottom: 2px; }
 .tile p { color: var(--ink-soft); font-size: 14px; margin: 0; }
 
-/* ---------- Stats -------------------------------------------------------- */
+/* ---------- Stats -------------------------------------------------------------
+   Ledger boxes: the figure in the typewriter face, tabular so columns of
+   numbers line up the way they would in a register.
+   ------------------------------------------------------------------------------ */
 
 .stat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+    gap: 16px;
 }
 
 .stat {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 26px;
+    background: var(--paper-2);
+    border: 1px solid var(--line-strong);
+    border-top: 4px solid var(--ink);
+    padding: 20px 22px;
 }
 
 .stat-value {
-    font-size: 40px;
-    font-weight: 700;
-    letter-spacing: -.03em;
-    line-height: 1.1;
     display: block;
+    font-family: var(--font-mono);
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
 }
 
-.stat-label { color: var(--ink-soft); font-size: 14px; }
+.stat-label {
+    font-family: var(--font-sans);
+    color: var(--ink-soft);
+    font-size: 13px;
+}
 
-/* Dashboards stack a stat row directly above the card grid. */
-.stat-grid + .card-grid { margin-top: 24px; }
+.stat-grid + .card-grid { margin-top: 22px; }
 
-/* ---------- Call to action ----------------------------------------------- */
+/* ---------- Call to action ------------------------------------------------------ */
 
 .cta {
-    position: relative;
-    overflow: hidden;
     text-align: center;
-    border-radius: 24px;
-    border: 1px solid var(--line);
-    padding: 72px 24px;
-    background:
-        radial-gradient(70% 120% at 50% 120%, rgba(255, 61, 118, .55), rgba(255, 61, 118, 0) 60%),
-        radial-gradient(60% 120% at 20% 0%,   rgba(123, 91, 255, .35), rgba(123, 91, 255, 0) 60%),
-        var(--bg-elev);
+    padding: 56px 24px;
+    color: var(--paper);
+    background: var(--red);
+    border: 1px solid var(--ink);
+    box-shadow: 6px 7px 0 rgba(28, 23, 18, .18);
+    outline: 2px solid var(--paper);
+    outline-offset: -10px;
 }
 
-.cta .lead { margin-left: auto; margin-right: auto; }
+.cta h2 { color: var(--paper); }
+.cta .lead { color: rgba(244, 236, 224, .88); margin-left: auto; margin-right: auto; }
+.cta .btn-ghost { color: var(--paper); border-color: var(--paper); }
+.cta .btn-ghost:hover { background: rgba(244, 236, 224, .14); }
 
-/* ---------- Buttons ------------------------------------------------------ */
+/* ---------- Buttons --------------------------------------------------------------
+   Rectangular with a hard offset shadow, and they physically press: on :active
+   the button moves into its own shadow. Mechanical, not springy.
+   --------------------------------------------------------------------------------- */
 
 .btn {
     display: inline-block;
-    border: 1px solid transparent;
-    border-radius: var(--radius-pill);
-    padding: 11px 22px;
-    font: inherit;
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
     text-decoration: none;
-    transition: background .15s ease, border-color .15s ease, color .15s ease, opacity .15s ease;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform .08s ease, box-shadow .08s ease, background .12s ease;
 }
 
-.btn-sm { padding: 7px 15px; font-size: 14px; }
-.btn-lg { padding: 14px 28px; font-size: 16px; }
+.btn:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-lift); }
+.btn:active { transform: translate(2px, 3px); box-shadow: none; }
 
-.btn-primary { background: #ffffff; color: #0d0d0e; }
-.btn-primary:hover { background: #e6e6e8; }
+.btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 
-.btn-gradient { background: var(--grad); color: #fff; }
-.btn-gradient:hover { opacity: .9; }
+.btn-sm { padding: 6px 13px; font-size: 12px; }
+.btn-lg { padding: 13px 26px; font-size: 15px; }
 
-.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
-.btn-ghost:hover { background: var(--surface-2); border-color: var(--ink-faint); }
+.btn-primary { background: var(--ink); color: var(--paper); }
+.btn-primary:hover { background: #2b241c; color: var(--paper); }
+
+/* Kept for compatibility: the "gradient" button is the shopfront red. */
+.btn-gradient { background: var(--red); color: var(--paper); border-color: var(--ink); }
+.btn-gradient:hover { background: var(--red-dark); color: var(--paper); }
+
+.btn-ghost { background: transparent; color: var(--ink); }
+.btn-ghost:hover { background: var(--paper-3); }
 
 .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
-/* ---------- Forms -------------------------------------------------------- */
+/* ---------- Forms -----------------------------------------------------------------
+   Fields look like blanks on a printed form: no rounding, a heavier bottom rule
+   than the other three sides, and a typewriter face for what the user types.
+   ----------------------------------------------------------------------------------- */
 
 .field { margin-bottom: 18px; }
 
 .field label {
     display: block;
-    font-size: 14px;
-    font-weight: 600;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
     margin-bottom: 6px;
-    color: var(--ink);
 }
 
 .field input[type="text"],
@@ -566,13 +1005,17 @@ code {
 .field select,
 .field textarea {
     width: 100%;
-    padding: 11px 13px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    font: inherit;
-    background: var(--surface-2);
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-size: 15px;
     color: var(--ink);
+    background: var(--paper-2);
+    border: 1px solid var(--line-strong);
+    border-bottom-width: 2px;
+    border-radius: 0;
 }
+
+.field textarea { line-height: 1.7; resize: vertical; }
 
 .field input::placeholder,
 .field textarea::placeholder { color: var(--ink-faint); }
@@ -580,185 +1023,643 @@ code {
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-    outline: 2px solid rgba(255, 77, 141, .45);
-    outline-offset: 1px;
-    border-color: var(--brand);
+    outline: none;
+    background: #fffaf1;
+    border-color: var(--red);
+    box-shadow: inset 0 -2px 0 var(--red);
 }
 
-.field-error { color: var(--danger); font-size: 13px; margin-top: 6px; display: block; }
-.field-hint  { color: var(--ink-faint); font-size: 13px; margin-top: 6px; display: block; }
+.field-error {
+    display: block;
+    font-family: var(--font-sans);
+    color: var(--danger);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 6px;
+}
 
-/* ---------- Alerts ------------------------------------------------------- */
+.field-hint {
+    display: block;
+    font-family: var(--font-sans);
+    color: var(--ink-faint);
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+/* ---------- Alerts ------------------------------------------------------------------
+   A rubber-stamped note in the margin: thick left rule, uppercase label face.
+   ------------------------------------------------------------------------------------ */
 
 .alert {
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    padding: 12px 15px;
+    border: 1px solid var(--line-strong);
+    border-left: 5px solid var(--ink);
+    padding: 11px 15px;
     margin-bottom: 18px;
     font-size: 15px;
+    background: var(--paper-2);
 }
 
-.alert-success { background: var(--ok-bg);     border-color: rgba(74, 222, 128, .32);  color: var(--ok); }
-.alert-error   { background: var(--danger-bg); border-color: rgba(248, 113, 113, .32); color: var(--danger); }
-.alert-info    { background: var(--warn-bg);   border-color: rgba(251, 191, 36, .32);  color: var(--warn); }
+.alert-success { background: var(--ok-bg);     border-left-color: var(--leaf); color: #2f5227; }
+.alert-error   { background: var(--danger-bg); border-left-color: var(--rust); color: var(--danger); }
+.alert-info    { background: var(--warn-bg);   border-left-color: var(--mustard); color: var(--warn); }
 
-/* ---------- Status badges (state machines) ------------------------------- */
+/* ---------- Status badges (state machines) -------------------------------------------- */
 
 .badge {
     display: inline-block;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: .04em;
-    padding: 4px 11px;
-    border-radius: var(--radius-pill);
-    border: 1px solid transparent;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid currentColor;
 }
 
-.badge-draft    { background: var(--surface-2); color: var(--ink-soft); border-color: var(--line-strong); }
-.badge-pending  { background: var(--warn-bg);   color: var(--warn);     border-color: rgba(251, 191, 36, .32); }
-.badge-approved { background: var(--ok-bg);     color: var(--ok);       border-color: rgba(74, 222, 128, .32); }
-.badge-rejected { background: var(--danger-bg); color: var(--danger);   border-color: rgba(248, 113, 113, .32); }
+.badge-draft    { color: var(--ink-soft); background: var(--paper-3); }
+.badge-pending  { color: var(--warn);     background: var(--warn-bg); }
+.badge-approved { color: var(--ok);       background: var(--ok-bg); }
+.badge-rejected { color: var(--danger);   background: var(--danger-bg); }
 
-/* ---------- Tables ------------------------------------------------------- */
+/* ---------- Stamp ----------------------------------------------------------------------
+   The decision made visible. A double-ruled box, rotated, in the colour of the
+   verdict — the same gesture a department clerk makes with an actual stamp.
+   Applied to a topic once a supervisor has ruled on it.
+   ---------------------------------------------------------------------------------------- */
+
+.stamp {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 7px 16px;
+    font-family: var(--font-sans);
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--red);
+    border: 3px double currentColor;
+    background: transparent;
+    transform: rotate(-6deg);
+    opacity: .88;
+    animation: stamp-down .28s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+
+.stamp-hi {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: none;
+    opacity: .9;
+}
+
+.stamp-approved { color: var(--ok); }
+.stamp-rejected { color: var(--danger); }
+.stamp-pending  { color: var(--warn); transform: rotate(-3deg); }
+
+/* Inside a table cell, where a full-size stamp would blow the row height. */
+.stamp-sm {
+    padding: 3px 9px;
+    font-size: 11px;
+    letter-spacing: .1em;
+    border-width: 2px;
+    transform: rotate(-3deg);
+    animation: none;
+}
+
+.stamp-sm .stamp-hi { font-size: 10px; }
+
+/* ---------- Error pages ------------------------------------------------------------------
+   403 and 404 are front-of-house: an anonymous visitor can land on either, so
+   they get the poster treatment rather than a bare paper card. The status code
+   is set as the display line, because the number IS the message.
+   -------------------------------------------------------------------------------------------- */
+
+.error-code {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: clamp(64px, 12vw, 132px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -.02em;
+    color: var(--paper);
+    text-shadow: 4px 5px 0 rgba(28, 23, 18, .45);
+}
+
+/* ---------- Application form sheet --------------------------------------------------------
+   The topic form is the one screen a student fills in by hand elsewhere, so it
+   is drawn as the printed application it replaces: a ruled header block, a
+   reference line, and numbered fields.
+   -------------------------------------------------------------------------------------------- */
+
+.form-sheet-head {
+    border: 1px solid var(--ink);
+    border-bottom: 3px double var(--ink);
+    background: var(--paper-2);
+    padding: 16px 20px;
+    margin-bottom: 22px;
+    text-align: center;
+}
+
+.form-sheet-head h2 { margin: 0 0 2px; font-size: 24px; }
+
+.form-sheet-head p {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+/* Fields numbered the way a form's clauses are, counted by CSS so inserting
+   one in the middle does not mean renumbering the rest by hand. */
+.form-sheet { counter-reset: clause; }
+
+.form-sheet .field > label {
+    counter-increment: clause;
+}
+
+.form-sheet .field > label::before {
+    content: counter(clause) ". ";
+    font-family: var(--font-mono);
+    color: var(--red);
+}
+
+/* Comes down out of the screen and flattens onto the page: tilted back 74
+   degrees and lifted 180px toward the viewer, then rotated flat as it lands.
+   perspective() is inside the transform so the stamp needs no 3D context from
+   its parent and can be dropped into any layout. */
+@keyframes stamp-down {
+    0% {
+        transform: perspective(700px) translateZ(180px) rotateX(-74deg) rotate(-14deg) scale(1.5);
+        opacity: 0;
+    }
+    55% {
+        transform: perspective(700px) translateZ(0) rotateX(0deg) rotate(-6deg) scale(.93);
+        opacity: .95;
+    }
+    75% {
+        transform: perspective(700px) translateZ(0) rotateX(0deg) rotate(-6deg) scale(1.03);
+    }
+    100% {
+        transform: perspective(700px) translateZ(0) rotateX(0deg) rotate(-6deg) scale(1);
+        opacity: .88;
+    }
+}
+
+/* ---------- Pipeline ------------------------------------------------------
+   The whole dissertation, drawn as one ruled line across the register: topic,
+   guide, milestones, viva, result. Each stage carries its own state, so a
+   student can see at a glance where they actually are instead of reading four
+   separate cards and inferring it.
+
+   Marked up as an ordered list, so with CSS off it degrades to a numbered list
+   of stages in order -- which is still the correct information.
+   -------------------------------------------------------------------------- */
+
+.pipeline {
+    display: flex;
+    list-style: none;
+    margin: 0 0 26px;
+    padding: 20px 22px 18px;
+    gap: 0;
+    background: var(--paper-2);
+    border: 1px solid var(--line-strong);
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+}
+
+.stage {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 128px;
+    padding: 0 8px;
+    text-align: center;
+}
+
+/* The rule that joins one stage to the next, drawn behind the markers. */
+.stage::before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    left: -50%;
+    width: 100%;
+    height: 2px;
+    background: repeating-linear-gradient(
+            to right,
+            var(--line-strong) 0 6px,
+            transparent 6px 11px);
+}
+
+.stage:first-child::before { display: none; }
+
+.stage-marker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: 0 auto 10px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    background: var(--paper);
+    border: 2px solid var(--line-strong);
+    color: var(--ink-faint);
+}
+
+.stage-name {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+.stage-note {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin-top: 3px;
+}
+
+/* Done: stamped through, the way a clerk rules off a completed row. */
+.stage[data-state="done"] .stage-marker {
+    background: var(--ok-bg);
+    border-color: var(--ok);
+    color: var(--ok);
+}
+
+.stage[data-state="done"] .stage-name { color: var(--ok); }
+
+/* Current: the only stage drawn in full ink, with the marker ringed. */
+.stage[data-state="current"] .stage-marker {
+    background: var(--red);
+    border-color: var(--ink);
+    color: var(--paper);
+    box-shadow: 0 0 0 4px rgba(214, 52, 42, .18);
+}
+
+.stage[data-state="current"] .stage-name { color: var(--ink); }
+.stage[data-state="current"] .stage-note { color: var(--ink-soft); }
+
+.stage[data-state="blocked"] .stage-marker {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.stage[data-state="blocked"] .stage-name { color: var(--danger); }
+
+/* Pending stages recede rather than disappear: the student should see what is
+   coming, just not be drawn to it. */
+.stage[data-state="pending"] { opacity: .55; }
+
+/* ---------- Printed record -------------------------------------------------
+   A topic page has to leave the building as paper: a signed sheet in a file.
+   The block is hidden on screen and only exists in print, where it supplies
+   the letterhead, the reference line and the signature block that a screen
+   layout has no business showing.
+   ---------------------------------------------------------------------------- */
+
+.record-print { display: none; }
+
+.seal {
+    width: 96px;
+    height: 96px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: var(--font-sans);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    line-height: 1.5;
+    color: var(--ink);
+    transform: rotate(-8deg);
+    box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px var(--ink);
+}
+
+.sign-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    margin-top: 44px;
+}
+
+.sign-slot { flex: 1; }
+
+.sign-line {
+    border-bottom: 1px solid var(--ink);
+    height: 42px;
+}
+
+.sign-label {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 6px;
+}
+
+/* ---------- Tables ----------------------------------------------------------------------
+   The allocation register should look like a register: ruled rows, no zebra
+   stripes, figures in the typewriter face.
+   ----------------------------------------------------------------------------------------- */
 
 .table-wrap {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
     box-shadow: var(--shadow);
     overflow-x: auto;
 }
 
 table { width: 100%; border-collapse: collapse; font-size: 15px; }
 
-th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+th, td {
+    padding: 11px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+}
+
+th:last-child, td:last-child { border-right: none; }
 
 th {
-    background: var(--surface-2);
-    font-size: 12px;
+    background: var(--paper-2);
+    border-bottom: 2px solid var(--line-strong);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .1em;
     color: var(--ink-soft);
 }
 
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: rgba(255, 255, 255, .02); }
+td { font-variant-numeric: tabular-nums; }
 
-/* ---------- AI advisory panel (Phase 7) ----------------------------------
-   Every AI-generated output renders inside this. Deliberately distinct from
-   normal content: the reader must always be able to tell a model wrote it.
-   -------------------------------------------------------------------------- */
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(200, 145, 42, .09); }
+
+/* ---------- AI advisory panel (Phase 7) --------------------------------------------------
+   Still deliberately distinct from every other surface: the reader must always
+   be able to tell a model wrote it. On paper that reads as a pasted-in slip.
+   ------------------------------------------------------------------------------------------- */
 
 .ai-panel {
-    background: rgba(123, 91, 255, .10);
-    border: 1px solid rgba(123, 91, 255, .32);
-    border-left: 3px solid #7b5bff;
-    border-radius: var(--radius);
-    padding: 18px 20px;
+    background: #eae6f2;
+    border: 1px dashed var(--blue);
+    border-left: 4px solid var(--blue);
+    padding: 16px 18px;
     margin: 18px 0;
 }
 
 .ai-panel-label {
     display: block;
-    font-size: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .08em;
-    color: #b5a4ff;
+    letter-spacing: .14em;
+    color: var(--blue);
     margin-bottom: 8px;
 }
 
 .status-note {
+    font-family: var(--font-sans);
     color: var(--ink-faint);
     font-size: 14px;
-    margin-top: 32px;
+    margin-top: 28px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
 }
 
-/* ---------- Auth ---------------------------------------------------------- */
+/* ---------- Auth ------------------------------------------------------------------------- */
 
+/* Login now takes the same poster band as every other page (see
+   layout/_pagehero.html) and the card sits on paper below it, so there is
+   exactly one scene per page rather than a band stacked on a backdrop. */
 .auth-wrap {
+    position: relative;
     display: flex;
     justify-content: center;
-    padding-top: 20px;
-    position: relative;
-}
-
-.auth-wrap::before {
-    content: "";
-    position: absolute;
-    inset: -20% 10% 40%;
-    background: radial-gradient(50% 60% at 50% 40%, rgba(255, 77, 141, .22), rgba(255, 77, 141, 0) 70%);
-    pointer-events: none;
+    padding: 4px 0 12px;
 }
 
 .auth-card {
     position: relative;
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: 20px;
-    box-shadow: var(--shadow);
-    padding: 34px;
+    z-index: 1;
     width: 100%;
-    max-width: 420px;
+    max-width: 430px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    box-shadow: 5px 6px 0 rgba(28, 23, 18, .16);
+    padding: 30px 32px;
 }
 
-.auth-card h1 { font-size: 28px; }
-.auth-card .lead { font-size: 15px; margin-bottom: 22px; }
+/* Perforated top edge, like a slip torn from a book. */
+.auth-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    height: 1px;
+    background-image: repeating-linear-gradient(
+            to right,
+            var(--line-strong) 0 5px,
+            transparent 5px 11px);
+}
+
+.auth-card h1 { font-size: 30px; }
+.auth-card .lead { font-size: 15px; margin-bottom: 20px; }
 
 .auth-foot {
     text-align: center;
+    font-family: var(--font-sans);
     color: var(--ink-faint);
     font-size: 14px;
     margin: 18px 0 0;
 }
 
-.auth-foot a { color: var(--ink-soft); }
-
 .btn-block { display: block; width: 100%; text-align: center; }
 
-/* ---------- Page header --------------------------------------------------- */
+/* ---------- Page header --------------------------------------------------------------------
+   Every page in the system carries the same two-line head: the Devanagari name
+   of the desk you are standing at, then the English title. It is what makes an
+   approvals inbox and a mark sheet feel like the same office.
+   ---------------------------------------------------------------------------------------------- */
+
+.kicker-hi {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: .02em;
+    margin-bottom: 2px;
+}
 
 .page-head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 26px;
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 3px double var(--line-strong);
 }
 
 .page-head .lead { margin-bottom: 0; font-size: 15px; }
 
-/* ---------- Phase tag (scaffold placeholder, removed as phases land) ------ */
+/* ---------- Phase tag (scaffold placeholder, removed as phases land) ------------------------ */
 
 .phase-tag {
     margin-top: 12px !important;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: .06em;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
     text-transform: uppercase;
     color: var(--ink-faint) !important;
 }
 
-/* ---------- Small screens ------------------------------------------------ */
+/* ---------- Footer --------------------------------------------------------------------------- */
+
+.site-footer {
+    margin-top: 24px;
+    background: var(--paper-2);
+    border-top: 3px double var(--line-strong);
+    color: var(--ink-soft);
+    font-size: 14px;
+    padding: 38px 0 24px;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr repeat(4, 1fr);
+    gap: 26px;
+}
+
+.footer-tagline { color: var(--ink-faint); margin: 12px 0 0; max-width: 30ch; font-size: 14px; }
+
+.footer-col h4 {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 0 0 10px;
+}
+
+.footer-col ul { list-style: none; margin: 0; padding: 0; }
+.footer-col li { margin-bottom: 7px; }
+.footer-col a { color: var(--ink-soft); text-decoration: none; }
+.footer-col a:hover { color: var(--red); text-decoration: underline; }
+
+.footer-bottom {
+    margin-top: 30px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    color: var(--ink-faint);
+    font-size: 12px;
+}
+
+/* ---------- Print -----------------------------------------------------------------------------
+   Mark sheets and approval records get printed and filed. Strip the grain, the
+   textures and the chrome, keep the rules — a printout should look like the
+   document it always was.
+   ------------------------------------------------------------------------------------------------ */
+
+@media print {
+    body::after { display: none; }          /* grain would print as mud */
+    body { background: #fff; font-size: 12pt; }
+
+    .navbar, .site-footer, .ambient, .btn, .btn-row, .prompt-box { display: none !important; }
+
+    .hero, .card, .stat, .table-wrap, .auth-card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .hero::before, .hero::after { display: none; }
+    .paper { background-image: none; }
+    .stamp { animation: none; }
+    a { color: #000; text-decoration: none; }
+
+    /* The letterhead, reference line and signature block only exist here. */
+    .record-print { display: block !important; }
+    .no-print { display: none !important; }
+
+    .record-head {
+        text-align: center;
+        border-bottom: 3px double #000;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .record-head h2 { font-size: 20pt; margin: 0 0 2px; }
+    .record-head p  { margin: 0; font-size: 9pt; letter-spacing: .18em; text-transform: uppercase; }
+
+    .record-meta {
+        display: flex;
+        justify-content: space-between;
+        font-family: "Courier New", monospace;
+        font-size: 9pt;
+        border-bottom: 1px solid #000;
+        padding-bottom: 6px;
+        margin-bottom: 16px;
+    }
+
+    /* The scene must never print: it would cover a whole page in grey ink. */
+    .hero-wash, .auth-wrap::before { background: none !important; }
+
+    /* One record per sheet. */
+    .record-print { page-break-inside: avoid; }
+}
+
+/* ---------- Small screens ---------------------------------------------------------------------- */
 
 @media (max-width: 900px) {
-    .split { grid-template-columns: 1fr; gap: 32px; }
+    .split { grid-template-columns: 1fr; gap: 28px; }
     .footer-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 620px) {
     .container { padding: 0 16px; }
-    .hero { padding: 26px; }
-    .hero-wash { margin: -40px -16px 32px; padding: 64px 16px 76px; }
-    h1 { font-size: 30px; }
-    h2 { font-size: 24px; }
-    .navbar-inner { min-height: 58px; }
+    .hero { padding: 22px 20px; }
+    .hero-wash { margin: -30px -16px 26px; padding: 48px 16px 56px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 23px; }
+    .navbar-inner { min-height: 56px; }
     .brand-text { display: none; }
-    .nav-links a { padding: 6px 9px; font-size: 14px; }
+    .nav-links a { padding: 5px 8px; font-size: 13px; }
     .nav-user { display: none; }
-    .logo-strip { gap: 20px; font-size: 12px; }
+    .ambient { font-size: 11px; }
+    .logo-strip { gap: 18px; font-size: 11px; }
     .footer-grid { grid-template-columns: 1fr; }
-    .site-footer { margin: 0 12px 12px; }
-    .section { padding: 44px 0; }
-    .cta { padding: 48px 18px; }
+    .section { padding: 34px 0; }
+    .cta { padding: 40px 18px; }
 }

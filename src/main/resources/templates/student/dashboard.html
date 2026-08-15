@@ -16,22 +16,63 @@
 <body>
 <section>
 
-    <div class="page-head">
-        <div>
-            <h1>Student dashboard</h1>
-            <p class="lead">
-                Signed in as <strong sec:authentication="name">student@college.edu</strong>
-            </p>
-        </div>
-        <span class="badge badge-approved">STUDENT</span>
-    </div>
+    <div th:replace="~{layout/_pagehero :: hero(
+            'विद्यार्थी पटल',
+            'Student dashboard',
+            'Your topic, your guide, your deadlines — all in one register.',
+            'STUDENT')}"></div>
+
+    <!--
+      The whole dissertation on one ruled line. Stage state is carried in the
+      data-state attribute, so wiring it up later is a th:attr expression per
+      stage and no markup change:
+
+          th:attr="data-state=${topic != null and topic.status.name() == 'APPROVED'}
+                               ? 'done' : (topic != null ? 'current' : 'pending')"
+
+      Until the dashboard controller supplies those attributes, every stage
+      reads pending except the first, which is where a new account genuinely
+      stands: nothing proposed yet.
+    -->
+    <ol class="pipeline reveal">
+        <li class="stage" data-state="current">
+            <span class="stage-marker">1</span>
+            <span class="stage-name">Topic</span>
+            <span class="stage-note">Propose and get approval</span>
+        </li>
+        <li class="stage" data-state="pending">
+            <span class="stage-marker">2</span>
+            <span class="stage-name">Guide</span>
+            <span class="stage-note">Allocation within capacity</span>
+        </li>
+        <li class="stage" data-state="pending">
+            <span class="stage-marker">3</span>
+            <span class="stage-name">Milestones</span>
+            <span class="stage-note">Submit each version</span>
+        </li>
+        <li class="stage" data-state="pending">
+            <span class="stage-marker">4</span>
+            <span class="stage-name">Review</span>
+            <span class="stage-note">Feedback and revision</span>
+        </li>
+        <li class="stage" data-state="pending">
+            <span class="stage-marker">5</span>
+            <span class="stage-name">Viva</span>
+            <span class="stage-note">Panel and schedule</span>
+        </li>
+        <li class="stage" data-state="pending">
+            <span class="stage-marker">6</span>
+            <span class="stage-name">Result</span>
+            <span class="stage-note">Mark sheet issued</span>
+        </li>
+    </ol>
 
     <!--
       Placeholder figures. Phase 2 replaces each th:text with the real model
       attribute (topic status, allocation, milestone counts) — the markup does
       not need to change, only the expression.
     -->
-    <div class="stat-grid">
+    <div class="stat-grid reveal">
         <div class="stat">
             <span class="stat-value">—</span>
             <span class="stat-label">Topic status</span>
@@ -50,7 +91,7 @@
         </div>
     </div>
 
-    <div class="card-grid">
+    <div class="card-grid reveal">
         <article class="card">
             <h3>My topic</h3>
             <p>Propose a dissertation topic and track its approval.</p>

@@ -14,17 +14,13 @@
 <body>
 <section>
 
-    <div class="page-head">
-        <div>
-            <h1>Admin dashboard</h1>
-            <p class="lead">
-                Signed in as <strong sec:authentication="name">admin@college.edu</strong>
-            </p>
-        </div>
-        <span class="badge badge-approved">ADMIN</span>
-    </div>
+    <div th:replace="~{layout/_pagehero :: hero(
+            'प्रशासन पटल',
+            'Admin dashboard',
+            'Accounts, roles and the audit trail behind every state change.',
+            'ADMIN')}"></div>
 
-    <div class="card-grid">
+    <div class="card-grid reveal">
         <article class="card">
             <h3>Users &amp; roles</h3>
             <p>Create accounts, assign roles, enable and disable users.</p>

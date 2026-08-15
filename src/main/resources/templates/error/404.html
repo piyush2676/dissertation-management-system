@@ -1,4 +1,11 @@
 <!DOCTYPE html>
+<!--
+  404. Rendered by CustomErrorController, which maps the container's status code
+  to a view name.
+
+  Poster treatment rather than a paper card: an anonymous visitor can land here
+  from a stale link, so it is front-of-house and gets the scene behind it.
+-->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
@@ -6,12 +13,27 @@
 </head>
 <body>
 <section>
-    <div class="hero">
-        <span class="badge badge-draft">404</span>
-        <h1>Page not found</h1>
-        <p class="lead">That page does not exist, or it has moved.</p>
-        <a th:href="@{/}" class="btn btn-primary">Go home</a>
+
+    <div class="hero-wash">
+        <span class="eyebrow">Nothing filed under this address</span>
+
+        <h1 class="display">
+            <span class="error-code">404</span>
+            <span class="display-hi" lang="hi">पृष्ठ नहीं मिला</span>
+            <span class="display-sub" lang="en">Page not found</span>
+        </h1>
+
+        <p class="lead">
+            That page does not exist, or it has moved. Check the address, or start
+            again from the front desk.
+        </p>
+
+        <div class="btn-row">
+            <a th:href="@{/}" class="btn btn-primary btn-lg">Go home</a>
+            <a th:href="@{/dashboard}" class="btn btn-ghost btn-lg">My dashboard</a>
+        </div>
     </div>
+
 </section>
 </body>
 </html>

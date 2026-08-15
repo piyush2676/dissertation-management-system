@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+  409 Conflict — rendered by GlobalExceptionHandler, not by the container.
+
+  Two things land here, and they are the same kind of refusal:
+    InvalidStateTransitionException  the move is not legal from this state
+    CapacityExceededException        the supervisor has no seat left
+
+  Neither is a crash. The system worked exactly as designed and said no, so
+  the page explains the rule rather than apologising. "reason" carries the
+  exception's own sentence, which is why those messages are written for a
+  person to read.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Not allowed right now</title>
+</head>
+<body>
+<section>
+
+    <div class="hero-wash">
+        <span class="eyebrow">The rule held</span>
+
+        <h1 class="display">
+            <span class="error-code">409</span>
+            <span class="display-hi" lang="hi">अभी संभव नहीं</span>
+            <span class="display-sub" lang="en">Not allowed right now</span>
+        </h1>
+
+        <p class="lead">
+            Nothing was saved. This action does not fit the current state of the record,
+            so the system refused it rather than writing something inconsistent.
+        </p>
+
+        <div class="btn-row">
+            <a th:href="@{/dashboard}" class="btn btn-primary btn-lg">Back to dashboard</a>
+            <a th:href="@{/}" class="btn btn-ghost btn-lg">Go home</a>
+        </div>
+    </div>
+
+    <div class="hero">
+        <div class="alert alert-info" th:if="${reason != null}" role="status">
+            <strong>Why:</strong> <span th:text="${reason}">Topic is already approved.</span>
+        </div>
+
+        <h2>What usually causes this</h2>
+
+        <ul class="steps">
+            <li class="step">
+                <h3>The record already moved on</h3>
+                <p>Someone acted on it in another tab or another session — a topic that was
+                    approved while you were reading it cannot be approved twice.</p>
+            </li>
+            <li class="step">
+                <h3>The guide is at capacity</h3>
+                <p>A supervisor can only take as many students as the department allows.
+                    Once the last seat is accepted, further requests are refused.</p>
+            </li>
+            <li class="step">
+                <h3>The step is out of order</h3>
+                <p>Allocation follows topic approval; a viva follows submission. Skipping a
+                    stage is refused rather than silently allowed.</p>
+            </li>
+        </ul>
+
+        <p class="status-note">
+            Reload the record to see its current state. If you believe this is wrong,
+            the project coordinator can check the audit trail.
+        </p>
+    </div>
+
+</section>
+</body>
+</html>
