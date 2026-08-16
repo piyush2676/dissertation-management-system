@@ -21,7 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -173,10 +175,51 @@ public class AllocationService {
         return allocationRepository.findByStudentAndSessionAndStatusIn(
                 student, activeSessionFor(student.getProgramme()), AllocationStatus.LIVE);
     }
-
     @Transactional(readOnly = true)
     public List<Allocation> historyFor(String studentEmail) {
         return allocationRepository.findByStudentOrderByRequestedAtDesc(student(studentEmail));
+    }
+    @Transactional(readOnly = true)
+    public List<SupervisorProfile> selectableSupervisors(){
+        return supervisorProfileRepository.findAllBy();
+    }
+
+    /**
+     * Whether the student has any topic on record at all.
+     *
+     * Deliberately not existsByStudentAndStatusIn: request() resolves the topic
+     * with findFirstByStudentOrderByCreatedAtDesc, which accepts a draft. A
+     * stricter check here would hide a form the service would have accepted.
+     */
+    @Transactional(readOnly = true)
+    public boolean hasTopic(String studentEmail) {
+        return topicRepository.existsByStudent(student(studentEmail));
+    }
+
+    /**
+     * Seats occupied per supervisor in the student's own active session, keyed by
+     * supervisor profile id. Every selectable supervisor is present: guides with
+     * no allocations are missing from the aggregate, so they are zero-filled
+     * first and overwritten second, leaving callers with no absent keys to guard.
+     *
+     * Counts OCCUPIES_A_SEAT only (ACCEPTED, COORDINATOR_ASSIGNED). A pending
+     * request has not taken a seat, so a guide reading "3 of 5" may still have
+     * several students waiting on a decision.
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Long> seatsTakenFor(String studentEmail) {
+        StudentProfile student = student(studentEmail);
+        AcademicSession session = activeSessionFor(student.getProgramme());
+
+        Map<Long, Long> taken = new HashMap<>();
+        for (SupervisorProfile supervisor : selectableSupervisors()) {
+            taken.put(supervisor.getId(), 0L);
+        }
+        for (Object[] row : allocationRepository.countPerSupervisor(
+                session, AllocationStatus.OCCUPIES_A_SEAT)) {
+            taken.put((Long) row[0], (Long) row[1]);
+        }
+        return taken;
     }
 
     @Transactional(readOnly = true)

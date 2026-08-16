@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<!--
+  Student's guide page — GET /student/guide  (StudentAllocationController.view)
+
+  Model attributes read here:
+      supervisors    List<SupervisorProfile>  always present (@ModelAttribute)
+      hasAllocation  boolean                  always present
+      allocation     Allocation               null when hasAllocation is false
+      history        List<Allocation>         every request ever made, newest first
+      canRequest     boolean                  true when no live allocation exists
+      form           AllocationRequestForm    flashed back on a validation failure
+
+  Fetch-safety, with open-in-view off:
+      currentAllocationFor and historyFor both load supervisor, supervisor.user
+      and topic through an entity graph, so reading the guide's name and the
+      topic title here is safe. allocation.session, allocation.student and
+      allocation.allocatedBy are NOT in either graph — touching any of them on
+      this page throws LazyInitializationException at render time.
+
+  Seat counts are deliberately absent. The model carries maxStudents but no live
+  occupancy, so this page states the ceiling and never implies a remaining count
+  it cannot verify. The service refuses an over-capacity request anyway, and that
+  refusal arrives as a flash message.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>My guide</title>
+</head>
+<body>
+<!--
+  Two attributes below are optional on purpose:
+
+      hasTopic    Boolean            gates the request form
+      seatsTaken  Map<Long, Long>    supervisor profile id -> seats occupied
+
+  Both are read defensively: when the controller does not supply them the page
+  falls back to what it did before (form shown, ceilings printed instead of
+  counts) rather than failing. That way the template can land before the
+  service methods behind it, and upgrades itself the moment they appear.
+-->
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()},
+                  topicMissing=${hasTopic != null and !hasTopic},
+                  seatsKnown=${seatsTaken != null}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'मार्गदर्शक',
+            'My guide',
+            'Request a dissertation guide and follow the decision on it.',
+            'STUDENT')}"></div>
+
+    <!-- ---------- Empty state ------------------------------------------- -->
+    <!--
+      Shown only when nothing is live AND nothing was ever requested. A student
+      whose request was declined last week has a history, so they get the
+      request form with the record beneath it rather than this blank welcome.
+    -->
+    <div th:if="${!hasAllocation and #lists.isEmpty(history)}" class="hero">
+        <span class="eyebrow">No guide yet</span>
+        <h2>Choose the guide you want to work under</h2>
+        <p class="lead">
+            Propose your topic first, then pick a member of faculty whose interests line up
+            with it and send the request. They see it on their desk and either accept it or
+            decline with a reason. You can withdraw a request while it is still pending.
+        </p>
+        <a th:href="@{/student/topic}" class="btn btn-ghost">Go to my topic</a>
+    </div>
+
+    <!-- ---------- The live allocation ----------------------------------- -->
+    <div th:if="${hasAllocation}" class="hero">
+
+        <div class="page-head" style="margin-bottom:14px">
+            <div>
+                <h2 th:text="${allocation.supervisor.user.fullName}">Dr A Sharma</h2>
+                <p class="lead" style="margin:0">
+                    <span th:text="${allocation.supervisor.designation}">Associate Professor</span>,
+                    <span th:text="${allocation.supervisor.department}">CSE</span>
+                    · requested
+                    <span th:text="${#temporals.format(allocation.requestedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</span>
+                </p>
+            </div>
+
+            <!--
+              Same gesture as the topic page: a ruling gets a stamp, a state that
+              nobody has ruled on yet gets a badge. REQUESTED is not a decision.
+            -->
+            <span th:if="${allocation.decidedAt != null}" class="stamp"
+                  th:classappend="${allocation.status.name() == 'DECLINED'} ? 'stamp-rejected' : 'stamp-approved'">
+                <span th:text="${#strings.replace(allocation.status, '_', ' ')}">ACCEPTED</span>
+                <span class="stamp-hi" lang="hi"
+                      th:text="${allocation.status.name() == 'DECLINED'} ? 'अस्वीकृत'
+                             : (${allocation.status.name() == 'COORDINATOR_ASSIGNED'} ? 'नियुक्त' : 'स्वीकृत')">स्वीकृत</span>
+            </span>
+
+            <span th:if="${allocation.decidedAt == null}" class="badge badge-pending"
+                  th:text="${#strings.replace(allocation.status, '_', ' ')}">REQUESTED</span>
+        </div>
+
+        <!-- The reason is the whole point of a decline, so it sits above the fold. -->
+        <div th:if="${allocation.decisionReason != null}"
+             th:classappend="${allocation.status.name() == 'DECLINED'} ? 'alert-error' : 'alert-info'"
+             class="alert">
+            <strong>Guide's note:</strong>
+            <span th:text="${allocation.decisionReason}">Taking no new students this term.</span>
+        </div>
+
+        <div class="field" th:if="${allocation.supervisor.researchInterests != null}">
+            <label>Research interests</label>
+            <p style="margin:0" th:text="${allocation.supervisor.researchInterests}">machine learning, federated systems</p>
+        </div>
+
+        <div class="field" th:if="${allocation.topic != null}">
+            <label>Topic on record</label>
+            <p style="margin:0" th:text="${allocation.topic.title}">Adaptive load balancing for edge inference</p>
+        </div>
+
+        <div class="field" th:if="${allocation.decidedAt != null}">
+            <label>Decided</label>
+            <p style="margin:0"
+               th:text="${#temporals.format(allocation.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</p>
+        </div>
+
+        <div class="btn-row no-print" style="justify-content:flex-start; margin-top:24px">
+            <!--
+              POST, not a link: withdrawing changes state and must not be
+              reachable by GET. Offered only from REQUESTED, which is the single
+              state the machine allows WITHDRAWN out of — once a guide has
+              accepted, the student cannot quietly undo it.
+            -->
+            <form th:if="${allocation.status.name() == 'REQUESTED'}"
+                  th:action="@{/student/guide/{id}/withdraw(id=${allocation.id})}"
+                  method="post" class="inline-form">
+                <button type="submit" class="btn btn-ghost">Withdraw request</button>
+            </form>
+
+            <button type="button" class="btn btn-ghost" data-print
+                    th:if="${allocation.decidedAt != null}">Print record</button>
+        </div>
+
+        <p class="status-note" th:if="${allocation.status.name() == 'REQUESTED'}">
+            Waiting on your guide. You will see the decision here as soon as they record it.
+        </p>
+        <p class="status-note" th:if="${allocation.status.name() == 'ACCEPTED'}">
+            Allocated. Milestones for this session follow in the next stage.
+        </p>
+        <p class="status-note" th:if="${allocation.status.name() == 'COORDINATOR_ASSIGNED'}">
+            Assigned by the coordinator rather than requested by you.
+        </p>
+
+        <!--
+          The filed copy. Hidden on screen, printed as a department record: the
+          letterhead and signature block the screen has no business showing.
+        -->
+        <div class="record-print" th:if="${allocation.decidedAt != null}">
+            <div class="record-head">
+                <h2 lang="hi">शोध प्रबंध कार्यालय</h2>
+                <p>Dissertation Management System &middot; Guide allocation record</p>
+            </div>
+
+            <div class="record-meta">
+                <span th:text="'Ref: ALC/' + ${allocation.id}">Ref: ALC/10</span>
+                <span th:text="'Decided: ' + ${#temporals.format(allocation.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">
+                    Decided: 01 Jan 2026</span>
+            </div>
+
+            <p><strong>Guide:</strong> <span th:text="${allocation.supervisor.user.fullName}">Dr A Sharma</span></p>
+            <p><strong>Status:</strong> <span th:text="${#strings.replace(allocation.status, '_', ' ')}">ACCEPTED</span></p>
+            <p th:if="${allocation.topic != null}">
+                <strong>Topic:</strong> <span th:text="${allocation.topic.title}">Title</span>
+            </p>
+            <p th:if="${allocation.decisionReason != null}">
+                <strong>Reason recorded:</strong> <span th:text="${allocation.decisionReason}">—</span>
+            </p>
+
+            <div class="sign-row">
+                <div class="sign-slot">
+                    <div class="sign-line"></div>
+                    <span class="sign-label">Supervisor</span>
+                </div>
+                <div class="sign-slot">
+                    <div class="sign-line"></div>
+                    <span class="sign-label">Coordinator</span>
+                </div>
+                <div class="seal">
+                    <span>Dissertation</span>
+                    <span>Cell</span>
+                    <span th:text="${#temporals.format(allocation.decidedAt.atZone(zone), 'yyyy')}">2026</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------- Blocked: no topic on record --------------------------- -->
+    <!--
+      Shown instead of the form, not beside it. The service refuses a request
+      from a student with no topic, so offering the form here would be offering
+      a button that cannot work: the student picks a guide, submits, and gets a
+      red flash for a rule that was knowable before they started.
+    -->
+    <div th:if="${canRequest and topicMissing}" class="alert alert-info" style="margin-top:32px">
+        <strong>Topic first.</strong>
+        A guide request is made against a topic, so put one on record before choosing a guide.
+        <a th:href="@{/student/topic}">Propose a topic</a>.
+    </div>
+
+    <!-- ---------- Request form ------------------------------------------ -->
+    <div th:if="${canRequest and !topicMissing}" class="form-sheet-head" style="margin-top:32px">
+        <h2 lang="hi">मार्गदर्शक आवेदन</h2>
+        <p lang="en">Form DMS/G-1 &middot; Guide request</p>
+    </div>
+
+    <form th:if="${canRequest and !topicMissing}" class="form-sheet" th:action="@{/student/guide/request}"
+          th:object="${form}" method="post" novalidate>
+
+        <div class="field">
+            <label for="supervisorId">Guide</label>
+            <!--
+              A full guide stays listed but cannot be picked. Removing the
+              option would leave the student wondering where a name went;
+              disabling it answers the question on the spot. The service still
+              enforces capacity — this only saves a pointless round trip.
+            -->
+            <select id="supervisorId" th:field="*{supervisorId}">
+                <option value="">— choose a guide —</option>
+                <option th:each="s : ${supervisors}"
+                        th:with="full=${seatsKnown and (seatsTaken[s.id] != null ? seatsTaken[s.id] : 0) >= s.maxStudents}"
+                        th:value="${s.id}"
+                        th:disabled="${full}"
+                        th:text="${s.user.fullName + ' — ' + s.designation + ', ' + s.department
+                                 + (full ? ' — full' : '')}">
+                    Dr Sharma — Professor, CSE
+                </option>
+            </select>
+            <span class="field-error" th:if="${#fields.hasErrors('supervisorId')}"
+                  th:errors="*{supervisorId}">Supervisor error</span>
+            <!--
+              The topic prerequisite is stated here rather than left to be
+              discovered by failing: the service refuses a request from a
+              student with no topic on record, and that refusal comes back as a
+              red flash after the form has already been filled in. The page
+              cannot gate the form on it — the model carries no topic flag — so
+              it says so in words instead.
+            -->
+            <span class="field-hint">
+                One request at a time. Your guide either accepts it or declines with a
+                reason, and a guide who is already full cannot be requested.
+                <!--
+                  Only worth saying while the page cannot tell: once hasTopic is
+                  supplied, a student without a topic never reaches this form.
+                -->
+                <span th:if="${hasTopic == null}">You need a topic on record first.</span>
+            </span>
+        </div>
+
+        <div class="btn-row" style="justify-content:flex-start">
+            <button type="submit" class="btn btn-gradient">Send request</button>
+        </div>
+    </form>
+
+    <!-- ---------- Faculty on offer -------------------------------------- -->
+    <!--
+      Shown next to the form so the choice is made from interests rather than
+      from a name in a dropdown.
+
+      Occupancy counts only the statuses that hold a seat (ACCEPTED and
+      COORDINATOR_ASSIGNED). Pending requests are deliberately not counted, so
+      "3 of 5 seats taken" can sit alongside four more students waiting on the
+      same guide. The number is what the department has committed, not what it
+      is likely to end up with.
+    -->
+    <div th:if="${canRequest and !topicMissing and !#lists.isEmpty(supervisors)}" class="section">
+        <div class="section-head">
+            <h2>Faculty taking students</h2>
+            <p class="lead">Match your topic to what they actually work on.</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card" th:each="s : ${supervisors}"
+                 th:with="taken=${seatsKnown ? (seatsTaken[s.id] != null ? seatsTaken[s.id] : 0) : null},
+                          full=${taken != null and taken >= s.maxStudents}">
+                <h3 th:text="${s.user.fullName}">Dr A Sharma</h3>
+                <p class="field-hint"
+                   th:text="${s.designation} + ', ' + ${s.department}">Associate Professor, CSE</p>
+                <p th:if="${s.researchInterests != null}"
+                   th:text="${s.researchInterests}">machine learning, federated systems</p>
+
+                <!-- Live occupancy, once the controller supplies it. -->
+                <p class="field-hint" th:if="${taken != null}">
+                    <span th:text="${taken + ' of ' + s.maxStudents + ' seats taken'}">2 of 5 seats taken</span>
+                    <span class="badge badge-draft" th:if="${full}">Full</span>
+                </p>
+
+                <!-- Fallback: the ceiling only, never a remaining count we cannot verify. -->
+                <p class="field-hint" th:if="${taken == null}"
+                   th:text="'Supervises up to ' + ${s.maxStudents} + ' students'">
+                    Supervises up to 5 students</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------- History ------------------------------------------------ -->
+    <!--
+      Every request the student ever made, live one included. Withdrawn and
+      declined rows stay visible on purpose: the record is the point, and a
+      student should be able to see what they already tried.
+    -->
+    <div th:unless="${#lists.isEmpty(history)}" class="section">
+        <div class="section-head">
+            <h2>Request history</h2>
+            <p class="lead">Newest first.</p>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Guide</th>
+                    <th>Status</th>
+                    <th>Requested</th>
+                    <th>Decided</th>
+                    <th>Reason</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${history}">
+                    <td>
+                        <span th:text="${a.supervisor.user.fullName}">Dr A Sharma</span><br>
+                        <span class="field-hint"
+                              th:text="${a.supervisor.designation} + ', ' + ${a.supervisor.department}">
+                            Associate Professor, CSE</span>
+                    </td>
+                    <td>
+                        <span th:if="${a.decidedAt != null}" class="stamp stamp-sm"
+                              th:classappend="${a.status.name() == 'DECLINED'} ? 'stamp-rejected' : 'stamp-approved'"
+                              th:text="${#strings.replace(a.status, '_', ' ')}">ACCEPTED</span>
+                        <span th:if="${a.decidedAt == null}" class="badge"
+                              th:classappend="${a.status.name() == 'WITHDRAWN'} ? 'badge-draft' : 'badge-pending'"
+                              th:text="${#strings.replace(a.status, '_', ' ')}">REQUESTED</span>
+                    </td>
+                    <td th:text="${#temporals.format(a.requestedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</td>
+                    <td th:text="${a.decidedAt != null}
+                            ? ${#temporals.format(a.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')} : '—'">—</td>
+                    <td th:text="${a.decisionReason != null} ? ${a.decisionReason} : '—'">—</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

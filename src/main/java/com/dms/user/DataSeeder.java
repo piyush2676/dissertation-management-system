@@ -1,11 +1,17 @@
 package com.dms.user;
 
+import com.dms.session.AcademicSession;
+import com.dms.session.AcademicSessionRepository;
+import com.dms.session.Milestone;
+import com.dms.session.MilestoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,9 +25,21 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final SupervisorProfileRepository supervisorProfileRepository;
     private final StudentProfileRepository studentProfileRepository;
+    private final AcademicSessionRepository academicSessionRepository;
+    private final MilestoneRepository milestoneRepository;
+
+    /**
+     * Each block guards its own data. A single guard at the top of run() would mean
+     * that anything added below it never runs once the users already exist.
+     */
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        seedUsers();
+        seedSessions();
+    }
+
+    private void seedUsers() {
         if (userRepository.count() > 0) {
             return;
         }
@@ -43,7 +61,46 @@ public class DataSeeder implements CommandLineRunner {
         createStudentProfile(student4, "21INT015", BTECH_MTECH_INTEGRATED, "CSE", "2021-2026", 9);
 
     }
-            private User createUser(String email,String rawPassword,String fullName,Set<Role> roles){
+
+    /**
+     * One active session per programme. Every programme needs its own, because the
+     * guide page looks the session up by the student's own programme: a missing row
+     * fails for those students alone. The partial unique index in V4 is
+     * UNIQUE (programme) WHERE active, so three active rows across three programmes
+     * are legal, while a second active row for one programme is not.
+     */
+    private void seedSessions() {
+        if (academicSessionRepository.count() > 0) {
+            return;
+        }
+
+        for (Programme programme : Programme.values()) {
+            AcademicSession session = createSession("2025-26", programme,
+                    LocalDate.of(2025, 7, 1), LocalDate.of(2026, 5, 31), true);
+            seedMilestones(session, programme);
+        }
+    }
+
+    /**
+     * Stages differ per programme by rows, not by a branch in any service.
+     * Weightage totals 100 within each session.
+     */
+    private void seedMilestones(AcademicSession session, Programme programme) {
+        if (programme == MTECH) {
+            createMilestone(session, "Synopsis", "Problem statement, objectives and scope", LocalDate.of(2025, 8, 15), 10, 1);
+            createMilestone(session, "Literature Review", "Survey of prior work with a gap analysis", LocalDate.of(2025, 10, 10), 15, 2);
+            createMilestone(session, "Interim Report", "Design, methodology and progress to date", LocalDate.of(2025, 12, 20), 25, 3);
+            createMilestone(session, "Pre-submission Seminar", "Departmental presentation before final submission", LocalDate.of(2026, 3, 15), 20, 4);
+            createMilestone(session, "Final Thesis", "Complete thesis with results and evaluation", LocalDate.of(2026, 4, 30), 30, 5);
+        } else {
+            createMilestone(session, "Synopsis", "Problem statement, objectives and scope", LocalDate.of(2025, 9, 1), 15, 1);
+            createMilestone(session, "Interim Report", "Design, methodology and progress to date", LocalDate.of(2025, 12, 15), 25, 2);
+            createMilestone(session, "Pre-submission Seminar", "Departmental presentation before final submission", LocalDate.of(2026, 3, 20), 20, 3);
+            createMilestone(session, "Final Report", "Complete report with results and evaluation", LocalDate.of(2026, 4, 25), 40, 4);
+        }
+    }
+
+    private User createUser(String email,String rawPassword,String fullName,Set<Role> roles){
         User user = new User();
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
@@ -69,5 +126,26 @@ public class DataSeeder implements CommandLineRunner {
         supervisorProfile.setResearchInterests(researchInterests);
         supervisorProfile.setMaxStudents(maxStudents);
         supervisorProfileRepository.save(supervisorProfile);
+    }
+    private AcademicSession createSession(String label,Programme programme,LocalDate startDate,LocalDate endDate,boolean active){
+        AcademicSession session = new AcademicSession();
+        session.setLabel(label);
+        session.setProgramme(programme);
+        session.setStartDate(startDate);
+        session.setEndDate(endDate);
+        session.setActive(active);
+        session.setCreatedAt(Instant.now());
+        return academicSessionRepository.save(session);
+    }
+    private void createMilestone(AcademicSession session,String name,String description,LocalDate dueDate,int weightage,int sequenceNo){
+        Milestone milestone = new Milestone();
+        milestone.setSession(session);
+        milestone.setName(name);
+        milestone.setDescription(description);
+        milestone.setDueDate(dueDate);
+        milestone.setWeightage(weightage);
+        milestone.setSequenceNo(sequenceNo);
+        milestone.setCreatedAt(Instant.now());
+        milestoneRepository.save(milestone);
     }
 }

@@ -30,6 +30,9 @@
             <li sec:authorize="hasRole('STUDENT')">
                 <a th:href="@{/student/topic}">My topic</a>
             </li>
+            <li sec:authorize="hasRole('STUDENT')">
+                <a th:href="@{/student/guide}">My guide</a>
+            </li>
 
             <li sec:authorize="hasRole('SUPERVISOR')">
                 <a th:href="@{/supervisor/dashboard}">Dashboard</a>

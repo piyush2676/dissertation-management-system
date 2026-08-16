@@ -5,12 +5,14 @@ import com.dms.user.StudentProfile;
 import com.dms.user.SupervisorProfile;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public interface AllocationRepository extends JpaRepository<Allocation, Long> {
+    @EntityGraph(attributePaths = {"supervisor","supervisor.user","topic"})
     Optional<Allocation> findByStudentAndSessionAndStatusIn(StudentProfile student, AcademicSession session, Collection<AllocationStatus> statuses);
     boolean existsByStudentAndSessionAndStatusIn(StudentProfile student, AcademicSession session, Collection<AllocationStatus> statuses);
     long countBySupervisorAndSessionAndStatusIn(SupervisorProfile supervisor, AcademicSession session, Collection<AllocationStatus> statuses);
@@ -25,4 +27,19 @@ public interface AllocationRepository extends JpaRepository<Allocation, Long> {
     @EntityGraph(attributePaths = {"supervisor","supervisor.user","topic"})
     List<Allocation> findByStudentOrderByRequestedAtDesc(StudentProfile student);
 
+    /**
+     * Seats occupied per supervisor in one session, as [supervisorId, count] rows.
+     * One aggregate query instead of countBySupervisorAndSessionAndStatusIn once
+     * per guide, which would be a query per card on every page load.
+     * Supervisors with no allocations are absent from the result entirely --
+     * callers zero-fill rather than assuming a row exists.
+     */
+    @Query("""
+           select a.supervisor.id, count(a)
+           from Allocation a
+           where a.session = :session and a.status in :statuses
+           group by a.supervisor.id
+           """)
+    List<Object[]> countPerSupervisor(@Param("session") AcademicSession session,
+                                      @Param("statuses") Collection<AllocationStatus> statuses);
 }

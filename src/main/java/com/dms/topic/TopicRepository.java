@@ -15,6 +15,7 @@ public interface TopicRepository extends JpaRepository<Topic,Long> {
     Optional<Topic> findFirstByStudentAndStatusInOrderByCreatedAtDesc(StudentProfile student, Collection<TopicStatus> statuses);
 
     boolean existsByStudentAndStatusIn(StudentProfile student, Collection<TopicStatus> statuses);
+    boolean existsByStudent(StudentProfile student);
 
     long countByProposedSupervisorAndStatus(SupervisorProfile supervisor, TopicStatus status);
 
