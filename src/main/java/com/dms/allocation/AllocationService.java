@@ -184,28 +184,11 @@ public class AllocationService {
         return supervisorProfileRepository.findAllBy();
     }
 
-    /**
-     * Whether the student has any topic on record at all.
-     *
-     * Deliberately not existsByStudentAndStatusIn: request() resolves the topic
-     * with findFirstByStudentOrderByCreatedAtDesc, which accepts a draft. A
-     * stricter check here would hide a form the service would have accepted.
-     */
     @Transactional(readOnly = true)
     public boolean hasTopic(String studentEmail) {
-        return topicRepository.existsByStudent(student(studentEmail));
+        return topicRepository.existsByStudentAndStatusIn(
+                student(studentEmail), List.of(TopicStatus.APPROVED));
     }
-
-    /**
-     * Seats occupied per supervisor in the student's own active session, keyed by
-     * supervisor profile id. Every selectable supervisor is present: guides with
-     * no allocations are missing from the aggregate, so they are zero-filled
-     * first and overwritten second, leaving callers with no absent keys to guard.
-     *
-     * Counts OCCUPIES_A_SEAT only (ACCEPTED, COORDINATOR_ASSIGNED). A pending
-     * request has not taken a seat, so a guide reading "3 of 5" may still have
-     * several students waiting on a decision.
-     */
     @Transactional(readOnly = true)
     public Map<Long, Long> seatsTakenFor(String studentEmail) {
         StudentProfile student = student(studentEmail);
@@ -227,7 +210,10 @@ public class AllocationService {
         return allocationRepository.findBySupervisorAndStatusOrderByRequestedAtAsc(
                 supervisor(supervisorEmail), AllocationStatus.REQUESTED);
     }
-
+    @Transactional(readOnly = true)
+    public List<Allocation> decidedBy(String supervisorEmail) {
+        return allocationRepository.findBySupervisorAndStatusInOrderByDecidedAtDesc(supervisor(supervisorEmail),List.of(AllocationStatus.ACCEPTED,AllocationStatus.DECLINED,AllocationStatus.COORDINATOR_ASSIGNED,AllocationStatus.WITHDRAWN));
+    }
     @Transactional(readOnly = true)
     public long loadFor(String supervisorEmail, Programme programme) {
         return allocationRepository.countBySupervisorAndSessionAndStatusIn(
