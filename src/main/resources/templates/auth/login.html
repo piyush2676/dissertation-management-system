@@ -1,21 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Login page.
-
-  Posts to /login, which Spring Security handles itself — you do NOT write a
-  POST /login controller method. In SecurityConfig:
-
-      .formLogin(form -> form
-              .loginPage("/login")
-              .defaultSuccessUrl("/dashboard", true)
-              .permitAll())
-      .logout(logout -> logout
-              .logoutSuccessUrl("/login?logout")
-              .permitAll())
-
-  Field names must stay "username" and "password" unless you override
-  .usernameParameter() / .passwordParameter().
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
