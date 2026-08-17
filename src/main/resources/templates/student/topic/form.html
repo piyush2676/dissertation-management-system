@@ -1,20 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Topic form — GET /student/topic/new, GET /student/topic/{id}/edit,
-  and re-rendered by POST /student/topic/save and /student/topic/submit
-  when validation fails.
-
-  Model attributes read here:
-      form            TopicForm       bound with th:object
-      mode            "new" | "edit"  always present
-      supervisors     List<SupervisorProfile>   @ModelAttribute on the controller
-      status          TopicStatus     edit only; absent on a validation re-render
-      decisionReason  String          edit only
-
-  One <form>, two submit buttons. formaction picks the endpoint, so "Save draft"
-  and "Submit for approval" post the same fields to different handlers instead of
-  duplicating the markup.
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
@@ -39,7 +23,6 @@
               th:text="${#strings.replace(status, '_', ' ')}">DRAFT</span>
     </div>
 
-    <!-- The guide's reason for sending it back, kept beside the fields being fixed. -->
     <div th:if="${decisionReason != null}" class="alert alert-info">
         <strong>Changes requested:</strong>
         <span th:text="${decisionReason}">Narrow the scope.</span>
@@ -47,12 +30,6 @@
 
     <div class="hero">
 
-        <!--
-          Drawn as the printed application it replaces: a ruled header block and
-          a reference line. The field numbers come from a CSS counter on
-          .form-sheet, so inserting a field in the middle never means
-          renumbering the rest by hand.
-        -->
         <div class="form-sheet-head">
             <h2 lang="hi">शोध विषय आवेदन</h2>
             <p lang="en">Form DMS/T-1 &middot; Topic proposal</p>
@@ -61,8 +38,6 @@
         <form class="form-sheet" th:action="@{/student/topic/save}" th:object="${form}"
               method="post" novalidate>
 
-            <!-- Carries the id on an edit; null on a new topic, which is how the
-                 service decides between insert and update. -->
             <input type="hidden" th:field="*{id}">
 
             <div class="field">
