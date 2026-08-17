@@ -1,13 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Supervisor dashboard.
-
-  Phase 1: no model attributes.
-  Phase 2+ adds: pendingTopics, myStudents, submissionsAwaitingReview
-
-  Note: every query behind this page must be scoped to the signed-in supervisor.
-  hasRole('SUPERVISOR') alone is not enough — see AuthzService and docs/guide.md §7.
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
