@@ -1,16 +1,4 @@
 <!DOCTYPE html>
-<!--
-  409 Conflict — rendered by GlobalExceptionHandler, not by the container.
-
-  Two things land here, and they are the same kind of refusal:
-    InvalidStateTransitionException  the move is not legal from this state
-    CapacityExceededException        the supervisor has no seat left
-
-  Neither is a crash. The system worked exactly as designed and said no, so
-  the page explains the rule rather than apologising. "reason" carries the
-  exception's own sentence, which is why those messages are written for a
-  person to read.
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
