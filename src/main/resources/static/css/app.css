@@ -1,34 +1,20 @@
-/* ==========================================================================
-   Dissertation Management System — application stylesheet
 
-   Aged-register theme. Paper canvas, printer's ink, one shopfront red, film
-   grain over everything. The reference is a small-town Indian signboard and a
-   college attendance register, not a SaaS dashboard.
-
-   Two zones, one vocabulary:
-     front of house  landing, login, errors     poster treatment, big type
-     back office     dashboards, forms, tables  paper documents, ruled, calm
-
-   No CDN, no framework, no downloaded font files. The display face is whatever
-   Devanagari the machine already has, so a lab demo works with the network
-   unplugged and nothing 404s.
-   ========================================================================== */
 
 :root {
-    /* Paper and ink */
-    --paper:       #f4ece0;   /* aged register page */
-    --paper-2:     #ede2d2;   /* a shade deeper, for wells and headers */
-    --paper-3:     #e3d5c0;   /* deepest, for pressed states */
-    --ink:         #1c1712;   /* printer's black, warm */
+    
+    --paper:       #f4ece0;   
+    --paper-2:     #ede2d2;   
+    --paper-3:     #e3d5c0;   
+    --ink:         #1c1712;   
     --ink-soft:    #5b5044;
     --ink-faint:   #8b7d6c;
 
-    /* Rules and hairlines */
+    
     --line:        rgba(28, 23, 18, .18);
     --line-strong: rgba(28, 23, 18, .42);
-    --rule:        rgba(47, 93, 138, .22);   /* the blue feint of ruled paper */
+    --rule:        rgba(47, 93, 138, .22);   
 
-    /* Signboard palette, straight off the shopfront */
+    
     --red:         #d6342a;
     --red-dark:    #a8241c;
     --blue:        #2f5d8a;
@@ -36,7 +22,7 @@
     --rust:        #b4531f;
     --mustard:     #c8912a;
 
-    /* Semantic, mapped onto the signboard palette */
+    
     --ok:          #3d6634;
     --ok-bg:       rgba(75, 122, 63, .13);
     --warn:        #8a6110;
@@ -44,14 +30,12 @@
     --danger:      #96301f;
     --danger-bg:   rgba(180, 83, 31, .13);
 
-    --radius:      3px;       /* paper does not have rounded corners */
+    --radius:      3px;       
     --radius-sm:   2px;
     --shadow:      2px 3px 0 rgba(28, 23, 18, .10);
     --shadow-lift: 3px 5px 0 rgba(28, 23, 18, .16);
 
-    /* Devanagari carries the nostalgia. Latin alone reads as a startup logo,
-       so the display face is the script the institute actually uses. All three
-       families ship with an OS; no webfont, no download, no fallback box. */
+    
     --font-display: "Nirmala UI", "Noto Sans Devanagari", "Mangal",
                     "Kohinoor Devanagari", "Devanagari Sangam MN", serif;
     --font-serif:   "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
@@ -59,18 +43,6 @@
     --font-sans:    "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
     --font-mono:    "Courier New", ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
-
-/* ---------- Time of day ------------------------------------------------------
-   The illustration answers to the ambient clock. /js/app.js writes
-   data-daypart onto <html>; these four blocks are the whole implementation.
-
-   Three layers sit over the artwork, in this order: a lamp glow (only after
-   dark, positioned over the shop's opening), a scrim for text legibility, and
-   a flat colour tint for the hour. Daylight is the default and adds nothing.
-
-   Paper surfaces never change. The room outside gets dark; the register on the
-   desk stays readable.
-   ------------------------------------------------------------------------------ */
 
 :root {
     --scene-lamp: linear-gradient(transparent, transparent);
@@ -105,7 +77,7 @@
 }
 
 :root[data-daypart="night"] {
-    /* Two lamps: the shop interior, and the bare bulb over the notice board. */
+    
     --scene-lamp:
         radial-gradient(circle at 49% 59%, rgba(255, 196, 104, .58) 0%, rgba(255, 196, 104, 0) 15%),
         radial-gradient(circle at 15% 55%, rgba(255, 214, 150, .34) 0%, rgba(255, 214, 150, 0) 11%);
@@ -120,25 +92,10 @@
         rgba(6, 8, 18, .60) 100%);
 }
 
-/* ---------- Cross-document view transitions ----------------------------------
-   This is a server-rendered multi-page app: every navigation is a fresh
-   document from Spring. That normally means a white flash between pages.
-
-   One at-rule opts both documents in, and the browser then snapshots the old
-   page, swaps in the new one and animates between them. Named elements morph
-   rather than cross-fade -- the masthead and the hero band are the same object
-   on both sides of a navigation, so they stay put while the content changes.
-
-   No JavaScript, no router, no framework. Browsers without support simply
-   navigate the old way, which is the behaviour we already had.
-   ------------------------------------------------------------------------------ */
-
 @view-transition {
     navigation: auto;
 }
 
-/* Names must be unique per document. Each of these appears exactly once on
-   every page, which is what makes them safe to name. */
 .navbar      { view-transition-name: masthead; }
 .ambient     { view-transition-name: ambient-strip; }
 .hero-wash   { view-transition-name: page-band; }
@@ -153,15 +110,13 @@
         animation: page-in .26s cubic-bezier(0, 0, .2, 1) both;
     }
 
-    /* The band morphs between pages rather than fading: same object, new
-       contents, like a sign being repainted while you stand in front of it. */
+    
     ::view-transition-group(page-band) {
         animation-duration: .32s;
         animation-timing-function: cubic-bezier(.2, .8, .3, 1);
     }
 }
 
-/* A page turning: the outgoing sheet lifts slightly, the incoming one settles. */
 @keyframes page-out {
     to { opacity: 0; transform: translateY(-6px) scale(.995); }
 }
@@ -169,17 +124,6 @@
 @keyframes page-in {
     from { opacity: 0; transform: translateY(10px) scale(.995); }
 }
-
-/* ---------- Scroll-driven animation -------------------------------------------
-   Reveals and the reading rule are driven by scroll position itself, not by a
-   scroll listener or an IntersectionObserver. The browser runs them on the
-   compositor, so they cost nothing on the main thread and cannot jank.
-
-   Both are wrapped in @supports on purpose. .reveal starts at opacity 0, so
-   without the guard a browser that does not understand view() would hide the
-   page's content permanently -- a decoration must never be able to take the
-   content down with it.
-   -------------------------------------------------------------------------------- */
 
 .scroll-rule {
     position: fixed;
@@ -241,10 +185,6 @@ body {
     overflow-x: clip;
 }
 
-/* Film grain over the whole page.
-   An inline SVG turbulence filter, so it costs one data URI and no request.
-   Fixed and pointer-events:none, so it never intercepts a click and never
-   scrolls with content — the grain sits on the screen, not on the page. */
 body::after {
     content: "";
     position: fixed;
@@ -272,12 +212,6 @@ a:hover { color: var(--red); }
 .container { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 24px; }
 .container-narrow { max-width: 820px; }
 
-/* ---------- Ambient strip -------------------------------------------------
-   Bare text at the top of the shell: local time on the left, presence on the
-   right. Deliberately not a card and not a nav item — it should read as
-   printed on the paper rather than as software.
-   -------------------------------------------------------------------------- */
-
 .ambient {
     display: flex;
     align-items: baseline;
@@ -303,11 +237,6 @@ a:hover { color: var(--red); }
     background: var(--leaf);
     box-shadow: 0 0 0 3px rgba(75, 122, 63, .18);
 }
-
-/* ---------- Navbar --------------------------------------------------------
-   A masthead, not a floating pill bar: sits on the paper, separated by a
-   double rule the way a printed header is.
-   -------------------------------------------------------------------------- */
 
 .navbar {
     position: sticky;
@@ -392,11 +321,7 @@ a:hover { color: var(--red); }
 
 .inline-form { display: inline; margin: 0; }
 
-/* ---------- Layout --------------------------------------------------------- */
-
 main.container { flex: 1; padding-top: 30px; padding-bottom: 64px; }
-
-/* ---------- Typography ------------------------------------------------------ */
 
 h1 {
     font-family: var(--font-display);
@@ -424,8 +349,6 @@ h3 {
 
 .lead { color: var(--ink-soft); font-size: 17px; max-width: 64ch; margin: 0 0 20px; }
 
-/* The Devanagari poster line. Set enormous, tight, and slightly loose in the
-   tracking so the matras have room. */
 .display {
     font-family: var(--font-display);
     font-size: clamp(40px, 8vw, 92px);
@@ -452,8 +375,6 @@ h3 {
     margin-top: 10px;
 }
 
-/* Kept for compatibility with existing markup; on paper a gradient would be
-   wrong, so the accent is simply the shopfront red. */
 .grad-text { color: var(--red); }
 
 .eyebrow {
@@ -477,12 +398,6 @@ code {
     padding: 1px 5px;
     font-size: .92em;
 }
-
-/* ---------- Ruled paper -----------------------------------------------------
-   The single texture that carries the whole theme. Feint blue horizontal rules
-   at the body line height, plus one red margin rule down the left, exactly as
-   on a college register.
-   ---------------------------------------------------------------------------- */
 
 .paper {
     position: relative;
@@ -508,9 +423,6 @@ code {
     background: rgba(214, 52, 42, .34);
 }
 
-/* Ruled paper carrying prose: text starts to the right of the red margin rule,
-   and the line height must match the rule spacing in .paper or the words drift
-   off the lines. Both are 28px. Do not change one without the other. */
 .paper-note {
     padding: 14px 20px 16px 48px;
     margin: 0;
@@ -518,13 +430,6 @@ code {
     white-space: pre-wrap;
 }
 
-/* ---------- Hero ------------------------------------------------------------ */
-
-/* Full-bleed poster band: breaks out of the container to touch both window
-   edges. left:50% + translateX(-50%) rather than a negative viewport margin,
-   because a transform on the band itself cannot break position:sticky on the
-   masthead the way overflow:hidden on an ancestor would. body has overflow-x:
-   clip (not hidden, same reason) to swallow the scrollbar's width. */
 .hero-wash {
     position: relative;
     left: 50%;
@@ -536,22 +441,8 @@ code {
     overflow: hidden;
     border-bottom: 3px double var(--line-strong);
 
-    /* The painted scene, drawn as vector so it scales to any window and costs
-       one file. It lives under /css/ rather than /img/ because SecurityConfig
-       permits /css/** to anonymous users and the landing page must render its
-       own background before anyone logs in.
-
-       The scrim on top is what makes the type legible: dark at the edges,
-       clearing in the middle where the illustration is worth seeing. Without
-       it, cream text over a cream sky disappears. */
-    /* Two depth planes rather than one flat image. ::before is the far plane
-       (sky, facade, notice board), ::after is the near plane (tree, cart,
-       bicycles, figures) plus the scrim and lamps that must sit above both.
-
-       --px / --py are written by app.js from the pointer position, in the range
-       -1..1. The planes translate at different rates, which is the whole trick:
-       parallax is what the eye reads as depth. Both are transform-only, so the
-       browser keeps them on the compositor and never re-lays-out the page. */
+    
+    
     perspective: 900px;
     --px: 0;
     --py: 0;
@@ -569,21 +460,16 @@ code {
     transition: transform .35s cubic-bezier(.2, .8, .3, 1), background-image .6s linear;
 }
 
-/* Far plane: barely moves, sits behind everything. */
 .hero-wash::before {
     background-image: var(--scene-tint), url("scene-bg.svg");
     transform: translate3d(calc(var(--px) * 10px), calc(var(--py) * 7px), 0) scale(1.03);
 }
 
-/* Near plane: moves twice as far, and carries the scrim and the lamps so that
-   both planes sit under the same light. */
 .hero-wash::after {
     background-image: var(--scene-lamp), var(--scene-scrim), url("scene-fg.svg");
     transform: translate3d(calc(var(--px) * 26px), calc(var(--py) * 16px), 0) scale(1.05);
 }
 
-/* Type is the nearest plane of all, and leads the parallax by moving against
-   the artwork rather than with it. */
 .hero-wash > * {
     position: relative;
     z-index: 1;
@@ -591,17 +477,12 @@ code {
     transition: transform .35s cubic-bezier(.2, .8, .3, 1);
 }
 
-/* A pointer is the only input that can drive parallax; touch and keyboard
-   users get the same picture, held still. */
 @media (hover: none), (prefers-reduced-motion: reduce) {
     .hero-wash::before,
     .hero-wash::after,
     .hero-wash > * { transform: none; }
 }
 
-/* Inner pages get the identical band, shorter: the landing page is selling,
-   an inner page is working, and a dashboard should not spend a whole screen
-   on its own title. Same scene, same parallax, same type — less of it. */
 .page-hero { padding: 46px 24px 52px; margin-bottom: 30px; }
 
 .page-hero .display { font-size: clamp(30px, 5vw, 56px); }
@@ -625,7 +506,6 @@ code {
     .page-hero { padding: 32px 16px 36px; }
 }
 
-/* Type reverses out over the artwork, as it does on a painted signboard. */
 .hero-wash .display      { color: var(--paper); }
 .hero-wash .display-hi   { color: #ff5a4d; text-shadow: 3px 4px 0 rgba(28, 23, 18, .55); }
 .hero-wash .display-sub  { color: rgba(244, 236, 224, .86); }
@@ -646,7 +526,6 @@ code {
 .hero-wash .btn-ghost { color: var(--paper); border-color: rgba(244, 236, 224, .75); }
 .hero-wash .btn-ghost:hover { background: rgba(244, 236, 224, .16); }
 
-/* Card hero, used by inner pages: a filed document. */
 .hero {
     position: relative;
     background: var(--paper);
@@ -656,7 +535,6 @@ code {
     margin-bottom: 24px;
 }
 
-/* Corner tick marks, like a form printed with crop registration. */
 .hero::before,
 .hero::after {
     content: "";
@@ -671,8 +549,6 @@ code {
 .hero::after  { bottom: 6px; right: 6px;  border-left: none;  border-top: none; }
 
 .hero > * { position: relative; }
-
-/* ---------- Notice slip (landing centrepiece) -------------------------------- */
 
 .prompt-box {
     max-width: 620px;
@@ -728,8 +604,6 @@ code {
 
 .prompt-send:hover { background: var(--red-dark); color: var(--paper); }
 
-/* ---------- Trust strip ------------------------------------------------------ */
-
 .logo-strip {
     display: flex;
     align-items: center;
@@ -745,8 +619,6 @@ code {
     text-transform: uppercase;
 }
 
-/* ---------- Section scaffolding ---------------------------------------------- */
-
 .section { padding: 48px 0; }
 .section-head { max-width: 64ch; margin-bottom: 28px; }
 .section-head .lead { margin-bottom: 0; }
@@ -758,7 +630,6 @@ code {
     align-items: center;
 }
 
-/* A painted placard rather than an image well. */
 .split-media {
     display: flex;
     align-items: center;
@@ -808,8 +679,6 @@ code {
 .step h3 { font-family: var(--font-display); font-size: 22px; margin-bottom: 4px; }
 .step p { color: var(--ink-soft); margin: 0; }
 
-/* ---------- Cards ------------------------------------------------------------- */
-
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -824,9 +693,6 @@ code {
     transition: transform .12s ease, box-shadow .12s ease;
 }
 
-/* Lifts toward the viewer inside the grid's perspective, rather than sliding
-   flat. Same gesture as the poster tiles, dialled down: a dashboard card is
-   read, not admired. */
 .card:hover {
     transform: translate3d(-1px, -2px, 12px) rotateX(3deg);
     box-shadow: var(--shadow-lift);
@@ -838,9 +704,6 @@ code {
 
 .card p { color: var(--ink-soft); margin: 0; font-size: 15px; }
 
-/* Gallery card: a flat poster block with the label reversed out.
-   The grid establishes the 3D context so each poster can tilt in it on hover,
-   like a board being turned toward you. */
 .card-grid { perspective: 1200px; }
 
 .tile { text-decoration: none; color: inherit; display: block; }
@@ -884,11 +747,6 @@ code {
 .tile h3 { margin-bottom: 2px; }
 .tile p { color: var(--ink-soft); font-size: 14px; margin: 0; }
 
-/* ---------- Stats -------------------------------------------------------------
-   Ledger boxes: the figure in the typewriter face, tabular so columns of
-   numbers line up the way they would in a register.
-   ------------------------------------------------------------------------------ */
-
 .stat-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
@@ -919,8 +777,6 @@ code {
 
 .stat-grid + .card-grid { margin-top: 22px; }
 
-/* ---------- Call to action ------------------------------------------------------ */
-
 .cta {
     text-align: center;
     padding: 56px 24px;
@@ -936,11 +792,6 @@ code {
 .cta .lead { color: rgba(244, 236, 224, .88); margin-left: auto; margin-right: auto; }
 .cta .btn-ghost { color: var(--paper); border-color: var(--paper); }
 .cta .btn-ghost:hover { background: rgba(244, 236, 224, .14); }
-
-/* ---------- Buttons --------------------------------------------------------------
-   Rectangular with a hard offset shadow, and they physically press: on :active
-   the button moves into its own shadow. Mechanical, not springy.
-   --------------------------------------------------------------------------------- */
 
 .btn {
     display: inline-block;
@@ -970,7 +821,6 @@ code {
 .btn-primary { background: var(--ink); color: var(--paper); }
 .btn-primary:hover { background: #2b241c; color: var(--paper); }
 
-/* Kept for compatibility: the "gradient" button is the shopfront red. */
 .btn-gradient { background: var(--red); color: var(--paper); border-color: var(--ink); }
 .btn-gradient:hover { background: var(--red-dark); color: var(--paper); }
 
@@ -978,11 +828,6 @@ code {
 .btn-ghost:hover { background: var(--paper-3); }
 
 .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-
-/* ---------- Forms -----------------------------------------------------------------
-   Fields look like blanks on a printed form: no rounding, a heavier bottom rule
-   than the other three sides, and a typewriter face for what the user types.
-   ----------------------------------------------------------------------------------- */
 
 .field { margin-bottom: 18px; }
 
@@ -1046,10 +891,6 @@ code {
     margin-top: 6px;
 }
 
-/* ---------- Alerts ------------------------------------------------------------------
-   A rubber-stamped note in the margin: thick left rule, uppercase label face.
-   ------------------------------------------------------------------------------------ */
-
 .alert {
     border: 1px solid var(--line-strong);
     border-left: 5px solid var(--ink);
@@ -1062,8 +903,6 @@ code {
 .alert-success { background: var(--ok-bg);     border-left-color: var(--leaf); color: #2f5227; }
 .alert-error   { background: var(--danger-bg); border-left-color: var(--rust); color: var(--danger); }
 .alert-info    { background: var(--warn-bg);   border-left-color: var(--mustard); color: var(--warn); }
-
-/* ---------- Status badges (state machines) -------------------------------------------- */
 
 .badge {
     display: inline-block;
@@ -1080,12 +919,6 @@ code {
 .badge-pending  { color: var(--warn);     background: var(--warn-bg); }
 .badge-approved { color: var(--ok);       background: var(--ok-bg); }
 .badge-rejected { color: var(--danger);   background: var(--danger-bg); }
-
-/* ---------- Stamp ----------------------------------------------------------------------
-   The decision made visible. A double-ruled box, rotated, in the colour of the
-   verdict — the same gesture a department clerk makes with an actual stamp.
-   Applied to a topic once a supervisor has ruled on it.
-   ---------------------------------------------------------------------------------------- */
 
 .stamp {
     display: inline-flex;
@@ -1119,7 +952,6 @@ code {
 .stamp-rejected { color: var(--danger); }
 .stamp-pending  { color: var(--warn); transform: rotate(-3deg); }
 
-/* Inside a table cell, where a full-size stamp would blow the row height. */
 .stamp-sm {
     padding: 3px 9px;
     font-size: 11px;
@@ -1131,12 +963,6 @@ code {
 
 .stamp-sm .stamp-hi { font-size: 10px; }
 
-/* ---------- Error pages ------------------------------------------------------------------
-   403 and 404 are front-of-house: an anonymous visitor can land on either, so
-   they get the poster treatment rather than a bare paper card. The status code
-   is set as the display line, because the number IS the message.
-   -------------------------------------------------------------------------------------------- */
-
 .error-code {
     display: block;
     font-family: var(--font-mono);
@@ -1147,12 +973,6 @@ code {
     color: var(--paper);
     text-shadow: 4px 5px 0 rgba(28, 23, 18, .45);
 }
-
-/* ---------- Application form sheet --------------------------------------------------------
-   The topic form is the one screen a student fills in by hand elsewhere, so it
-   is drawn as the printed application it replaces: a ruled header block, a
-   reference line, and numbered fields.
-   -------------------------------------------------------------------------------------------- */
 
 .form-sheet-head {
     border: 1px solid var(--ink);
@@ -1175,8 +995,6 @@ code {
     color: var(--ink-soft);
 }
 
-/* Fields numbered the way a form's clauses are, counted by CSS so inserting
-   one in the middle does not mean renumbering the rest by hand. */
 .form-sheet { counter-reset: clause; }
 
 .form-sheet .field > label {
@@ -1189,10 +1007,6 @@ code {
     color: var(--red);
 }
 
-/* Comes down out of the screen and flattens onto the page: tilted back 74
-   degrees and lifted 180px toward the viewer, then rotated flat as it lands.
-   perspective() is inside the transform so the stamp needs no 3D context from
-   its parent and can be dropped into any layout. */
 @keyframes stamp-down {
     0% {
         transform: perspective(700px) translateZ(180px) rotateX(-74deg) rotate(-14deg) scale(1.5);
@@ -1210,16 +1024,6 @@ code {
         opacity: .88;
     }
 }
-
-/* ---------- Pipeline ------------------------------------------------------
-   The whole dissertation, drawn as one ruled line across the register: topic,
-   guide, milestones, viva, result. Each stage carries its own state, so a
-   student can see at a glance where they actually are instead of reading four
-   separate cards and inferring it.
-
-   Marked up as an ordered list, so with CSS off it degrades to a numbered list
-   of stages in order -- which is still the correct information.
-   -------------------------------------------------------------------------- */
 
 .pipeline {
     display: flex;
@@ -1241,7 +1045,6 @@ code {
     text-align: center;
 }
 
-/* The rule that joins one stage to the next, drawn behind the markers. */
 .stage::before {
     content: "";
     position: absolute;
@@ -1291,7 +1094,6 @@ code {
     margin-top: 3px;
 }
 
-/* Done: stamped through, the way a clerk rules off a completed row. */
 .stage[data-state="done"] .stage-marker {
     background: var(--ok-bg);
     border-color: var(--ok);
@@ -1300,7 +1102,6 @@ code {
 
 .stage[data-state="done"] .stage-name { color: var(--ok); }
 
-/* Current: the only stage drawn in full ink, with the marker ringed. */
 .stage[data-state="current"] .stage-marker {
     background: var(--red);
     border-color: var(--ink);
@@ -1319,16 +1120,7 @@ code {
 
 .stage[data-state="blocked"] .stage-name { color: var(--danger); }
 
-/* Pending stages recede rather than disappear: the student should see what is
-   coming, just not be drawn to it. */
 .stage[data-state="pending"] { opacity: .55; }
-
-/* ---------- Printed record -------------------------------------------------
-   A topic page has to leave the building as paper: a signed sheet in a file.
-   The block is hidden on screen and only exists in print, where it supplies
-   the letterhead, the reference line and the signature block that a screen
-   layout has no business showing.
-   ---------------------------------------------------------------------------- */
 
 .record-print { display: none; }
 
@@ -1378,11 +1170,6 @@ code {
     margin-top: 6px;
 }
 
-/* ---------- Tables ----------------------------------------------------------------------
-   The allocation register should look like a register: ruled rows, no zebra
-   stripes, figures in the typewriter face.
-   ----------------------------------------------------------------------------------------- */
-
 .table-wrap {
     background: var(--paper);
     border: 1px solid var(--line-strong);
@@ -1417,11 +1204,6 @@ td { font-variant-numeric: tabular-nums; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: rgba(200, 145, 42, .09); }
 
-/* ---------- AI advisory panel (Phase 7) --------------------------------------------------
-   Still deliberately distinct from every other surface: the reader must always
-   be able to tell a model wrote it. On paper that reads as a pasted-in slip.
-   ------------------------------------------------------------------------------------------- */
-
 .ai-panel {
     background: #eae6f2;
     border: 1px dashed var(--blue);
@@ -1450,11 +1232,6 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
     border-top: 1px dashed var(--line);
 }
 
-/* ---------- Auth ------------------------------------------------------------------------- */
-
-/* Login now takes the same poster band as every other page (see
-   layout/_pagehero.html) and the card sits on paper below it, so there is
-   exactly one scene per page rather than a band stacked on a backdrop. */
 .auth-wrap {
     position: relative;
     display: flex;
@@ -1473,7 +1250,6 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
     padding: 30px 32px;
 }
 
-/* Perforated top edge, like a slip torn from a book. */
 .auth-card::before {
     content: "";
     position: absolute;
@@ -1500,12 +1276,6 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
 
 .btn-block { display: block; width: 100%; text-align: center; }
 
-/* ---------- Page header --------------------------------------------------------------------
-   Every page in the system carries the same two-line head: the Devanagari name
-   of the desk you are standing at, then the English title. It is what makes an
-   approvals inbox and a mark sheet feel like the same office.
-   ---------------------------------------------------------------------------------------------- */
-
 .kicker-hi {
     display: block;
     font-family: var(--font-display);
@@ -1528,8 +1298,6 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
 
 .page-head .lead { margin-bottom: 0; font-size: 15px; }
 
-/* ---------- Phase tag (scaffold placeholder, removed as phases land) ------------------------ */
-
 .phase-tag {
     margin-top: 12px !important;
     font-family: var(--font-mono);
@@ -1539,8 +1307,6 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
     text-transform: uppercase;
     color: var(--ink-faint) !important;
 }
-
-/* ---------- Footer --------------------------------------------------------------------------- */
 
 .site-footer {
     margin-top: 24px;
@@ -1587,14 +1353,8 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
     font-size: 12px;
 }
 
-/* ---------- Print -----------------------------------------------------------------------------
-   Mark sheets and approval records get printed and filed. Strip the grain, the
-   textures and the chrome, keep the rules — a printout should look like the
-   document it always was.
-   ------------------------------------------------------------------------------------------------ */
-
 @media print {
-    body::after { display: none; }          /* grain would print as mud */
+    body::after { display: none; }          
     body { background: #fff; font-size: 12pt; }
 
     .navbar, .site-footer, .ambient, .btn, .btn-row, .prompt-box { display: none !important; }
@@ -1609,7 +1369,7 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
     .stamp { animation: none; }
     a { color: #000; text-decoration: none; }
 
-    /* The letterhead, reference line and signature block only exist here. */
+    
     .record-print { display: block !important; }
     .no-print { display: none !important; }
 
@@ -1633,14 +1393,12 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
         margin-bottom: 16px;
     }
 
-    /* The scene must never print: it would cover a whole page in grey ink. */
+    
     .hero-wash, .auth-wrap::before { background: none !important; }
 
-    /* One record per sheet. */
+    
     .record-print { page-break-inside: avoid; }
 }
-
-/* ---------- Small screens ---------------------------------------------------------------------- */
 
 @media (max-width: 900px) {
     .split { grid-template-columns: 1fr; gap: 28px; }
