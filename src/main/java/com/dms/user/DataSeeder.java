@@ -28,10 +28,6 @@ public class DataSeeder implements CommandLineRunner {
     private final AcademicSessionRepository academicSessionRepository;
     private final MilestoneRepository milestoneRepository;
 
-    /**
-     * Each block guards its own data. A single guard at the top of run() would mean
-     * that anything added below it never runs once the users already exist.
-     */
     @Override
     @Transactional
     public void run(String... args) throws Exception {
@@ -62,13 +58,6 @@ public class DataSeeder implements CommandLineRunner {
 
     }
 
-    /**
-     * One active session per programme. Every programme needs its own, because the
-     * guide page looks the session up by the student's own programme: a missing row
-     * fails for those students alone. The partial unique index in V4 is
-     * UNIQUE (programme) WHERE active, so three active rows across three programmes
-     * are legal, while a second active row for one programme is not.
-     */
     private void seedSessions() {
         if (academicSessionRepository.count() > 0) {
             return;
@@ -81,10 +70,6 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    /**
-     * Stages differ per programme by rows, not by a branch in any service.
-     * Weightage totals 100 within each session.
-     */
     private void seedMilestones(AcademicSession session, Programme programme) {
         if (programme == MTECH) {
             createMilestone(session, "Synopsis", "Problem statement, objectives and scope", LocalDate.of(2025, 8, 15), 10, 1);
