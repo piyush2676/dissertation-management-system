@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Guide requests</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'मार्गदर्शन अनुरोध',
+            'Guide requests',
+            'Students asking to work under you. A decline needs a reason.',
+            'SUPERVISOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>Waiting on you</h2>
+            <p class="lead">First asked, first answered.</p>
+        </div>
+        <span class="badge badge-pending"
+              th:text="${#lists.size(pending)} + ' waiting'">0 waiting</span>
+    </div>
+
+    <div th:if="${#lists.isEmpty(pending)}" class="card" style="margin-bottom:36px">
+        <h3>Nothing pending</h3>
+        <p>No student has a request sitting with you right now.</p>
+    </div>
+
+    <div th:each="a : ${pending}" class="hero" style="padding:26px; margin-bottom:18px">
+
+        <div class="page-head" style="margin-bottom:12px">
+            <div>
+                <h3 style="font-size:22px" th:text="${a.student.user.fullName}">Piyush Pandey</h3>
+                <p class="lead" style="margin:0">
+                    <span th:text="${a.student.rollNo}">21INT015</span>
+                    · <span th:text="${a.student.programme}">BTECH</span>
+                    · semester <span th:text="${a.student.semester}">8</span>
+                    · asked <span th:text="${#temporals.format(a.requestedAt.atZone(zone), 'dd MMM yyyy')}">01 Jan 2026</span>
+                </p>
+            </div>
+            <span class="badge badge-pending">REQUESTED</span>
+        </div>
+
+        <div class="field" th:if="${a.topic != null}">
+            <label>Topic proposed</label>
+            <p style="margin:0" th:text="${a.topic.title}">Adaptive load balancing for edge inference</p>
+            <span class="field-hint" th:text="'Status: ' + ${#strings.replace(a.topic.status, '_', ' ')}">Status: PROPOSED</span>
+        </div>
+
+        <p th:if="${a.topic == null}" class="field-hint">
+            No topic on record for this student yet.
+        </p>
+
+        <details th:attr="open=${openRequestId != null and openRequestId == a.id} ? 'open' : null"
+                 style="margin-top:16px">
+            <summary style="cursor:pointer; font-weight:600">Record a decision</summary>
+
+            <form th:action="@{/supervisor/requests/{id}/decide(id=${a.id})}" th:object="${form}"
+                  method="post" novalidate style="margin-top:14px">
+
+                <div class="field">
+                    <label th:for="'decision-' + ${a.id}">Decision</label>
+                    <select name="decision" th:id="'decision-' + ${a.id}">
+                        <option value="">— choose —</option>
+                        <option th:each="d : ${decisions}"
+                                th:value="${d}"
+                                th:selected="${openRequestId != null and openRequestId == a.id and form.decision == d}"
+                                th:text="${#strings.replace(d, '_', ' ')}">ACCEPTED</option>
+                    </select>
+                    <span class="field-error"
+                          th:if="${openRequestId != null and openRequestId == a.id and #fields.hasErrors('decision')}"
+                          th:errors="*{decision}">Decision error</span>
+                </div>
+
+                <div class="field">
+                    <label th:for="'reason-' + ${a.id}">Reason</label>
+                    <textarea name="reason" th:id="'reason-' + ${a.id}" rows="3" maxlength="200"
+                              th:text="${openRequestId != null and openRequestId == a.id} ? ${form.reason} : ''"
+                              placeholder="Required when declining."></textarea>
+                    <span class="field-error"
+                          th:if="${openRequestId != null and openRequestId == a.id and #fields.hasErrors('reason')}"
+                          th:errors="*{reason}">Reason error</span>
+                    <span class="field-error"
+                          th:if="${openRequestId != null and openRequestId == a.id and #fields.hasErrors('reasonPresentWhenDeclining')}"
+                          th:errors="*{reasonPresentWhenDeclining}">A reason is required.</span>
+                    <span class="field-hint">
+                        The student sees this text verbatim. 200 characters.
+                        Accepting ignores it.
+                    </span>
+                </div>
+
+                <button type="submit" class="btn btn-gradient btn-sm">Record decision</button>
+            </form>
+        </details>
+    </div>
+
+    <h2 style="margin-top:44px">Already decided</h2>
+
+    <div th:if="${#lists.isEmpty(decided)}" class="card">
+        <h3>No history yet</h3>
+        <p>Requests you accept or decline appear here, along with any a student withdrew.</p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(decided)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th>Student</th>
+                <th>Topic</th>
+                <th>Decision</th>
+                <th>Reason</th>
+                <th>When</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${decided}">
+                <td>
+                    <span th:text="${a.student.user.fullName}">Piyush Pandey</span><br>
+                    <span class="field-hint"
+                          th:text="${a.student.rollNo} + ' · ' + ${a.student.programme}">21INT015 · BTECH</span>
+                </td>
+                <td th:text="${a.topic != null} ? ${a.topic.title} : '—'">Topic title</td>
+                <td>
+                    <span th:if="${a.status.name() != 'WITHDRAWN'}" class="stamp stamp-sm"
+                          th:classappend="${a.status.name() == 'DECLINED'} ? 'stamp-rejected' : 'stamp-approved'">
+                        <span th:text="${#strings.replace(a.status, '_', ' ')}">ACCEPTED</span>
+                        <span class="stamp-hi" lang="hi"
+                              th:text="${a.status.name() == 'DECLINED'} ? 'अस्वीकृत'
+                                     : (${a.status.name() == 'COORDINATOR_ASSIGNED'} ? 'नियुक्त' : 'स्वीकृत')">स्वीकृत</span>
+                    </span>
+                    <span th:if="${a.status.name() == 'WITHDRAWN'}" class="badge badge-draft">WITHDRAWN</span>
+                </td>
+                <td th:text="${a.decisionReason != null} ? ${a.decisionReason} : '—'">—</td>
+                <td th:text="${a.decidedAt != null}
+                        ? ${#temporals.format(a.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')} : '—'">01 Jan 2026</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</section>
+</body>
+</html>
