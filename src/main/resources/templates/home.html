@@ -1,12 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Public landing page. Anonymous visitors only ever see this and /login, so it
-  carries the whole story: what the system does, who it is for, and where the
-  numbers come from.
-
-  Section ids (#steps, #roles, #numbers) are linked from the navbar and footer.
-  Rename one here and you rename it in layout/_navbar.html and layout/_footer.html.
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
@@ -15,14 +7,6 @@
 <body>
 <section>
 
-    <!-- ---------- Hero ------------------------------------------------- -->
-
-    <!--
-      The display line is Devanagari, set as a painted signboard would be: the
-      script carries the institution, the Latin subtitle carries the meaning.
-      No webfont is loaded for it -- the stack in app.css uses the Devanagari
-      face the operating system already ships, so this renders offline.
-    -->
     <div class="hero-wash">
         <span class="eyebrow">B.Tech &amp; M.Tech dissertations</span>
 
@@ -51,8 +35,6 @@
         </div>
     </div>
 
-    <!-- ---------- Trust strip ------------------------------------------ -->
-
     <div class="logo-strip">
         <span>B.Tech</span>
         <span>M.Tech</span>
@@ -60,8 +42,6 @@
         <span>Coordinators</span>
         <span>Examination cell</span>
     </div>
-
-    <!-- ---------- Three steps ------------------------------------------ -->
 
     <div class="section reveal" id="steps">
         <div class="split">
@@ -86,8 +66,6 @@
             </ol>
         </div>
     </div>
-
-    <!-- ---------- Roles ------------------------------------------------- -->
 
     <div class="section reveal" id="roles">
         <div class="section-head">
@@ -129,8 +107,6 @@
         </div>
     </div>
 
-    <!-- ---------- Numbers ----------------------------------------------- -->
-
     <div class="section reveal" id="numbers">
         <div class="section-head">
             <h2>The system in numbers</h2>
@@ -156,8 +132,6 @@
             </div>
         </div>
     </div>
-
-    <!-- ---------- Closing call to action -------------------------------- -->
 
     <div class="section">
         <div class="cta">
