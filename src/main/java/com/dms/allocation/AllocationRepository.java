@@ -26,14 +26,6 @@ public interface AllocationRepository extends JpaRepository<Allocation, Long> {
     boolean existsByIdAndSupervisorUserEmail(Long id, String email);
     @EntityGraph(attributePaths = {"supervisor","supervisor.user","topic"})
     List<Allocation> findByStudentOrderByRequestedAtDesc(StudentProfile student);
-
-    /**
-     * Seats occupied per supervisor in one session, as [supervisorId, count] rows.
-     * One aggregate query instead of countBySupervisorAndSessionAndStatusIn once
-     * per guide, which would be a query per card on every page load.
-     * Supervisors with no allocations are absent from the result entirely --
-     * callers zero-fill rather than assuming a row exists.
-     */
     @Query("""
            select a.supervisor.id, count(a)
            from Allocation a
@@ -42,4 +34,6 @@ public interface AllocationRepository extends JpaRepository<Allocation, Long> {
            """)
     List<Object[]> countPerSupervisor(@Param("session") AcademicSession session,
                                       @Param("statuses") Collection<AllocationStatus> statuses);
+    @EntityGraph(attributePaths = {"student","student.user","topic"})
+    List<Allocation> findBySupervisorAndStatusInOrderByDecidedAtDesc(SupervisorProfile supervisor, Collection<AllocationStatus> statuses);
 }
