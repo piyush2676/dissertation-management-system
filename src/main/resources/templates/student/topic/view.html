@@ -1,19 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Student's topic page — GET /student/topic  (StudentTopicController.view)
-
-  Model attributes read here:
-      hasTopic      boolean          always present
-      topic         Topic            null when hasTopic is false
-      canEdit       boolean          only added when a topic exists
-      canSubmit     boolean          only added when a topic exists
-      isTerminal    boolean          only added when a topic exists
-
-  topic.proposedSupervisor and .proposedSupervisor.user are fetched by the
-  entity graph on findFirstByStudentOrderByCreatedAtDesc, so reading the guide's
-  name here is safe with open-in-view off. topic.student is NOT in that graph —
-  do not touch it on this page.
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
@@ -36,7 +21,6 @@
         <a th:href="@{/student/topic/new}" class="btn btn-primary btn-sm">Propose a topic</a>
     </div>
 
-    <!-- ---------- Empty state ------------------------------------------- -->
     <div th:unless="${hasTopic}" class="hero">
         <span class="eyebrow">Nothing proposed yet</span>
         <h2>Start with a title and an abstract</h2>
@@ -47,7 +31,6 @@
         <a th:href="@{/student/topic/new}" class="btn btn-gradient">Propose a topic</a>
     </div>
 
-    <!-- ---------- The topic --------------------------------------------- -->
     <div th:if="${hasTopic}" class="hero">
 
         <div class="page-head" style="margin-bottom:14px">
@@ -59,11 +42,6 @@
                     <span th:text="${#temporals.format(topic.createdAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</span>
                 </p>
             </div>
-            <!--
-              A ruled decision gets a stamp, not a badge: it is the clerk's
-              gesture, and it makes the state machine visible in one glance.
-              DRAFT and PROPOSED are not decisions, so they stay as badges.
-            -->
             <span th:if="${topic.decidedAt != null}" class="stamp"
                   th:classappend="${topic.status.name() == 'APPROVED'} ? 'stamp-approved'
                                 : (${topic.status.name() == 'REJECTED'} ? 'stamp-rejected' : 'stamp-pending')">
@@ -78,10 +56,6 @@
                   th:text="${#strings.replace(topic.status, '_', ' ')}">PROPOSED</span>
         </div>
 
-        <!--
-          Rendered whenever the guide wrote something: the reason is the whole
-          point of CHANGES_REQUESTED, so it must not be buried below the fold.
-        -->
         <div th:if="${topic.decisionReason != null}"
              th:classappend="${topic.status.name() == 'REJECTED'} ? 'alert-error' : 'alert-info'"
              class="alert">
@@ -122,24 +96,15 @@
             <a th:if="${canEdit}" th:href="@{/student/topic/{id}/edit(id=${topic.id})}"
                class="btn btn-ghost">Edit</a>
 
-            <!-- POST, not a link: this changes state, so it must not be reachable by GET. -->
             <form th:if="${canSubmit}" th:action="@{/student/topic/{id}/submit(id=${topic.id})}"
                   method="post" class="inline-form">
                 <button type="submit" class="btn btn-gradient">Send for approval</button>
             </form>
 
-            <!-- Prints the record below. No PDF library and no server round trip:
-                 the print stylesheet already knows what a filed sheet looks like. -->
             <button type="button" class="btn btn-ghost" data-print
                     th:if="${topic.decidedAt != null}">Print record</button>
         </div>
 
-        <!--
-          The filed copy. display:none on screen, block in print. It carries the
-          letterhead, the reference line and the signatures a screen layout has
-          no business showing — so what comes out of the printer reads as a
-          department record rather than a screenshot of a web page.
-        -->
         <div class="record-print" th:if="${topic.decidedAt != null}">
             <div class="record-head">
                 <h2 lang="hi">शोध प्रबंध कार्यालय</h2>
