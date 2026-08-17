@@ -1,15 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Base page shell. Every page calls it like this:
-
-    <html th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
-      <head><title>My page</title></head>
-      <body><section> ...page content... </section></body>
-    </html>
-
-  The page supplies its own <title> and a <section>; this file supplies
-  everything around them. Change the chrome here once, not in 30 files.
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)">
 <head>
     <meta charset="UTF-8">
@@ -21,19 +10,8 @@
 </head>
 <body>
 
-<!--
-  Reading rule: a red line across the top that tracks scroll position. Driven
-  by CSS scroll-timeline, so there is no scroll listener behind it and nothing
-  runs on the main thread. Purely decorative, hence aria-hidden.
--->
 <div class="scroll-rule" aria-hidden="true"></div>
 
-<!--
-  Ambient strip: local time on the left, session note on the right. Printed on
-  the paper rather than presented as UI, which is why it sits above the
-  masthead and carries no border of its own. The clock is filled in by
-  /js/app.js; without JS it simply stays blank rather than showing a wrong time.
--->
 <div class="container">
     <div class="ambient">
         <span class="ambient-clock" data-clock aria-hidden="true"></span>
