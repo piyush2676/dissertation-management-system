@@ -1,11 +1,4 @@
 <!DOCTYPE html>
-<!--
-  403 — Spring Boot resolves templates/error/403.html automatically.
-
-  This is the page a supervisor hits when they request another supervisor's
-  student. If it never appears during testing, the ownership checks in
-  AuthzService are not wired up. See docs/guide.md §7.
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
