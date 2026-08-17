@@ -1,12 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Student dashboard.
-
-  Phase 1: no model attributes — renders off the authenticated principal only,
-  so it cannot break before the service layer exists.
-
-  Phase 2 adds: topic, allocation, milestones, pendingCount  (see docs/guide.md §9)
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
@@ -22,18 +14,6 @@
             'Your topic, your guide, your deadlines — all in one register.',
             'STUDENT')}"></div>
 
-    <!--
-      The whole dissertation on one ruled line. Stage state is carried in the
-      data-state attribute, so wiring it up later is a th:attr expression per
-      stage and no markup change:
-
-          th:attr="data-state=${topic != null and topic.status.name() == 'APPROVED'}
-                               ? 'done' : (topic != null ? 'current' : 'pending')"
-
-      Until the dashboard controller supplies those attributes, every stage
-      reads pending except the first, which is where a new account genuinely
-      stands: nothing proposed yet.
-    -->
     <ol class="pipeline reveal">
         <li class="stage" data-state="current">
             <span class="stage-marker">1</span>
@@ -67,11 +47,6 @@
         </li>
     </ol>
 
-    <!--
-      Placeholder figures. Phase 2 replaces each th:text with the real model
-      attribute (topic status, allocation, milestone counts) — the markup does
-      not need to change, only the expression.
-    -->
     <div class="stat-grid reveal">
         <div class="stat">
             <span class="stat-value">—</span>
