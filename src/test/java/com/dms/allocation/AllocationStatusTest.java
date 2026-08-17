@@ -16,17 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * The allocation state machine, tested on its own.
- *
- * Same shape as TopicStatusTest, plus the two sets this enum publishes.
- * OCCUPIES_A_SEAT and LIVE are duplicated in V4 as the WHERE clauses of two
- * partial unique indexes, so the tests that pin their contents are the ones
- * that catch the two definitions drifting apart.
- */
 class AllocationStatusTest {
-
-    // ---------- legal moves -------------------------------------------------
 
     @Test
     void requestedCanBeAcceptedDeclinedOrWithdrawn() {
@@ -37,13 +27,9 @@ class AllocationStatusTest {
 
     @Test
     void requestedCannotJumpToCoordinatorAssigned() {
-        // COORDINATOR_ASSIGNED is an entry state, not a transition: the
-        // override path skips the supervisor's answer entirely.
         assertFalse(REQUESTED.canTransitionTo(COORDINATOR_ASSIGNED));
         assertFalse(REQUESTED.canTransitionTo(REQUESTED));
     }
-
-    // ---------- terminal states ---------------------------------------------
 
     @Test
     void everyOutcomeIsTerminal() {
@@ -67,16 +53,11 @@ class AllocationStatusTest {
         assertEquals(1, nonTerminal, "only REQUESTED may be non-terminal");
     }
 
-    // ---------- capacity and liveness sets ----------------------------------
-
     @Test
     void onlyAcceptedAndAssignedTakeASeat() {
         assertTrue(ACCEPTED.occupiesASeat());
         assertTrue(COORDINATOR_ASSIGNED.occupiesASeat());
 
-        // The one that matters. Five students can ask the same guide while one
-        // seat remains; if a pending request took the seat, a popular guide
-        // would be locked out by requests they had not answered.
         assertFalse(REQUESTED.occupiesASeat(), "a pending request must not consume capacity");
         assertFalse(DECLINED.occupiesASeat());
         assertFalse(WITHDRAWN.occupiesASeat());
@@ -94,9 +75,6 @@ class AllocationStatusTest {
     void liveIsExactlyTheStatusesInPlay() {
         assertEquals(Set.of(REQUESTED, ACCEPTED, COORDINATOR_ASSIGNED), AllocationStatus.LIVE);
 
-        // Declined and withdrawn rows are history. They must stay out of LIVE,
-        // or a student refused by one guide could never ask another -- the
-        // partial unique index in V4 uses this same list.
         assertFalse(AllocationStatus.LIVE.contains(DECLINED));
         assertFalse(AllocationStatus.LIVE.contains(WITHDRAWN));
     }
@@ -106,8 +84,6 @@ class AllocationStatusTest {
         assertTrue(AllocationStatus.LIVE.containsAll(AllocationStatus.OCCUPIES_A_SEAT),
                 "a status that consumes a seat must count as a live allocation");
     }
-
-    // ---------- the map itself ----------------------------------------------
 
     @Test
     void everyConstantHasAMapEntry() {
