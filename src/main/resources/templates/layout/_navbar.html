@@ -1,15 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Navbar fragment. Role-aware via sec:authorize.
-
-  sec:authorize takes a Spring Security expression, so a user holding two roles
-  (a faculty member who is both SUPERVISOR and REVIEWER) sees both link groups.
-  That is why User.roles is a Set, not a single column.
-
-  Layout note: <li class="nav-spacer"> splits the list. Everything before it
-  hugs the brand; everything after it (identity, sign in / sign out) is pushed
-  to the right edge.
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
@@ -39,6 +28,9 @@
             </li>
             <li sec:authorize="hasRole('SUPERVISOR')">
                 <a th:href="@{/supervisor/topics}">Topic approvals</a>
+            </li>
+            <li sec:authorize="hasRole('SUPERVISOR')">
+                <a th:href="@{/supervisor/requests}">Guide requests</a>
             </li>
 
             <li sec:authorize="hasRole('COORDINATOR')">
