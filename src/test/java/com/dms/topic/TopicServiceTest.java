@@ -26,19 +26,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * TopicService business rules, with the repositories mocked.
- *
- * No Spring context and no database: Mockito builds the service through its
- * Lombok @RequiredArgsConstructor, so this file asserts the rules themselves —
- * who may act, which transitions are legal, and what is written when one is
- * refused. Whether the queries work is a different question, answered by
- * @DataJpaTest later.
- *
- * Every illegal-move test ends with verify(save, never()). That is the real
- * assertion: it proves the guard runs before any mutation, so a refused call
- * cannot leave a half-written row behind.
- */
 @ExtendWith(MockitoExtension.class)
 class TopicServiceTest {
 
@@ -57,8 +44,6 @@ class TopicServiceTest {
 
     @InjectMocks
     private TopicService service;
-
-    // ---------- propose() ---------------------------------------------------
 
     @Test
     void proposeFromDraftSetsProposedAndKeepsVersionOne() {
@@ -90,8 +75,6 @@ class TopicServiceTest {
         assertEquals(TopicStatus.PROPOSED, result.getStatus());
         assertEquals(2, result.getVersion(), "a resubmission is a new round");
 
-        // The next reviewer must not see the previous round's verdict still
-        // attached to a proposal that has since changed.
         assertNull(result.getDecisionReason());
         assertNull(result.getDecidedBy());
         assertNull(result.getDecidedAt());
@@ -127,14 +110,10 @@ class TopicServiceTest {
         when(topicRepository.findById(10L)).thenReturn(Optional.of(topic));
         when(topicRepository.existsByIdAndStudentUserEmail(10L, STUDENT_EMAIL)).thenReturn(false);
 
-        // NotFound, not AccessDenied: a 404 tells the caller nothing about
-        // whether topic 10 exists at all.
         assertThrows(NotFoundException.class, () -> service.propose(STUDENT_EMAIL, 10L));
 
         verify(topicRepository, never()).save(any());
     }
-
-    // ---------- decide() ----------------------------------------------------
 
     @Test
     void decideApprovesAndStampsWhoAndWhen() {
@@ -183,8 +162,6 @@ class TopicServiceTest {
         when(topicRepository.findById(10L)).thenReturn(Optional.of(topic));
         when(supervisorProfileRepository.findByUserEmail(OTHER_GUIDE_EMAIL)).thenReturn(Optional.of(intruder));
 
-        // hasRole('SUPERVISOR') is true for the intruder — role alone is not
-        // enough, and this per-record check is what closes the gap.
         assertThrows(NotFoundException.class,
                 () -> service.decide(OTHER_GUIDE_EMAIL, 10L, decisionForm(TopicStatus.APPROVED, null)));
 
@@ -200,8 +177,6 @@ class TopicServiceTest {
         when(topicRepository.findById(10L)).thenReturn(Optional.of(topic));
         when(supervisorProfileRepository.findByUserEmail(GUIDE_EMAIL)).thenReturn(Optional.of(guide));
 
-        // Reversing an approval is a coordinator override — a different method
-        // with a different audit trail, not a second click on this one.
         assertThrows(InvalidStateTransitionException.class,
                 () -> service.decide(GUIDE_EMAIL, 10L, decisionForm(TopicStatus.REJECTED, "changed my mind")));
 
@@ -212,7 +187,7 @@ class TopicServiceTest {
     void decideOnATopicWhoseSupervisorWasDeletedThrowsNotFound() {
         SupervisorProfile guide = supervisor(7L, GUIDE_EMAIL);
         Topic topic = topic(10L, student(1L, STUDENT_EMAIL), TopicStatus.PROPOSED, 1);
-        topic.setProposedSupervisor(null);   // V3 sets proposed_supervisor_id NULL on delete
+        topic.setProposedSupervisor(null);
 
         when(topicRepository.findById(10L)).thenReturn(Optional.of(topic));
         when(supervisorProfileRepository.findByUserEmail(GUIDE_EMAIL)).thenReturn(Optional.of(guide));
@@ -221,8 +196,6 @@ class TopicServiceTest {
                 () -> service.decide(GUIDE_EMAIL, 10L, decisionForm(TopicStatus.APPROVED, null)),
                 "a retired guide's topics must not blow up with a NullPointerException");
     }
-
-    // ---------- saveDraft() -------------------------------------------------
 
     @Test
     void saveDraftWithNoIdCreatesADraftOwnedByTheCaller() {
@@ -262,8 +235,6 @@ class TopicServiceTest {
         when(studentProfileRepository.findByUserEmail(STUDENT_EMAIL)).thenReturn(Optional.of(student));
         givenTopicOwnedByStudent(topic);
 
-        // Editing under review would change the document out from under the
-        // reviewer who is reading it.
         assertThrows(InvalidStateTransitionException.class,
                 () -> service.saveDraft(STUDENT_EMAIL, topicForm(10L, "Rewritten", 7L)));
 
@@ -292,19 +263,15 @@ class TopicServiceTest {
         verify(topicRepository, never()).save(any());
     }
 
-    // ---------- submitForApproval() ----------------------------------------
-
     @Test
     void submitForApprovalSavesThenProposesInOneCall() {
         StudentProfile student = student(1L, STUDENT_EMAIL);
 
-        // The draft as it comes back out of the database once saveDraft has
-        // written it: id assigned, still DRAFT. propose() then reloads it by id.
         Topic persistedDraft = topic(10L, student, TopicStatus.DRAFT, 1);
 
         when(studentProfileRepository.findByUserEmail(STUDENT_EMAIL)).thenReturn(Optional.of(student));
         when(supervisorProfileRepository.findById(7L)).thenReturn(Optional.of(supervisor(7L, GUIDE_EMAIL)));
-        givenSaveEchoesItsArgument();   // stamps id 10 on the way through, as the database would
+        givenSaveEchoesItsArgument();
         givenTopicOwnedByStudent(persistedDraft);
 
         Topic result = service.submitForApproval(STUDENT_EMAIL, topicForm(null, "Edge inference", 7L));
@@ -313,19 +280,11 @@ class TopicServiceTest {
         assertEquals(1, result.getVersion());
     }
 
-    // ---------- stub helpers ------------------------------------------------
-
-    /** loadOwned() looks the topic up, then re-checks ownership by email. */
     private void givenTopicOwnedByStudent(Topic topic) {
         when(topicRepository.findById(topic.getId())).thenReturn(Optional.of(topic));
         when(topicRepository.existsByIdAndStudentUserEmail(topic.getId(), STUDENT_EMAIL)).thenReturn(true);
     }
 
-    /**
-     * save() hands back what it was given, stamping an id when there is none —
-     * which is the one thing the real repository does that the service depends
-     * on (submitForApproval reads the id back out).
-     */
     private void givenSaveEchoesItsArgument() {
         when(topicRepository.save(any(Topic.class))).thenAnswer(invocation -> {
             Topic saved = invocation.getArgument(0);
@@ -335,8 +294,6 @@ class TopicServiceTest {
             return saved;
         });
     }
-
-    // ---------- fixture builders --------------------------------------------
 
     private User user(Long id, String email, String fullName) {
         User user = new User();
