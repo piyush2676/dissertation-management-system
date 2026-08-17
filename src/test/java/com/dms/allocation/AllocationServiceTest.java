@@ -35,16 +35,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * AllocationService business rules, with the repositories mocked.
- *
- * The rule this file exists to protect is capacity. It is checked twice, at
- * request time and again at accept time, and the tests for both are the
- * reason the second check cannot be "simplified away" later.
- *
- * Every refusal ends with verify(save, never()): a rejected call must leave
- * nothing behind.
- */
 @ExtendWith(MockitoExtension.class)
 class AllocationServiceTest {
 
@@ -61,8 +51,6 @@ class AllocationServiceTest {
     @Mock private UserRepository userRepository;
 
     @InjectMocks private AllocationService service;
-
-    // ---------- request() ---------------------------------------------------
 
     @Test
     void requestCreatesARequestedAllocationAgainstTheApprovedTopic() {
@@ -101,8 +89,6 @@ class AllocationServiceTest {
         when(topicRepository.findFirstByStudentOrderByCreatedAtDesc(student))
                 .thenReturn(Optional.of(topic(10L, student, TopicStatus.PROPOSED)));
 
-        // Allocation follows approval. That ordering is the workflow, not a
-        // convenience check.
         assertThrows(IllegalStateException.class, () -> service.request(STUDENT_EMAIL, 7L));
         verify(allocationRepository, never()).save(any());
     }
@@ -183,13 +169,8 @@ class AllocationServiceTest {
         when(allocationRepository.save(any(Allocation.class)))
                 .thenThrow(new DataIntegrityViolationException("uq_allocations_one_live_per_student_session"));
 
-        // Two clicks in the same instant both pass the exists() check; the
-        // partial unique index in V4 is what actually stops the second one,
-        // and the user must see a sentence rather than a stack trace.
         assertThrows(IllegalStateException.class, () -> service.request(STUDENT_EMAIL, 7L));
     }
-
-    // ---------- accept() ----------------------------------------------------
 
     @Test
     void acceptStampsWhoAndWhen() {
@@ -220,10 +201,6 @@ class AllocationServiceTest {
         when(allocationRepository.countBySupervisorAndSessionAndStatusIn(
                 guide, session, AllocationStatus.OCCUPIES_A_SEAT)).thenReturn(5L);
 
-        // The whole reason capacity is checked twice. Five students can hold a
-        // REQUESTED row against a guide with one seat left: every one of those
-        // requests was legal when it was made. Only the accept takes the seat,
-        // so only the accept can refuse it.
         assertThrows(CapacityExceededException.class, () -> service.accept(GUIDE_EMAIL, 50L));
         verify(allocationRepository, never()).save(any());
     }
@@ -236,8 +213,6 @@ class AllocationServiceTest {
         when(allocationRepository.findById(50L)).thenReturn(Optional.of(allocation));
         when(allocationRepository.existsByIdAndSupervisorUserEmail(50L, OTHER_GUIDE_EMAIL)).thenReturn(false);
 
-        // NotFound, not access-denied: a guide poking at ids learns nothing
-        // about which allocations exist.
         assertThrows(NotFoundException.class, () -> service.accept(OTHER_GUIDE_EMAIL, 50L));
         verify(allocationRepository, never()).save(any());
     }
@@ -252,8 +227,6 @@ class AllocationServiceTest {
         assertThrows(InvalidStateTransitionException.class, () -> service.accept(GUIDE_EMAIL, 50L));
         verify(allocationRepository, never()).save(any());
     }
-
-    // ---------- decline() ---------------------------------------------------
 
     @Test
     void declineStoresTheStrippedReason() {
@@ -278,8 +251,6 @@ class AllocationServiceTest {
 
         givenAllocationOwnedBy(allocation, GUIDE_EMAIL);
 
-        // The student is about to have to ask someone else. Being told why is
-        // the difference between guidance and a closed door.
         assertThrows(IllegalArgumentException.class, () -> service.decline(GUIDE_EMAIL, 50L, "   "));
         verify(allocationRepository, never()).save(any());
     }
@@ -295,8 +266,6 @@ class AllocationServiceTest {
                 () -> service.decline(GUIDE_EMAIL, 50L, "changed my mind"));
         verify(allocationRepository, never()).save(any());
     }
-
-    // ---------- withdraw() --------------------------------------------------
 
     @Test
     void withdrawPullsBackAPendingRequest() {
@@ -322,8 +291,6 @@ class AllocationServiceTest {
         when(allocationRepository.findById(50L)).thenReturn(Optional.of(allocation));
         when(allocationRepository.existsByIdAndStudentUserEmail(50L, STUDENT_EMAIL)).thenReturn(true);
 
-        // Unpicking an accepted allocation is a coordinator action with its own
-        // audit trail, not a button the student presses.
         assertThrows(InvalidStateTransitionException.class, () -> service.withdraw(STUDENT_EMAIL, 50L));
         verify(allocationRepository, never()).save(any());
     }
@@ -339,8 +306,6 @@ class AllocationServiceTest {
         assertThrows(NotFoundException.class, () -> service.withdraw(STUDENT_EMAIL, 50L));
         verify(allocationRepository, never()).save(any());
     }
-
-    // ---------- assign() ----------------------------------------------------
 
     @Test
     void assignPlacesTheStudentWithoutARequest() {
@@ -410,9 +375,6 @@ class AllocationServiceTest {
         when(allocationRepository.countBySupervisorAndSessionAndStatusIn(
                 guide, session, AllocationStatus.OCCUPIES_A_SEAT)).thenReturn(5L);
 
-        // The override overrides the supervisor's ANSWER, not the department's
-        // capacity rule. Exceeding it would need an explicit method that
-        // records the exception.
         assertThrows(CapacityExceededException.class, () -> service.assign(COORDINATOR_EMAIL, 1L, 7L));
         verify(allocationRepository, never()).save(any());
     }
@@ -434,15 +396,12 @@ class AllocationServiceTest {
         verify(allocationRepository, never()).save(any());
     }
 
-    // ---------- stub helpers ------------------------------------------------
-
     private void givenStudentWithSession(StudentProfile student, AcademicSession session) {
         when(studentProfileRepository.findByUserEmail(STUDENT_EMAIL)).thenReturn(Optional.of(student));
         when(academicSessionRepository.findByProgrammeAndActiveTrue(eq(Programme.BTECH)))
                 .thenReturn(Optional.of(session));
     }
 
-    /** loadOwnedBySupervisor() looks the row up, then re-checks ownership by email. */
     private void givenAllocationOwnedBy(Allocation allocation, String supervisorEmail) {
         when(allocationRepository.findById(allocation.getId())).thenReturn(Optional.of(allocation));
         when(allocationRepository.existsByIdAndSupervisorUserEmail(allocation.getId(), supervisorEmail))
@@ -458,8 +417,6 @@ class AllocationServiceTest {
             return saved;
         });
     }
-
-    // ---------- fixture builders --------------------------------------------
 
     private User user(Long id, String email, String fullName) {
         User user = new User();
