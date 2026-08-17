@@ -16,17 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * The topic state machine, tested on its own.
- *
- * No Spring context, no database, no mocks — TopicStatus is a plain enum, so
- * the whole class runs in milliseconds. Everything the transition map promises
- * is asserted here, which means TopicService is free to trust canTransitionTo
- * without re-checking anything.
- */
 class TopicStatusTest {
-
-    // ---------- each state's legal moves -----------------------------------
 
     @Test
     void draftGoesOnlyToProposed() {
@@ -57,8 +47,6 @@ class TopicStatusTest {
         assertFalse(CHANGES_REQUESTED.canTransitionTo(DRAFT));
     }
 
-    // ---------- terminal states --------------------------------------------
-
     @Test
     void approvedIsTerminal() {
         assertTrue(APPROVED.isTerminal());
@@ -80,12 +68,6 @@ class TopicStatusTest {
                     "REJECTED must not move to " + target);
         }
     }
-
-    // ---------- the map itself ---------------------------------------------
-    // These are the ones worth having. They fail the day a sixth constant is
-    // added without a map entry — which would otherwise surface as a
-    // NullPointerException inside canTransitionTo, at runtime, in front of a
-    // user.
 
     @Test
     void everyConstantHasAMapEntry() {
