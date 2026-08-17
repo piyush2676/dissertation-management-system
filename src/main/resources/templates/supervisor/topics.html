@@ -1,20 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Supervisor topic inbox — GET /supervisor/topics  (SupervisorTopicController.inbox)
-
-  Model attributes read here:
-      pending      List<Topic>          status = PROPOSED, addressed to this guide
-      decided      List<Topic>          everything this guide already ruled on
-      form         TopicDecisionForm    empty, or the rejected one flashed back
-      decisions    List<TopicStatus>    APPROVED, CHANGES_REQUESTED, REJECTED
-      openTopicId  Long                 flashed on a validation failure only
-
-  Both lists come from queries carrying @EntityGraph on student and student.user,
-  so the student's name is safe to read with open-in-view off.
-
-  The decision panel is a native <details> — no JavaScript. th:attr="open=..."
-  re-opens the one row that failed validation so the guide is not hunting for it.
--->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
@@ -37,8 +21,6 @@
         <span class="badge badge-pending"
               th:text="${#lists.size(pending)} + ' waiting'">0 waiting</span>
     </div>
-
-    <!-- ---------- Pending --------------------------------------------------- -->
 
     <div th:if="${#lists.isEmpty(pending)}" class="card" style="margin-bottom:36px">
         <h3>Nothing pending</h3>
@@ -72,11 +54,6 @@
                  style="margin-top:16px">
             <summary style="cursor:pointer; font-weight:600">Record a decision</summary>
 
-            <!--
-              th:object binds every row to the same TopicDecisionForm instance.
-              Fields use plain name= rather than th:field so that three rows on one
-              page do not emit three elements with the same id.
-            -->
             <form th:action="@{/supervisor/topics/{id}/decide(id=${t.id})}" th:object="${form}"
                   method="post" novalidate style="margin-top:14px">
 
@@ -113,7 +90,6 @@
         </details>
     </div>
 
-    <!-- ---------- Already decided ------------------------------------------- -->
     <h2 style="margin-top:44px">Already decided</h2>
 
     <div th:if="${#lists.isEmpty(decided)}" class="card">
@@ -142,9 +118,6 @@
                 <td th:text="${t.title}">Topic title</td>
                 <td th:text="${t.version}">1</td>
                 <td>
-                    <!-- Small stamp, not a badge: this column records a ruling the
-                         guide made, and it should read the same way here as it does
-                         on the student's own page. -->
                     <span class="stamp stamp-sm"
                           th:classappend="${t.status.name() == 'APPROVED'} ? 'stamp-approved'
                                         : (${t.status.name() == 'REJECTED'} ? 'stamp-rejected' : 'stamp-pending')">
