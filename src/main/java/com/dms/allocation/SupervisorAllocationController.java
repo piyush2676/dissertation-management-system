@@ -58,6 +58,5 @@ public class SupervisorAllocationController {
             redirectAttributes.addFlashAttribute("error","That request is no longer open - it may have been withdrawn");
         }
         return "redirect:/supervisor/requests";
-
     }
 }
