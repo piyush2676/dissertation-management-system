@@ -192,17 +192,7 @@ public class AllocationService {
     @Transactional(readOnly = true)
     public Map<Long, Long> seatsTakenFor(String studentEmail) {
         StudentProfile student = student(studentEmail);
-        AcademicSession session = activeSessionFor(student.getProgramme());
-
-        Map<Long, Long> taken = new HashMap<>();
-        for (SupervisorProfile supervisor : selectableSupervisors()) {
-            taken.put(supervisor.getId(), 0L);
-        }
-        for (Object[] row : allocationRepository.countPerSupervisor(
-                session, AllocationStatus.OCCUPIES_A_SEAT)) {
-            taken.put((Long) row[0], (Long) row[1]);
-        }
-        return taken;
+        return seatsTakenIn(activeSessionFor(student.getProgramme()));
     }
 
     @Transactional(readOnly = true)
@@ -223,6 +213,39 @@ public class AllocationService {
     @Transactional(readOnly = true)
     public List<Allocation> cohortFor(Programme programme) {
         return allocationRepository.findBySessionOrderByRequestedAtDesc(activeSessionFor(programme));
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentProfile> studentsIn(Programme programme) {
+        return studentProfileRepository.findByProgrammeOrderByRollNoAsc(programme);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Allocation> liveAllocationsIn(Programme programme) {
+        Map<Long, Allocation> live = new HashMap<>();
+        for (Allocation allocation : cohortFor(programme)) {
+            if (AllocationStatus.LIVE.contains(allocation.getStatus())) {
+                live.put(allocation.getStudent().getId(), allocation);
+            }
+        }
+        return live;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Long> seatsTakenIn(Programme programme) {
+        return seatsTakenIn(activeSessionFor(programme));
+    }
+
+    private Map<Long, Long> seatsTakenIn(AcademicSession session) {
+        Map<Long, Long> taken = new HashMap<>();
+        for (SupervisorProfile supervisor : selectableSupervisors()) {
+            taken.put(supervisor.getId(), 0L);
+        }
+        for (Object[] row : allocationRepository.countPerSupervisor(
+                session, AllocationStatus.OCCUPIES_A_SEAT)) {
+            taken.put((Long) row[0], (Long) row[1]);
+        }
+        return taken;
     }
 
     private StudentProfile student(String email) {
