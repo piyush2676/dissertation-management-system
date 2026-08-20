@@ -51,9 +51,9 @@ public class DataSeeder implements CommandLineRunner {
         User student4 = createUser("student4@gmail.com", "student123", "Piyush Pandey", Set.of(STUDENT));
         createSupervisorProfile(guide1, "Associate Professor", "CSE", "machine learning,federated systems,privacy-preserving computation", 5);
         createSupervisorProfile(guide2, "Assistant Professor", "CSE", "distributed databases,query optimisation", 3);
-        createStudentProfile(student1, "21CSE001", BTECH, "CSE", "2021-2025", 8);
+        createStudentProfile(student1, "24MCS001", MTECH, "CSE", "2024-2026", 4);
         createStudentProfile(student2, "24MCS007", MTECH, "CSE", "2024-2026", 4);
-        createStudentProfile(student3, "21CSE042", BTECH, "CSE", "2021-2025", 8);
+        createStudentProfile(student3, "24MCS042", MTECH, "CSE", "2024-2026", 3);
         createStudentProfile(student4, "21INT015", BTECH_MTECH_INTEGRATED, "CSE", "2021-2026", 9);
 
     }
@@ -81,7 +81,7 @@ public class DataSeeder implements CommandLineRunner {
             createMilestone(session, "Synopsis", "Problem statement, objectives and scope", LocalDate.of(2025, 9, 1), 15, 1);
             createMilestone(session, "Interim Report", "Design, methodology and progress to date", LocalDate.of(2025, 12, 15), 25, 2);
             createMilestone(session, "Pre-submission Seminar", "Departmental presentation before final submission", LocalDate.of(2026, 3, 20), 20, 3);
-            createMilestone(session, "Final Report", "Complete report with results and evaluation", LocalDate.of(2026, 4, 25), 40, 4);
+            createMilestone(session, "Final Thesis", "Complete thesis with results and evaluation", LocalDate.of(2026, 4, 25), 40, 4);
         }
     }
 
