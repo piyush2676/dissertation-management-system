@@ -34,7 +34,7 @@
                 <h3 style="font-size:22px" th:text="${a.student.user.fullName}">Piyush Pandey</h3>
                 <p class="lead" style="margin:0">
                     <span th:text="${a.student.rollNo}">21INT015</span>
-                    · <span th:text="${a.student.programme}">BTECH</span>
+                    · <span th:text="${a.student.programme}">MTECH</span>
                     · semester <span th:text="${a.student.semester}">8</span>
                     · asked <span th:text="${#temporals.format(a.requestedAt.atZone(zone), 'dd MMM yyyy')}">01 Jan 2026</span>
                 </p>
@@ -118,7 +118,7 @@
                 <td>
                     <span th:text="${a.student.user.fullName}">Piyush Pandey</span><br>
                     <span class="field-hint"
-                          th:text="${a.student.rollNo} + ' · ' + ${a.student.programme}">21INT015 · BTECH</span>
+                          th:text="${a.student.rollNo} + ' · ' + ${a.student.programme}">21INT015 · MTECH</span>
                 </td>
                 <td th:text="${a.topic != null} ? ${a.topic.title} : '—'">Topic title</td>
                 <td>
