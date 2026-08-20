@@ -123,7 +123,7 @@ Show class names, fields with types, key methods, and the associations between c
 class User { Long id; String email; String passwordHash; String fullName; boolean enabled;
   Instant createdAt; Set<Role> roles }
 enum Role { STUDENT, SUPERVISOR, REVIEWER, COORDINATOR, ADMIN; String authority() }
-enum Programme { BTECH, MTECH, BTECH_MTECH_INTEGRATED }
+enum Programme { MTECH, BTECH_MTECH_INTEGRATED }
 class StudentProfile { Long id; User user; String rollNo; Programme programme;
   String department; String batch; Integer semester }
 class SupervisorProfile { Long id; User user; String designation; String department;
