@@ -308,7 +308,7 @@ class TopicServiceTest {
         profile.setId(id);
         profile.setUser(user(id, email, "Test Student"));
         profile.setRollNo("21INT0" + id);
-        profile.setProgramme(Programme.BTECH);
+        profile.setProgramme(Programme.MTECH);
         return profile;
     }
 
