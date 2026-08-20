@@ -6,7 +6,7 @@ Living design document. **Update this file before writing code that changes a de
 
 ## 1. Why this exists
 
-B.Tech and M.Tech dissertation work is run manually: topics by email, guide allocation in a
+M.Tech dissertation work is run manually: topics by email, guide allocation in a
 spreadsheet, deadlines over WhatsApp, reports as `report_final_FINAL_v2.docx` on pen drives,
 feedback on printed copies, marks totalled in Excel. Nobody can answer *"who approved this,
 and when"*.
@@ -189,7 +189,8 @@ The flow will keep moving. Seven mechanisms so that costs an edit, not a rewrite
 1. **Workflow is data.** Milestones are rows keyed to `(AcademicSession, Programme)`, not an
    enum. Inserting "Pre-submission Seminar" is an INSERT plus a `sequenceNo` renumber. Also how
    every programme shares one codebase — adding the five-year integrated B.Tech+M.Tech degree
-   cost one enum value and one `ALTER TABLE`, with no change to any logic.
+   cost one enum value and one `ALTER TABLE`, and dropping standalone B.Tech later cost one
+   enum value and one data migration, with no change to any logic.
 2. **State machines are declarative.** One transition map per aggregate. A new legal path is
    one line. A flow change can never silently corrupt data.
 3. **Rubric is configurable.** `RubricCriterion` rows with weights, scoped to a session.
@@ -272,9 +273,9 @@ Seeded on first startup only — `DataSeeder` no-ops when the users table is non
 | `coordinator@college.edu` | `coord123` | COORDINATOR |
 | `guide1@college.edu` | `guide123` | SUPERVISOR + REVIEWER (capacity 5) |
 | `guide2@college.edu` | `guide123` | SUPERVISOR (capacity 3) |
-| `student1@college.edu` | `student123` | STUDENT — B.Tech |
+| `student1@college.edu` | `student123` | STUDENT — M.Tech |
 | `student2@college.edu` | `student123` | STUDENT — M.Tech |
-| `student3@college.edu` | `student123` | STUDENT — B.Tech |
+| `student3@college.edu` | `student123` | STUDENT — M.Tech |
 | `student4@gmail.com` | `student123` | STUDENT — integrated B.Tech+M.Tech |
 
 `guide1` holding two roles is the case worth demonstrating: one account, two link groups in
