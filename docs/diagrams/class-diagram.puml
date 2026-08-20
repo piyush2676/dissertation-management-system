@@ -43,7 +43,6 @@ package "com.dms.user" #F7F9FA {
   }
 
   enum Programme {
-    BTECH
     MTECH
     BTECH_MTECH_INTEGRATED
   }
@@ -240,8 +239,8 @@ note bottom of SubmissionVersion
 end note
 
 note right of Milestone
-  B.Tech, M.Tech and the integrated
-  degree share one codebase and differ
+  M.Tech and the integrated degree
+  share one codebase and differ
   only in Milestone rows. Adding a
   milestone is an INSERT, not a release.
 end note
