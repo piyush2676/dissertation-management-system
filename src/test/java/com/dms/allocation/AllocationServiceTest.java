@@ -107,7 +107,7 @@ class AllocationServiceTest {
     void requestWithNoActiveSessionThrows() {
         StudentProfile student = student(1L);
         when(studentProfileRepository.findByUserEmail(STUDENT_EMAIL)).thenReturn(Optional.of(student));
-        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.BTECH)).thenReturn(Optional.empty());
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.MTECH)).thenReturn(Optional.empty());
 
         assertThrows(IllegalStateException.class, () -> service.request(STUDENT_EMAIL, 7L));
         verify(allocationRepository, never()).save(any());
@@ -317,7 +317,7 @@ class AllocationServiceTest {
 
         when(userRepository.findByEmail(COORDINATOR_EMAIL)).thenReturn(Optional.of(coordinator));
         when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(student));
-        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.BTECH)).thenReturn(Optional.of(session));
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.MTECH)).thenReturn(Optional.of(session));
         when(supervisorProfileRepository.findById(7L)).thenReturn(Optional.of(guide));
         when(allocationRepository.existsByStudentAndSessionAndStatusIn(
                 student, session, AllocationStatus.LIVE)).thenReturn(false);
@@ -343,7 +343,7 @@ class AllocationServiceTest {
         when(userRepository.findByEmail(COORDINATOR_EMAIL))
                 .thenReturn(Optional.of(user(99L, COORDINATOR_EMAIL, "PG Coordinator")));
         when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(student));
-        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.BTECH)).thenReturn(Optional.of(session));
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.MTECH)).thenReturn(Optional.of(session));
         when(supervisorProfileRepository.findById(7L)).thenReturn(Optional.of(guide));
         when(allocationRepository.existsByStudentAndSessionAndStatusIn(
                 student, session, AllocationStatus.LIVE)).thenReturn(false);
@@ -368,7 +368,7 @@ class AllocationServiceTest {
         when(userRepository.findByEmail(COORDINATOR_EMAIL))
                 .thenReturn(Optional.of(user(99L, COORDINATOR_EMAIL, "PG Coordinator")));
         when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(student));
-        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.BTECH)).thenReturn(Optional.of(session));
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.MTECH)).thenReturn(Optional.of(session));
         when(supervisorProfileRepository.findById(7L)).thenReturn(Optional.of(guide));
         when(allocationRepository.existsByStudentAndSessionAndStatusIn(
                 student, session, AllocationStatus.LIVE)).thenReturn(false);
@@ -387,7 +387,7 @@ class AllocationServiceTest {
         when(userRepository.findByEmail(COORDINATOR_EMAIL))
                 .thenReturn(Optional.of(user(99L, COORDINATOR_EMAIL, "PG Coordinator")));
         when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(student));
-        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.BTECH)).thenReturn(Optional.of(session));
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.MTECH)).thenReturn(Optional.of(session));
         when(supervisorProfileRepository.findById(7L)).thenReturn(Optional.of(supervisor(7L, 5)));
         when(allocationRepository.existsByStudentAndSessionAndStatusIn(
                 student, session, AllocationStatus.LIVE)).thenReturn(true);
@@ -398,7 +398,7 @@ class AllocationServiceTest {
 
     private void givenStudentWithSession(StudentProfile student, AcademicSession session) {
         when(studentProfileRepository.findByUserEmail(STUDENT_EMAIL)).thenReturn(Optional.of(student));
-        when(academicSessionRepository.findByProgrammeAndActiveTrue(eq(Programme.BTECH)))
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(eq(Programme.MTECH)))
                 .thenReturn(Optional.of(session));
     }
 
@@ -431,7 +431,7 @@ class AllocationServiceTest {
         profile.setId(id);
         profile.setUser(user(id, STUDENT_EMAIL, "Test Student"));
         profile.setRollNo("21INT00" + id);
-        profile.setProgramme(Programme.BTECH);
+        profile.setProgramme(Programme.MTECH);
         return profile;
     }
 
@@ -449,7 +449,7 @@ class AllocationServiceTest {
         AcademicSession session = new AcademicSession();
         session.setId(id);
         session.setLabel("2025-26");
-        session.setProgramme(Programme.BTECH);
+        session.setProgramme(Programme.MTECH);
         session.setStartDate(LocalDate.of(2025, 7, 1));
         session.setEndDate(LocalDate.of(2026, 5, 31));
         session.setActive(true);
