@@ -40,7 +40,7 @@ public enum Role {
     }
 }
 
-public enum Programme { BTECH, MTECH }
+public enum Programme { MTECH, BTECH_MTECH_INTEGRATED }
 ```
 
 ---
@@ -307,9 +307,10 @@ never duplicates rows. Hash passwords with the `PasswordEncoder` bean — never 
 | `coordinator@college.edu` | `coord123` | COORDINATOR |
 | `guide1@college.edu` | `guide123` | SUPERVISOR, REVIEWER |
 | `guide2@college.edu` | `guide123` | SUPERVISOR |
-| `student1@college.edu` | `student123` | STUDENT (BTECH) |
+| `student1@college.edu` | `student123` | STUDENT (MTECH) |
 | `student2@college.edu` | `student123` | STUDENT (MTECH) |
-| `student3@college.edu` | `student123` | STUDENT (BTECH) |
+| `student3@college.edu` | `student123` | STUDENT (MTECH) |
+| `student4@gmail.com` | `student123` | STUDENT (BTECH_MTECH_INTEGRATED) |
 
 Demo credentials only — fine for a local demo, never for a deployment.
 
