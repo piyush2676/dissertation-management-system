@@ -18,6 +18,7 @@
     --red:         #d6342a;
     --red-dark:    #a8241c;
     --blue:        #2f5d8a;
+    --blue-dark:   #1e3f66;
     --leaf:        #4b7a3f;
     --rust:        #b4531f;
     --mustard:     #c8912a;
@@ -360,7 +361,7 @@ h3 {
 
 .display-hi {
     display: block;
-    color: var(--red);
+    color: var(--blue-dark);
     text-shadow: 2px 3px 0 rgba(28, 23, 18, .13);
 }
 
@@ -507,7 +508,7 @@ code {
 }
 
 .hero-wash .display      { color: var(--paper); }
-.hero-wash .display-hi   { color: #ff5a4d; text-shadow: 3px 4px 0 rgba(28, 23, 18, .55); }
+.hero-wash .display-hi   { color: #4a8fd6; text-shadow: 3px 4px 0 rgba(28, 23, 18, .55); }
 .hero-wash .display-sub  { color: rgba(244, 236, 224, .86); }
 .hero-wash .lead         { color: rgba(244, 236, 224, .92); margin-left: auto; margin-right: auto; }
 
@@ -1380,7 +1381,7 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
         margin-bottom: 20px;
     }
 
-    .record-head h2 { font-size: 20pt; margin: 0 0 2px; }
+    .record-head h2 { font-size: 20pt; margin: 0 0 2px; color: #1e3f66; }
     .record-head p  { margin: 0; font-size: 9pt; letter-spacing: .18em; text-transform: uppercase; }
 
     .record-meta {
