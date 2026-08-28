@@ -36,4 +36,5 @@ public interface AllocationRepository extends JpaRepository<Allocation, Long> {
                                       @Param("statuses") Collection<AllocationStatus> statuses);
     @EntityGraph(attributePaths = {"student","student.user","topic"})
     List<Allocation> findBySupervisorAndStatusInOrderByDecidedAtDesc(SupervisorProfile supervisor, Collection<AllocationStatus> statuses);
+    boolean existsByStudentIdAndSupervisorUserEmailAndStatusIn(Long studentId, String email, Collection<AllocationStatus> statuses);
 }
