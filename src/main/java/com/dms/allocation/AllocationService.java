@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -282,5 +284,15 @@ public class AllocationService {
             throw new CapacityExceededException(
                     supervisor.getUser().getFullName(), taken, supervisor.getMaxStudents());
         }
+    }
+    private Map<Long,Topic> latestTopicsFor(Collection<StudentProfile> students){
+        if(students.isEmpty()){
+            return Collections.emptyMap();
+        }
+        Map<Long,Topic> map = new HashMap<>();
+        for(Topic topic : topicRepository.findByStudentInOrderByCreatedAtDesc(students)){
+            map.putIfAbsent(topic.getStudent().getId(), topic);
+        }
+        return map;
     }
 }
