@@ -48,6 +48,10 @@
             <span class="stat-value" th:text="${board.withGuide}">0</span>
             <span class="stat-label">With your guide</span>
         </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.openComments}">0</span>
+            <span class="stat-label">Open feedback items</span>
+        </div>
     </div>
 
     <div th:if="${board.topicTitle != null}" class="hero reveal">

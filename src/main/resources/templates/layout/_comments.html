@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Review thread for the latest version of a submission. The guide writes,
+  the student ticks off. Both read the same list.
+-->
+<div th:fragment="comments(comments, latestVersionId, canComment, canResolve, returnTo)"
+     th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <h3 style="margin-top:32px">Review comments</h3>
+
+    <p th:if="${latestVersionId == null}" class="status-note">
+        Comments open once a version has been filed.
+    </p>
+
+    <div th:if="${latestVersionId != null}">
+
+        <p th:if="${#lists.isEmpty(comments)}" class="status-note">
+            No comments on the latest version.
+        </p>
+
+        <div th:each="c : ${comments}" class="field"
+             th:style="${c.resolved} ? 'opacity:.6' : ''">
+            <label>
+                <span th:text="${c.pageLabel}">Page 4</span>
+                &middot; <span th:text="${c.reviewerName}">Dr A Sharma</span>
+                &middot; <span th:text="${#temporals.format(c.createdAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan</span>
+                <span th:if="${c.resolved}" class="badge badge-approved">DONE</span>
+                <span th:unless="${c.resolved}" class="badge badge-pending">OPEN</span>
+            </label>
+            <p style="margin:0 0 8px" th:text="${c.body}">Tighten the evaluation section.</p>
+
+            <form th:if="${canResolve}" method="post" class="inline-form no-print"
+                  th:action="${c.resolved}
+                             ? @{/review/comments/{id}/reopen(id=${c.commentId}, returnTo=${returnTo})}
+                             : @{/review/comments/{id}/resolve(id=${c.commentId}, returnTo=${returnTo})}">
+                <button type="submit" class="btn btn-ghost btn-sm"
+                        th:text="${c.resolved} ? 'Reopen' : 'Mark as done'">Mark as done</button>
+            </form>
+        </div>
+
+        <form th:if="${canComment}" method="post" class="no-print" style="margin-top:24px"
+              th:action="@{/review/comments(returnTo=${returnTo})}">
+            <input type="hidden" name="versionId" th:value="${latestVersionId}">
+
+            <div class="field">
+                <label for="pageNo">Page (optional)</label>
+                <input type="number" id="pageNo" name="pageNo" min="1" placeholder="Leave blank for a general remark">
+            </div>
+
+            <div class="field">
+                <label for="body">Comment</label>
+                <textarea id="body" name="body" rows="3" maxlength="2000" required
+                          placeholder="What needs to change, and where."></textarea>
+            </div>
+
+            <div class="btn-row" style="justify-content:flex-start">
+                <button type="submit" class="btn btn-ghost">Post comment</button>
+            </div>
+        </form>
+
+        <p class="status-note">
+            Comments are pinned to the version they were written against, so a new
+            upload starts a clean sheet and this thread stays with the old file.
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

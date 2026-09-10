@@ -305,6 +305,18 @@ public class SubmissionService {
                 version.getSizeBytes());
     }
 
+    /** True when this email is the student whose work the submission holds. */
+    @Transactional(readOnly = true)
+    public boolean isStudentOf(Long submissionId, String email) {
+        return submissionRepository.existsByIdAndAllocationStudentUserEmail(submissionId, email);
+    }
+
+    /** True when this email is the guide supervising that student. */
+    @Transactional(readOnly = true)
+    public boolean isSupervisorOf(Long submissionId, String email) {
+        return submissionRepository.existsByIdAndAllocationSupervisorUserEmail(submissionId, email);
+    }
+
     @Transactional(readOnly = true)
     public boolean canRead(Long submissionId, String email) {
         return submissionRepository.existsByIdAndAllocationStudentUserEmail(submissionId, email)

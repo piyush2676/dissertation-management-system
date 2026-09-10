@@ -1,6 +1,8 @@
 package com.dms.submission;
 
 import com.dms.common.InvalidStateTransitionException;
+import com.dms.review.ReviewCommentForm;
+import com.dms.review.ReviewService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import java.util.List;
 public class SupervisorSubmissionController {
 
     private final SubmissionService submissionService;
+    private final ReviewService reviewService;
 
     @ModelAttribute("decisions")
     public List<SubmissionStatus> decisions() {
@@ -39,8 +42,21 @@ public class SupervisorSubmissionController {
 
     @GetMapping("/{submissionId}")
     public String detail(@PathVariable Long submissionId, Authentication authentication, Model model) {
-        model.addAttribute("detail",
-                submissionService.detailFor(submissionId, authentication.getName(), false));
+        SubmissionDetail detail = submissionService.detailFor(submissionId, authentication.getName(), false);
+        model.addAttribute("detail", detail);
+
+        if (detail.hasVersions()) {
+            model.addAttribute("comments", reviewService.commentsOn(
+                    detail.latest().versionId(), authentication.getName(), false));
+            model.addAttribute("latestVersionId", detail.latest().versionId());
+        }
+        if (!model.containsAttribute("commentForm")) {
+            model.addAttribute("commentForm", new ReviewCommentForm());
+        }
+        model.addAttribute("canComment", true);
+        model.addAttribute("canResolve", false);
+        model.addAttribute("returnTo", "/supervisor/submissions/" + submissionId);
+
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new SubmissionDecisionForm());
         }

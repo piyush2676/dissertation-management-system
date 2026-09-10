@@ -1,6 +1,7 @@
 package com.dms.submission;
 
 import com.dms.common.InvalidStateTransitionException;
+import com.dms.review.ReviewService;
 import com.dms.storage.StorageException;
 
 import jakarta.validation.Valid;
@@ -22,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class StudentSubmissionController {
 
     private final SubmissionService submissionService;
+    private final ReviewService reviewService;
 
     @GetMapping("")
     public String board(Authentication authentication, Model model) {
@@ -34,8 +36,17 @@ public class StudentSubmissionController {
 
     @GetMapping("/{submissionId}")
     public String detail(@PathVariable Long submissionId, Authentication authentication, Model model) {
-        model.addAttribute("detail",
-                submissionService.detailFor(submissionId, authentication.getName(), false));
+        SubmissionDetail detail = submissionService.detailFor(submissionId, authentication.getName(), false);
+        model.addAttribute("detail", detail);
+
+        if (detail.hasVersions()) {
+            model.addAttribute("comments", reviewService.commentsOn(
+                    detail.latest().versionId(), authentication.getName(), false));
+            model.addAttribute("latestVersionId", detail.latest().versionId());
+        }
+        model.addAttribute("canComment", false);
+        model.addAttribute("canResolve", true);
+        model.addAttribute("returnTo", "/student/submissions/" + submissionId);
         return "student/submission";
     }
 
