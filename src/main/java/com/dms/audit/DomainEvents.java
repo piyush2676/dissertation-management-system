@@ -72,4 +72,14 @@ public final class DomainEvents {
         public String oldValue() { return from; }
         public String newValue() { return to; }
     }
+
+    // ---- review -------------------------------------------------------------
+
+    /** entityId is the submission, not the comment: that is what a reader opens. */
+    public record ReviewCommented(String actorEmail, Long entityId, String excerpt)
+            implements DomainEvent {
+        public String action() { return "REVIEW_COMMENTED"; }
+        public String entityType() { return "Submission"; }
+        public String newValue() { return excerpt; }
+    }
 }

@@ -1,5 +1,6 @@
 package com.dms.review;
 
+import com.dms.audit.DomainEvents;
 import com.dms.common.NotFoundException;
 import com.dms.submission.SubmissionService;
 import com.dms.submission.SubmissionVersion;
@@ -8,6 +9,7 @@ import com.dms.user.User;
 import com.dms.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class ReviewService {
     private final SubmissionVersionRepository versionRepository;
     private final SubmissionService submissionService;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher events;
 
     /**
      * Adds a remark against one version. Only the supervising guide may write; the
@@ -51,7 +54,11 @@ public class ReviewService {
         comment.setPageNo(pageNo);
         comment.setBody(body.strip());
         comment.setCreatedAt(Instant.now());
-        return commentRepository.save(comment);
+        ReviewComment saved = commentRepository.save(comment);
+
+        events.publishEvent(new DomainEvents.ReviewCommented(
+                reviewerEmail, version.getSubmission().getId(), saved.getBody()));
+        return saved;
     }
 
     /**
