@@ -1,10 +1,12 @@
 package com.dms.topic;
 
+import com.dms.audit.DomainEvents;
 import com.dms.common.InvalidStateTransitionException;
 import com.dms.common.NotFoundException;
 import com.dms.user.*;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ public class TopicService {
     private final TopicRepository topicRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final SupervisorProfileRepository supervisorProfileRepository;
+    private final ApplicationEventPublisher events;
 
     @Transactional(readOnly = true)
     public Optional<Topic> currentTopicFor(String studentEmail) {
@@ -77,7 +80,10 @@ public class TopicService {
         topic.setDecidedBy(null);
         topic.setDecidedAt(null);
         topic.setStatus(TopicStatus.PROPOSED);
-        return topicRepository.save(topic);
+        Topic proposed = topicRepository.save(topic);
+        events.publishEvent(new DomainEvents.TopicProposed(
+                studentEmail, proposed.getId(), proposed.getTitle()));
+        return proposed;
     }
     public Topic submitForApproval(String studentEmail,TopicForm form) {
         Topic saved = saveDraft(studentEmail,form);
@@ -90,6 +96,7 @@ public class TopicService {
             throw new NotFoundException("Topic", topicId);
         }
         TopicStatus target = form.getDecision();
+        TopicStatus from = topic.getStatus();
         if (!topic.getStatus().canTransitionTo(target)) {
             throw new InvalidStateTransitionException(topic.getStatus(), target);
         }
@@ -97,7 +104,10 @@ public class TopicService {
         topic.setDecisionReason(target == TopicStatus.APPROVED ? null : form.getReason().strip());
         topic.setDecidedBy(sup.getUser());
         topic.setDecidedAt(Instant.now());
-        return topicRepository.save(topic);
+        Topic decided = topicRepository.save(topic);
+        events.publishEvent(new DomainEvents.TopicDecided(
+                supervisorEmail, decided.getId(), from.name(), target.name()));
+        return decided;
     }
 
     private StudentProfile student(String email) {

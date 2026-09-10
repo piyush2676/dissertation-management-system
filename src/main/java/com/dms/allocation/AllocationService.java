@@ -1,5 +1,6 @@
 package com.dms.allocation;
 
+import com.dms.audit.DomainEvents;
 import com.dms.common.InvalidStateTransitionException;
 import com.dms.common.NotFoundException;
 import com.dms.session.AcademicSession;
@@ -16,6 +17,7 @@ import com.dms.user.User;
 import com.dms.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +42,7 @@ public class AllocationService {
     private final SupervisorProfileRepository supervisorProfileRepository;
     private final AcademicSessionRepository academicSessionRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher events;
 
     public Allocation request(String studentEmail, Long supervisorId) {
         StudentProfile student = student(studentEmail);
@@ -71,7 +74,10 @@ public class AllocationService {
         allocation.setRequestedAt(Instant.now());
 
         try {
-            return allocationRepository.save(allocation);
+            Allocation saved = allocationRepository.save(allocation);
+            events.publishEvent(new DomainEvents.GuideRequested(
+                    studentEmail, saved.getId(), supervisor.getUser().getFullName()));
+            return saved;
         } catch (DataIntegrityViolationException ex) {
             throw new IllegalStateException("You already have a guide request in play this session.");
         }
@@ -91,7 +97,10 @@ public class AllocationService {
         allocation.setDecisionReason(null);
         allocation.setDecidedAt(Instant.now());
         allocation.setAllocatedBy(supervisor.getUser());
-        return allocationRepository.save(allocation);
+        Allocation accepted = allocationRepository.save(allocation);
+        events.publishEvent(new DomainEvents.GuideDecided(supervisorEmail, accepted.getId(),
+                AllocationStatus.REQUESTED.name(), AllocationStatus.ACCEPTED.name()));
+        return accepted;
     }
 
     public Allocation decline(String supervisorEmail, Long allocationId, String reason) {
@@ -109,7 +118,10 @@ public class AllocationService {
         allocation.setDecisionReason(reason.strip());
         allocation.setDecidedAt(Instant.now());
         allocation.setAllocatedBy(allocation.getSupervisor().getUser());
-        return allocationRepository.save(allocation);
+        Allocation declined = allocationRepository.save(allocation);
+        events.publishEvent(new DomainEvents.GuideDecided(supervisorEmail, declined.getId(),
+                AllocationStatus.REQUESTED.name(), AllocationStatus.DECLINED.name()));
+        return declined;
     }
 
     public Allocation withdraw(String studentEmail, Long allocationId) {
@@ -127,7 +139,10 @@ public class AllocationService {
         allocation.setStatus(AllocationStatus.WITHDRAWN);
         allocation.setDecidedAt(Instant.now());
         allocation.setAllocatedBy(allocation.getStudent().getUser());
-        return allocationRepository.save(allocation);
+        Allocation withdrawn = allocationRepository.save(allocation);
+        events.publishEvent(new DomainEvents.GuideDecided(studentEmail, withdrawn.getId(),
+                AllocationStatus.REQUESTED.name(), AllocationStatus.WITHDRAWN.name()));
+        return withdrawn;
     }
 
     public Allocation assign(String coordinatorEmail, Long studentId, Long supervisorId) {
@@ -166,7 +181,10 @@ public class AllocationService {
         allocation.setDecidedAt(now);
 
         try {
-            return allocationRepository.save(allocation);
+            Allocation assigned = allocationRepository.save(allocation);
+            events.publishEvent(new DomainEvents.GuideAssigned(
+                    coordinatorEmail, assigned.getId(), supervisor.getUser().getFullName()));
+            return assigned;
         } catch (DataIntegrityViolationException ex) {
             throw new IllegalStateException("That student already has a live allocation this session.");
         }

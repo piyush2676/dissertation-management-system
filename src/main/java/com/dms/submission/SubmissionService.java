@@ -3,6 +3,7 @@ package com.dms.submission;
 import com.dms.allocation.Allocation;
 import com.dms.allocation.AllocationService;
 import com.dms.allocation.AllocationStatus;
+import com.dms.audit.DomainEvents;
 import com.dms.common.InvalidStateTransitionException;
 import com.dms.common.NotFoundException;
 import com.dms.session.Milestone;
@@ -13,6 +14,7 @@ import com.dms.user.User;
 import com.dms.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +39,7 @@ public class SubmissionService {
     private final AllocationService allocationService;
     private final StorageService storageService;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher events;
 
     // ---- student ------------------------------------------------------------
 
@@ -166,7 +169,10 @@ public class SubmissionService {
         submission.setDecidedAt(null);
         submission.setUpdatedAt(Instant.now());
 
-        return submissionRepository.save(submission);
+        Submission filed = submissionRepository.save(submission);
+        events.publishEvent(new DomainEvents.SubmissionFiled(
+                studentEmail, filed.getId(), milestone.getName(), versionNo));
+        return filed;
     }
 
     // ---- guide --------------------------------------------------------------
@@ -197,13 +203,17 @@ public class SubmissionService {
 
         submission.setStatus(SubmissionStatus.UNDER_REVIEW);
         submission.setUpdatedAt(Instant.now());
-        return submissionRepository.save(submission);
+        Submission started = submissionRepository.save(submission);
+        events.publishEvent(new DomainEvents.SubmissionReviewStarted(
+                supervisorEmail, started.getId(), started.getMilestone().getName()));
+        return started;
     }
 
     /** UNDER_REVIEW to APPROVED, REVISION_REQUESTED or REJECTED. */
     public Submission decide(String supervisorEmail, Long submissionId, SubmissionStatus target, String note) {
         Submission submission = loadForSupervisor(submissionId, supervisorEmail);
 
+        SubmissionStatus from = submission.getStatus();
         if (!submission.getStatus().canTransitionTo(target)) {
             throw new InvalidStateTransitionException(submission.getStatus(), target);
         }
@@ -219,7 +229,10 @@ public class SubmissionService {
         submission.setDecidedBy(decidedBy);
         submission.setDecidedAt(Instant.now());
         submission.setUpdatedAt(Instant.now());
-        return submissionRepository.save(submission);
+        Submission decided = submissionRepository.save(submission);
+        events.publishEvent(new DomainEvents.SubmissionDecided(
+                supervisorEmail, decided.getId(), from.name(), target.name()));
+        return decided;
     }
 
     // ---- shared -------------------------------------------------------------
