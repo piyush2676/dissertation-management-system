@@ -22,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.time.LocalDate;
@@ -51,6 +52,7 @@ class SubmissionServiceTest {
     @Mock private AllocationService allocationService;
     @Mock private StorageService storageService;
     @Mock private UserRepository userRepository;
+    @Mock private ApplicationEventPublisher events;
 
     @InjectMocks private SubmissionService service;
 

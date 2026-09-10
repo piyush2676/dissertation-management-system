@@ -8,6 +8,7 @@ import com.dms.user.StudentProfileRepository;
 import com.dms.user.SupervisorProfile;
 import com.dms.user.SupervisorProfileRepository;
 import com.dms.user.User;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,6 +42,9 @@ class TopicServiceTest {
 
     @Mock
     private SupervisorProfileRepository supervisorProfileRepository;
+
+    @Mock
+    private ApplicationEventPublisher events;
 
     @InjectMocks
     private TopicService service;

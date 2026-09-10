@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.LocalDate;
@@ -52,6 +53,7 @@ class AllocationServiceTest {
     @Mock private SupervisorProfileRepository supervisorProfileRepository;
     @Mock private AcademicSessionRepository academicSessionRepository;
     @Mock private UserRepository userRepository;
+    @Mock private ApplicationEventPublisher events;
 
     @InjectMocks private AllocationService service;
 
