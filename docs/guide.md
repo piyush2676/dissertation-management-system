@@ -17,18 +17,28 @@ Built, verified in a browser, and covered by tests:
 | 4 | Milestone submissions with immutable version history, audit trail | done |
 | 5 | Review comments pinned to a version | done |
 | 6 | Rubric, weighted evaluation, viva scheduling, mark sheet | done |
-| 7 | Spring AI features | **not started** -- see the note below |
+| 7 | Topic overlap check, guide matching (Gemini) | done — needs a key to run |
 | 8 | End-to-end acceptance pass | partly: the chain below runs, notifications do not exist |
 
-`.\mvnw.cmd test` — 115 tests, green. Flyway at V9.
+`.\mvnw.cmd test` — 125 tests, green. Flyway at V10.
 
-**Phase 7 is blocked on the environment, not on the code.** The vector features need the
-pgvector extension, and `SELECT * FROM pg_available_extensions WHERE name = 'vector'` returns
-nothing on the PostgreSQL 18 instance this was built against, so the extension is not
-installed. They also need an `ANTHROPIC_API_KEY` and spend real money per call. Both are
-decisions for whoever runs the demo rather than things to decide silently in code. The seam is
-already in place: `StorageService` demonstrates the interface-per-external-dependency pattern
-the AI services would follow, so adding them is additive.
+**Phase 7 changed provider, for a reason worth recording.** Section 10 below planned Anthropic
+plus an unnamed embedding model. Anthropic ships no embedding model, and three of the five
+features are embedding-driven, so that design always needed a second provider. Google AI Studio
+covers chat and embeddings on one free-tier key, so it is the provider now.
+
+**The AI features are off unless a key is configured**, and the rest of the system does not care.
+That is not a guard in application code: the Google auto-configuration builds its client eagerly
+and throws at startup with no key, before anything of ours runs. Two model switches plus two
+auto-configuration exclusions in `application.properties` are what keep a key-less checkout
+booting. `application-local.properties.example` has the three lines that turn it on.
+
+**pgvector is still not installed and cannot be built on that machine** — the Visual Studio
+BuildTools install there is headers-only, with no compiler, and the PostgreSQL directory needs
+elevation. Vectors are stored as JSONB and scanned exactly by `CosineSimilarityProvider`, behind
+the `SimilarityProvider` interface. At department scale an exact scan beats an index and is
+exactly right rather than nearly right; past a few thousand rows, that one class is what pgvector
+replaces, plus a migration copying the arrays into a `vector(768)` column.
 
 **Known limitation.** `AllocationStatus.COORDINATOR_ASSIGNED` is terminal, so a coordinator who
 places a student with the wrong guide cannot undo it from the UI, and the partial unique index
@@ -408,18 +418,28 @@ templates/
 
 ## 10. Spring AI design (Phase 7)
 
-Added last, on a working system. One vector store, five features.
+Added last, on a working system. Two features shipped of the five planned.
 
-| Feature | How | Model |
+| Feature | How | State |
 |---|---|---|
-| Archive semantic search | Embed approved theses into pgvector; search by meaning | embedding model |
-| Topic novelty check | RAG: retrieve top-k similar theses, LLM reports overlap and gaps | `claude-opus-5` |
-| Supervisor matching | Cosine similarity: topic embedding vs `researchInterests` | embedding model |
-| Regulations Q&A | RAG over the department handbook PDF | `claude-sonnet-5` |
-| Chapter summary for reviewer | 200-word summary + draft review checklist | `claude-sonnet-5` |
+| Topic overlap check | Embed the abstract, retrieve top-k approved topics, model writes the note | **shipped** |
+| Supervisor matching | Cosine: topic embedding vs `researchInterests` | **shipped** |
+| Archive semantic search | Standalone search page over the same vectors | cut — retrieval ships inside the overlap check |
+| Regulations Q&A | RAG over the department handbook PDF | cut |
+| Chapter summary for reviewer | 200-word summary + draft review checklist | cut |
 
-Cost per million tokens (in/out): `claude-opus-5` $5/$25 · `claude-sonnet-5` $3/$15 ·
-`claude-haiku-4-5` $1/$5. Key from `ANTHROPIC_API_KEY` env var — **never committed**.
+**Provider: Google AI Studio (Gemini), not Anthropic.** The original plan named Anthropic for
+the narrative half and left the embedding model unnamed. Anthropic ships no embedding model, and
+three of the five features are embedding-driven, so the plan always needed a second provider.
+Gemini covers both on one key with a free tier — `gemini-2.5-flash` for the note,
+`text-embedding-004` for the vectors.
+
+Key from `GOOGLE_API_KEY`, or `spring.ai.google.genai.api-key` in the gitignored
+`application-local.properties` — **never committed**. Off by default; see section 0.
+
+Two economies worth naming. Every embedding row stores the SHA-256 of the text it was built
+from, so unchanged text is never re-embedded and never re-billed. And each feature runs only when
+the user asks: embedding on page load would burn quota rendering a page nobody was reading.
 
 **Hard constraint, designed in from the start:** the LLM never assigns a final grade or an
 approve/reject decision. Every AI output is advisory, rendered in a visually distinct panel
