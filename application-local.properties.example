@@ -6,5 +6,14 @@
 
 spring.datasource.password=your-postgres-password
 
-# Phase 7 only -- Spring AI. Prefer the ANTHROPIC_API_KEY environment variable.
-# spring.ai.anthropic.api-key=sk-ant-...
+# Phase 7 -- Google AI Studio (Gemini), free tier.
+# Create a key at https://aistudio.google.com/apikey , then uncomment all three
+# lines below. The two switches matter: the AI features are off by default so a
+# checkout without a key still starts.
+#
+# The key can also come from the GOOGLE_API_KEY environment variable, in which
+# case uncomment only the two switches.
+# spring.ai.google.genai.api-key=AIza...
+# spring.ai.model.chat=google-genai
+# spring.ai.model.embedding.text=google-genai
+# spring.autoconfigure.exclude=
