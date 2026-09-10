@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Notifications</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'सूचनाएँ',
+            'Notifications',
+            'What has happened that you need to act on.',
+            'ALL')}"></div>
+
+    <p th:if="${entries.isEmpty()}" class="status-note">
+        Nothing yet. Notifications appear here when work moves — a topic decided, a
+        request answered, a submission filed or reviewed.
+    </p>
+
+    <div th:unless="${entries.isEmpty()}">
+
+        <div class="btn-row no-print" style="justify-content:flex-start">
+            <form th:action="@{/notifications/read-all}" method="post" class="inline-form">
+                <button type="submit" class="btn btn-ghost btn-sm">Mark all as read</button>
+            </form>
+        </div>
+
+        <div th:each="n : ${entries.content}" class="hero"
+             th:style="${n.read} ? 'opacity:.62; margin-top:16px' : 'margin-top:16px'">
+
+            <div class="page-head" style="margin-bottom:10px">
+                <div>
+                    <h3 style="margin:0" th:text="${n.title}">Work filed for review</h3>
+                    <p class="status-note" style="margin:4px 0 0">
+                        <span th:text="${#temporals.format(n.createdAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan</span>
+                        &middot; <span th:text="${#strings.replace(n.type, '_', ' ')}">SUBMISSION FILED</span>
+                    </p>
+                </div>
+                <span th:unless="${n.read}" class="badge badge-pending">NEW</span>
+            </div>
+
+            <p th:if="${n.body != null}" style="margin:0 0 14px" th:text="${n.body}">
+                Avika Singh filed Synopsis v1.
+            </p>
+
+            <form th:if="${n.link != null}" th:action="@{/notifications/{id}/open(id=${n.id})}"
+                  method="post" class="inline-form no-print">
+                <button type="submit" class="btn btn-ghost btn-sm">Open</button>
+            </form>
+        </div>
+
+        <div class="btn-row no-print" th:if="${entries.totalPages > 1}" style="justify-content:flex-start">
+            <a th:if="${entries.hasPrevious()}" class="btn btn-ghost btn-sm"
+               th:href="@{/notifications(page=${entries.number - 1})}">Newer</a>
+            <span class="status-note"
+                  th:text="|Page ${entries.number + 1} of ${entries.totalPages}|">Page 1 of 2</span>
+            <a th:if="${entries.hasNext()}" class="btn btn-ghost btn-sm"
+               th:href="@{/notifications(page=${entries.number + 1})}">Older</a>
+        </div>
+    </div>
+
+    <p class="status-note">
+        Written by a listener on the same domain events the audit trail consumes, in the
+        same transaction — so an action that rolls back notifies nobody about something
+        that did not happen.
+    </p>
+
+</section>
+</body>
+</html>

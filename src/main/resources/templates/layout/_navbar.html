@@ -84,6 +84,13 @@
             <li class="nav-spacer"></li>
 
             <li sec:authorize="isAuthenticated()">
+                <a th:href="@{/notifications}" title="Notifications">
+                    Alerts<span th:if="${unreadNotifications != null and unreadNotifications > 0}"
+                          class="badge badge-pending" style="margin-left:6px"
+                          th:text="${unreadNotifications}">3</span>
+                </a>
+            </li>
+            <li sec:authorize="isAuthenticated()">
                 <span class="nav-user" sec:authentication="name">user</span>
             </li>
             <li sec:authorize="isAuthenticated()">
