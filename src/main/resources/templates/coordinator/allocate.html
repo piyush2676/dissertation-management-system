@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Allocate guides</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'मार्गदर्शक नियुक्ति',
+            'Allocate guides',
+            'Place a student with a guide when the request route stalls.',
+            'COORDINATOR')}"></div>
+
+    <div class="btn-row no-print" style="justify-content:flex-start">
+        <a th:each="p : ${programmes}"
+           th:href="@{/coordinator/allocate(programme=${p})}"
+           th:text="${#strings.replace(p, '_', ' ')}"
+           th:class="${p == programme} ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'">M.TECH</a>
+    </div>
+
+    <div th:if="${board == null}" class="hero">
+        <span class="eyebrow">Nothing to show</span>
+        <h2>No active session for this programme</h2>
+        <p class="lead">
+            Allocation is scoped to the running academic session. Open one for this
+            programme and the cohort appears here.
+        </p>
+    </div>
+
+    <div th:if="${board != null}">
+
+        <div class="stat-grid reveal">
+            <div class="stat">
+                <span class="stat-value" th:text="${board.sessionLabel}">2025-26</span>
+                <span class="stat-label">Active session</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${#lists.size(board.unallocated)}">0</span>
+                <span class="stat-label">Awaiting a guide</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${#lists.size(board.allocated)}">0</span>
+                <span class="stat-label">Placed</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${#lists.size(board.supervisors)}">0</span>
+                <span class="stat-label">Guides on roll</span>
+            </div>
+        </div>
+
+        <!-- Capacity board -->
+        <h2 style="margin-top:44px">Guide capacity</h2>
+        <div class="table-wrap reveal">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Guide</th>
+                    <th scope="col">Designation</th>
+                    <th scope="col">Load</th>
+                    <th scope="col">Seats left</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${board.supervisors}">
+                    <td th:text="${s.name}">Dr A Sharma</td>
+                    <td th:text="${s.designation} ?: '—'">Associate Professor</td>
+                    <td th:text="|${s.taken} / ${s.max}|">2 / 5</td>
+                    <td>
+                        <span th:if="${s.full}" class="badge badge-rejected">Full</span>
+                        <span th:unless="${s.full}" class="badge badge-approved"
+                              th:text="${s.remaining}">3</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Unallocated students, one assign form per row -->
+        <h2 style="margin-top:44px">Awaiting a guide</h2>
+
+        <p th:if="${#lists.isEmpty(board.unallocated)}" class="status-note">
+            Every student in this cohort has a live allocation.
+        </p>
+
+        <div th:unless="${#lists.isEmpty(board.unallocated)}" class="table-wrap reveal">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Roll no</th>
+                    <th scope="col">Student</th>
+                    <th scope="col">Sem</th>
+                    <th scope="col">Topic</th>
+                    <th scope="col" class="no-print">Assign to</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${board.unallocated}">
+                    <td th:text="${u.rollNo}">24MCS001</td>
+                    <td th:text="${u.fullName}">Avika Singh</td>
+                    <td th:text="${u.semester} ?: '—'">4</td>
+                    <td>
+                        <span th:text="${u.topicTitle} ?: 'No topic yet'">Adaptive load balancing</span>
+                        <br>
+                        <span th:if="${u.topicApproved}" class="badge badge-approved">APPROVED</span>
+                        <span th:unless="${u.topicApproved}" class="badge badge-pending">
+                            Override — topic not approved
+                        </span>
+                    </td>
+                    <td class="no-print">
+                        <form th:action="@{/coordinator/allocate/assign(programme=${programme})}"
+                              method="post" class="inline-form">
+                            <input type="hidden" name="studentId" th:value="${u.studentId}">
+                            <select name="supervisorId" required aria-label="Guide">
+                                <option value="">Choose a guide</option>
+                                <option th:each="s : ${board.supervisors}"
+                                        th:value="${s.supervisorId}"
+                                        th:disabled="${s.full}"
+                                        th:text="|${s.name} (${s.taken}/${s.max})|">Dr A Sharma (2/5)</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm">Assign</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Already placed -->
+        <h2 style="margin-top:44px">Placed this session</h2>
+
+        <p th:if="${#lists.isEmpty(board.allocated)}" class="status-note">
+            Nobody has a live allocation yet.
+        </p>
+
+        <div th:unless="${#lists.isEmpty(board.allocated)}" class="table-wrap reveal">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Roll no</th>
+                    <th scope="col">Student</th>
+                    <th scope="col">Guide</th>
+                    <th scope="col">Topic</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Decided</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${board.allocated}">
+                    <td th:text="${a.rollNo}">24MCS001</td>
+                    <td th:text="${a.studentName}">Avika Singh</td>
+                    <td th:text="${a.supervisorName}">Dr A Sharma</td>
+                    <td th:text="${a.topicTitle} ?: '—'">Adaptive load balancing</td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${a.status.name() == 'REQUESTED'} ? 'badge-pending' : 'badge-approved'"
+                              th:text="${#strings.replace(a.status, '_', ' ')}">ACCEPTED</span>
+                    </td>
+                    <td th:text="${a.decidedAt != null}
+                                 ? ${#temporals.format(a.decidedAt.atZone(zone), 'dd MMM yyyy')}
+                                 : 'Pending'">01 Jan 2026</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="status-note">
+            A coordinator placement is recorded as COORDINATOR ASSIGNED — it bypasses the
+            guide's consent and takes a seat immediately. Capacity is still enforced.
+        </p>
+    </div>
+
+</section>
+</body>
+</html>
