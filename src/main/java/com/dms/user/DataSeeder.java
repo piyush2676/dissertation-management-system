@@ -58,30 +58,40 @@ public class DataSeeder implements CommandLineRunner {
 
     }
 
+    /**
+     * Dates are anchored to the day the database is first seeded rather than
+     * hard-coded, so a demo run months from now still has a session in progress
+     * and deadlines ahead of it. Fixed dates would make every submission read as
+     * late the moment the calendar moved past them.
+     */
     private void seedSessions() {
         if (academicSessionRepository.count() > 0) {
             return;
         }
 
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.minusMonths(2);
+        LocalDate end = today.plusMonths(8);
+        String label = start.getYear() + "-" + String.valueOf(start.plusYears(1).getYear()).substring(2);
+
         for (Programme programme : Programme.values()) {
-            AcademicSession session = createSession("2025-26", programme,
-                    LocalDate.of(2025, 7, 1), LocalDate.of(2026, 5, 31), true);
-            seedMilestones(session, programme);
+            AcademicSession session = createSession(label, programme, start, end, true);
+            seedMilestones(session, programme, today);
         }
     }
 
-    private void seedMilestones(AcademicSession session, Programme programme) {
+    private void seedMilestones(AcademicSession session, Programme programme, LocalDate today) {
         if (programme == MTECH) {
-            createMilestone(session, "Synopsis", "Problem statement, objectives and scope", LocalDate.of(2025, 8, 15), 10, 1);
-            createMilestone(session, "Literature Review", "Survey of prior work with a gap analysis", LocalDate.of(2025, 10, 10), 15, 2);
-            createMilestone(session, "Interim Report", "Design, methodology and progress to date", LocalDate.of(2025, 12, 20), 25, 3);
-            createMilestone(session, "Pre-submission Seminar", "Departmental presentation before final submission", LocalDate.of(2026, 3, 15), 20, 4);
-            createMilestone(session, "Final Thesis", "Complete thesis with results and evaluation", LocalDate.of(2026, 4, 30), 30, 5);
+            createMilestone(session, "Synopsis", "Problem statement, objectives and scope", today.plusDays(15), 10, 1);
+            createMilestone(session, "Literature Review", "Survey of prior work with a gap analysis", today.plusDays(60), 15, 2);
+            createMilestone(session, "Interim Report", "Design, methodology and progress to date", today.plusDays(120), 25, 3);
+            createMilestone(session, "Pre-submission Seminar", "Departmental presentation before final submission", today.plusDays(190), 20, 4);
+            createMilestone(session, "Final Thesis", "Complete thesis with results and evaluation", today.plusDays(230), 30, 5);
         } else {
-            createMilestone(session, "Synopsis", "Problem statement, objectives and scope", LocalDate.of(2025, 9, 1), 15, 1);
-            createMilestone(session, "Interim Report", "Design, methodology and progress to date", LocalDate.of(2025, 12, 15), 25, 2);
-            createMilestone(session, "Pre-submission Seminar", "Departmental presentation before final submission", LocalDate.of(2026, 3, 20), 20, 3);
-            createMilestone(session, "Final Thesis", "Complete thesis with results and evaluation", LocalDate.of(2026, 4, 25), 40, 4);
+            createMilestone(session, "Synopsis", "Problem statement, objectives and scope", today.plusDays(25), 15, 1);
+            createMilestone(session, "Interim Report", "Design, methodology and progress to date", today.plusDays(110), 25, 2);
+            createMilestone(session, "Pre-submission Seminar", "Departmental presentation before final submission", today.plusDays(200), 20, 3);
+            createMilestone(session, "Final Thesis", "Complete thesis with results and evaluation", today.plusDays(240), 40, 4);
         }
     }
 
