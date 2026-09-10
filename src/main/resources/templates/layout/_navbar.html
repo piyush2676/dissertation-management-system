@@ -49,6 +49,9 @@
             <li sec:authorize="hasRole('ADMIN')">
                 <a th:href="@{/admin/users}">Users</a>
             </li>
+            <li sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/admin/audit}">Audit trail</a>
+            </li>
 
             <li sec:authorize="isAnonymous()">
                 <a th:href="@{/#steps}">How it works</a>

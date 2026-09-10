@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Users</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'उपयोगकर्ता',
+            'Users',
+            'Every account on the system and the roles it holds.',
+            'ADMIN')}"></div>
+
+    <div class="stat-grid reveal">
+        <div class="stat">
+            <span class="stat-value" th:text="${#lists.size(users)}">8</span>
+            <span class="stat-label">Accounts</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${#lists.size(students)}">4</span>
+            <span class="stat-label">Students</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${#lists.size(supervisors)}">2</span>
+            <span class="stat-label">Guides</span>
+        </div>
+    </div>
+
+    <h2 style="margin-top:44px">Accounts</h2>
+    <div class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Roles</th>
+                <th scope="col">Enabled</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${users}">
+                <td th:text="${u.fullName}">Dr A Sharma</td>
+                <td th:text="${u.email}">guide1@college.edu</td>
+                <td>
+                    <span th:each="r : ${u.roles}" class="badge badge-draft"
+                          th:text="${r}" style="margin-right:4px">SUPERVISOR</span>
+                </td>
+                <td>
+                    <span class="badge" th:classappend="${u.enabled} ? 'badge-approved' : 'badge-rejected'"
+                          th:text="${u.enabled} ? 'YES' : 'NO'">YES</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 style="margin-top:44px">Guide capacity</h2>
+    <div class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Guide</th>
+                <th scope="col">Designation</th>
+                <th scope="col">Department</th>
+                <th scope="col">Max students</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${supervisors}">
+                <td th:text="${s.user.fullName}">Dr A Sharma</td>
+                <td th:text="${s.designation}">Associate Professor</td>
+                <td th:text="${s.department}">CSE</td>
+                <td th:text="${s.maxStudents}">5</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="status-note">
+        Read-only by design. Accounts come from the institute records; the demo set is
+        created by DataSeeder on an empty database.
+    </p>
+
+</section>
+</body>
+</html>

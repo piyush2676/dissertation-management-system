@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Audit trail</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'लेखा परीक्षा',
+            'Audit trail',
+            'Who did what, to which record, and when.',
+            'ADMIN')}"></div>
+
+    <p class="status-note">
+        Written by an event listener inside the transaction that made the change, so a
+        rolled-back action leaves no entry and no entry can describe something that did
+        not happen. Nothing here is editable.
+    </p>
+
+    <p th:if="${entries.isEmpty()}" class="status-note">Nothing recorded yet.</p>
+
+    <div th:unless="${entries.isEmpty()}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">When</th>
+                <th scope="col">Actor</th>
+                <th scope="col">Action</th>
+                <th scope="col">Record</th>
+                <th scope="col">From</th>
+                <th scope="col">To</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="e : ${entries.content}">
+                <td th:text="${#temporals.format(e.at.atZone(zone), 'dd MMM yyyy, HH:mm:ss')}">01 Jan</td>
+                <td th:text="${e.actorEmail}">student1@college.edu</td>
+                <td><code th:text="${e.action}">TOPIC_APPROVED</code></td>
+                <td th:text="|${e.entityType} #${e.entityId}|">Topic #1</td>
+                <td th:text="${e.oldValue} ?: '—'">PROPOSED</td>
+                <td th:text="${e.newValue} ?: '—'">APPROVED</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="btn-row no-print" th:if="${entries.totalPages > 1}" style="justify-content:flex-start">
+        <a th:if="${entries.hasPrevious()}" class="btn btn-ghost btn-sm"
+           th:href="@{/admin/audit(page=${entries.number - 1})}">Newer</a>
+        <span class="status-note"
+              th:text="|Page ${entries.number + 1} of ${entries.totalPages}|">Page 1 of 2</span>
+        <a th:if="${entries.hasNext()}" class="btn btn-ghost btn-sm"
+           th:href="@{/admin/audit(page=${entries.number + 1})}">Older</a>
+    </div>
+
+</section>
+</body>
+</html>
