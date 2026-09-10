@@ -1,5 +1,7 @@
 package com.dms.security;
 
+import com.dms.allocation.AllocationRepository;
+import com.dms.allocation.AllocationStatus;
 import com.dms.user.User;
 import com.dms.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthzService {
     private final UserRepository userRepository;
+    private final AllocationRepository allocationRepository;
     public boolean isSelf(Long userId, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
@@ -26,8 +29,19 @@ public class AuthzService {
         return userRepository.findByEmail(authentication.getName());
     }
 
+    /**
+     * True when the signed-in guide actually supervises this student.
+     *
+     * <p>Scoped to the statuses that occupy a seat. A REQUESTED allocation is not
+     * supervision yet -- treating it as such would hand a guide read access to a
+     * student who has merely named them.
+     */
     public boolean supervises(Long studentId, Authentication authentication) {
-        return false;
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        return allocationRepository.existsByStudentIdAndSupervisorUserEmailAndStatusIn(
+                studentId, authentication.getName(), AllocationStatus.OCCUPIES_A_SEAT);
     }
     public boolean ownsSubmission(Long submissionId, Authentication authentication) {
         return false;
