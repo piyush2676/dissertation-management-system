@@ -1,6 +1,7 @@
 package com.dms.security;
 
 import com.dms.allocation.AllocationRepository;
+import com.dms.submission.SubmissionRepository;
 import com.dms.allocation.AllocationStatus;
 import com.dms.user.User;
 import com.dms.user.UserRepository;
@@ -15,6 +16,7 @@ import java.util.Optional;
 public class AuthzService {
     private final UserRepository userRepository;
     private final AllocationRepository allocationRepository;
+    private final SubmissionRepository submissionRepository;
     public boolean isSelf(Long userId, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
@@ -43,7 +45,17 @@ public class AuthzService {
         return allocationRepository.existsByStudentIdAndSupervisorUserEmailAndStatusIn(
                 studentId, authentication.getName(), AllocationStatus.OCCUPIES_A_SEAT);
     }
+    /**
+     * True when the signed-in user owns this submission, or supervises the student
+     * who does. The coordinator and admin are handled at the URL layer instead --
+     * this answers ownership, not privilege.
+     */
     public boolean ownsSubmission(Long submissionId, Authentication authentication) {
-        return false;
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        String email = authentication.getName();
+        return submissionRepository.existsByIdAndAllocationStudentUserEmail(submissionId, email)
+                || submissionRepository.existsByIdAndAllocationSupervisorUserEmail(submissionId, email);
     }
 }

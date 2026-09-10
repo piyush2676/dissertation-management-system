@@ -1,6 +1,7 @@
 package com.dms.common;
 
 import com.dms.allocation.CapacityExceededException;
+import com.dms.storage.StorageException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
@@ -30,6 +31,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public String capacity(CapacityExceededException ex, Model model){
         log.warn("409 capacity: {} at {}/{}", ex.getSupervisorName(), ex.getTaken(), ex.getMax());
+        model.addAttribute("reason", ex.getMessage());
+        return "error/409";
+    }
+
+    @ExceptionHandler(StorageException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String storage(StorageException ex, Model model){
+        log.warn("409 storage: {}", ex.getMessage());
         model.addAttribute("reason", ex.getMessage());
         return "error/409";
     }
