@@ -1,5 +1,7 @@
 package com.dms.user;
 
+import com.dms.evaluation.RubricCriterion;
+import com.dms.evaluation.RubricCriterionRepository;
 import com.dms.session.AcademicSession;
 import com.dms.session.AcademicSessionRepository;
 import com.dms.session.Milestone;
@@ -27,12 +29,14 @@ public class DataSeeder implements CommandLineRunner {
     private final StudentProfileRepository studentProfileRepository;
     private final AcademicSessionRepository academicSessionRepository;
     private final MilestoneRepository milestoneRepository;
+    private final RubricCriterionRepository rubricRepository;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
         seedUsers();
         seedSessions();
+        seedRubrics();
     }
 
     private void seedUsers() {
@@ -142,5 +146,40 @@ public class DataSeeder implements CommandLineRunner {
         milestone.setSequenceNo(sequenceNo);
         milestone.setCreatedAt(Instant.now());
         milestoneRepository.save(milestone);
+    }
+
+    /**
+     * Guarded on its own count rather than folded into seedSessions, so a database
+     * seeded before the rubric existed still picks one up on the next start.
+     */
+    private void seedRubrics() {
+        if (rubricRepository.count() > 0) {
+            return;
+        }
+        for (AcademicSession session : academicSessionRepository.findAll()) {
+            seedRubric(session);
+        }
+    }
+
+    /** A workable default marking scheme. Rows, so the department can change it without a release. */
+    private void seedRubric(AcademicSession session) {
+        createCriterion(session, "Problem definition", "Clarity of the problem and its scope", 10, 15, 1);
+        createCriterion(session, "Literature and novelty", "Depth of survey and the gap identified", 10, 15, 2);
+        createCriterion(session, "Methodology", "Soundness of the approach and design", 10, 25, 3);
+        createCriterion(session, "Results and evaluation", "Rigour of experiments and analysis", 10, 25, 4);
+        createCriterion(session, "Presentation and viva", "Report quality and the defence", 10, 20, 5);
+    }
+
+    private void createCriterion(AcademicSession session, String name, String description,
+                                 int maxMarks, int weightage, int sequenceNo) {
+        RubricCriterion criterion = new RubricCriterion();
+        criterion.setSession(session);
+        criterion.setName(name);
+        criterion.setDescription(description);
+        criterion.setMaxMarks(maxMarks);
+        criterion.setWeightage(weightage);
+        criterion.setSequenceNo(sequenceNo);
+        criterion.setCreatedAt(Instant.now());
+        rubricRepository.save(criterion);
     }
 }
