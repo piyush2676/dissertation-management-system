@@ -28,6 +28,12 @@
             <li sec:authorize="hasRole('STUDENT')">
                 <a th:href="@{/student/result}">Result</a>
             </li>
+            <li sec:authorize="hasRole('STUDENT')">
+                <a th:href="@{/student/ai/novelty}">Overlap check</a>
+            </li>
+            <li sec:authorize="hasRole('STUDENT')">
+                <a th:href="@{/student/ai/match}">Suggested guides</a>
+            </li>
 
             <li sec:authorize="hasRole('SUPERVISOR')">
                 <a th:href="@{/supervisor/dashboard}">Dashboard</a>

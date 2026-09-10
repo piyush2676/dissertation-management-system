@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Suggested guides</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'मार्गदर्शक सुझाव',
+            'Suggested guides',
+            'Faculty whose stated research interests sit closest to your topic.',
+            'STUDENT')}"></div>
+
+    <div th:unless="${hasTopic}" class="hero">
+        <span class="eyebrow">Nothing to match</span>
+        <h2>Propose a topic first</h2>
+        <p class="lead">
+            Matching compares your topic against each guide's stated research interests, so it
+            needs a topic to work from.
+        </p>
+        <a th:href="@{/student/topic}" class="btn btn-ghost">Go to my topic</a>
+    </div>
+
+    <div th:if="${hasTopic and !available}"
+         th:replace="~{layout/_aipanel :: unconfigured('Guide matching')}"></div>
+
+    <div th:if="${hasTopic and available}">
+
+        <div class="hero">
+            <span class="eyebrow">Your topic</span>
+            <h2 th:text="${topic.title}">Adaptive load balancing for edge inference clusters</h2>
+            <form th:action="@{/student/ai/match}" method="post" class="no-print" style="margin-top:18px">
+                <button type="submit" class="btn btn-primary">Suggest guides</button>
+            </form>
+        </div>
+
+        <div th:if="${matches != null}" class="hero" style="border-left:3px solid var(--warn)">
+            <span class="eyebrow" style="color:var(--warn)">AI-generated — verify before acting</span>
+
+            <p th:if="${#lists.isEmpty(matches)}" class="lead">
+                No guide has stated research interests to match against yet.
+            </p>
+
+            <div th:unless="${#lists.isEmpty(matches)}" class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th scope="col">Guide</th>
+                        <th scope="col">Interests</th>
+                        <th scope="col">Closeness</th>
+                        <th scope="col" class="no-print">&nbsp;</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="m : ${matches}">
+                        <td>
+                            <span th:text="${m.value().user.fullName}">Dr A Sharma</span><br>
+                            <span class="status-note" th:text="${m.value().designation}">Associate Professor</span>
+                        </td>
+                        <td th:text="${m.value().researchInterests}">machine learning, federated systems</td>
+                        <td th:text="|${m.percent()}%|">74%</td>
+                        <td class="no-print">
+                            <a class="btn btn-ghost btn-sm" th:href="@{/student/guide}">Request</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="status-note" style="margin-top:18px">
+                A suggestion, not a shortlist — you may request any guide. Capacity and the
+                guide's own decision still determine the outcome, and the coordinator can
+                override either way.
+            </p>
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

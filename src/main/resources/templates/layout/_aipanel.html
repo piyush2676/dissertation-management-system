@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Every AI output on this system renders inside this wrapper. The label is not
+  decoration: the design fixes that a model never approves, rejects or grades,
+  and that its output is always visibly marked as advisory.
+-->
+<div th:fragment="aipanel(body)" class="hero" style="border-left:3px solid var(--warn)">
+    <span class="eyebrow" style="color:var(--warn)">AI-generated — verify before acting</span>
+    <div th:replace="${body}"></div>
+    <p class="status-note" style="margin-top:18px">
+        Advisory only. No decision on this system is made by a model — approval,
+        allocation and marks are recorded by people.
+    </p>
+</div>
+
+<!-- Shown wherever a feature needs a key that is not configured. -->
+<div th:fragment="unconfigured(what)" class="hero">
+    <span class="eyebrow">Not configured</span>
+    <h2>AI features are switched off</h2>
+    <p class="lead">
+        <span th:text="${what}">This check</span> needs a Google AI Studio key. Set
+        <code>GOOGLE_API_KEY</code> in the environment, or
+        <code>spring.ai.google.genai.api-key</code> in
+        <code>application-local.properties</code>, and restart. Everything else on the
+        system works without it.
+    </p>
+</div>
+
+</body>
+</html>
