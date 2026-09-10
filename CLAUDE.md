@@ -35,7 +35,8 @@ tutorials blindly.
 
 ## Current state (2026-09-10)
 
-Phases 0–7 complete, verified in a browser, 125 tests green, 103 commits. Flyway at V10.
+Phases 0–8 complete, verified in a browser, 140 tests green, 107 commits. Flyway at V10.
+The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 19 assertions, all green.
 
 | Phase | Covers | State |
 |---|---|---|
@@ -47,7 +48,7 @@ Phases 0–7 complete, verified in a browser, 125 tests green, 103 commits. Flyw
 | 5 | Review comments pinned to a version | done |
 | 6 | Rubric, weighted evaluation, viva, mark sheet | done |
 | 7 | Topic overlap check + guide matching (Gemini) | done — key optional |
-| 8 | End-to-end acceptance | chain runs; notifications cut |
+| 8 | End-to-end acceptance | done — scripted, 19/19 |
 
 ### Phase 7 — Google AI Studio, not Anthropic
 
@@ -100,7 +101,7 @@ ships inside the overlap check).
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (125 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (140 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -142,6 +143,11 @@ These cost real time in past sessions. Read before running anything.
   file must detect: `NL = '\r\n' if '\r\n' in s else '\n'`.
 - **Local DB predates the M.Tech migration** — some roll numbers read `21CSE001` where the
   current seeder writes `24MCS001`. Not a bug.
+- **psql emits CRLF.** Splitting a multi-row `psql -t -A` result leaves `` glued to every
+  value but the last, and the terminal hides it. Always pipe through `tr -d ''`.
+- **`grep -oP` fails here** — "supports only unibyte and UTF-8 locales". Use `sed -n 's/x//p'`.
+  Silent empty output from it once left `psql` waiting on stdin forever; pass `-w` so a missing
+  password fails instead of hanging.
 
 ---
 
