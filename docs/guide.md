@@ -4,6 +4,42 @@ Living design document. **Update this file before writing code that changes a de
 
 ---
 
+## 0. Where this stands
+
+Built, verified in a browser, and covered by tests:
+
+| Phase | What it covers | State |
+|---|---|---|
+| 0 | Scaffold, landing page, error pages, design system | done |
+| 1 | Auth, roles, dashboards | done |
+| 2 | Topic proposal and approval | done |
+| 3 | Academic session, milestones, guide allocation, coordinator override | done |
+| 4 | Milestone submissions with immutable version history, audit trail | done |
+| 5 | Review comments pinned to a version | done |
+| 6 | Rubric, weighted evaluation, viva scheduling, mark sheet | done |
+| 7 | Spring AI features | **not started** -- see the note below |
+| 8 | End-to-end acceptance pass | partly: the chain below runs, notifications do not exist |
+
+`.\mvnw.cmd test` — 115 tests, green. Flyway at V9.
+
+**Phase 7 is blocked on the environment, not on the code.** The vector features need the
+pgvector extension, and `SELECT * FROM pg_available_extensions WHERE name = 'vector'` returns
+nothing on the PostgreSQL 18 instance this was built against, so the extension is not
+installed. They also need an `ANTHROPIC_API_KEY` and spend real money per call. Both are
+decisions for whoever runs the demo rather than things to decide silently in code. The seam is
+already in place: `StorageService` demonstrates the interface-per-external-dependency pattern
+the AI services would follow, so adding them is additive.
+
+**Known limitation.** `AllocationStatus.COORDINATOR_ASSIGNED` is terminal, so a coordinator who
+places a student with the wrong guide cannot undo it from the UI, and the partial unique index
+then blocks a second live allocation. The fix is one line — allow `WITHDRAWN` from `ACCEPTED`
+and `COORDINATOR_ASSIGNED`, then add a revoke action — but it reverses a decision that
+`AllocationStatusTest` deliberately pins ("only REQUESTED may be non-terminal"), so it is left
+as a decision to take rather than one made quietly.
+
+
+---
+
 ## 1. Why this exists
 
 M.Tech dissertation work is run manually: topics by email, guide allocation in a
@@ -86,29 +122,34 @@ written by `@EventListener` on domain events, `JavaMailSender` for notifications
 
 ### Package layout — by feature, not by layer
 
-Built so far (Phase 1):
+Built so far (phases 1 to 6):
 
 ```
 com.dms
 ├── DissertationManagementSystemApplication.java
+├── audit/           AuditLog, DomainEvent, DomainEvents, AuditLogListener,
+│                    AuditLogRepository, AuditLogController
+├── allocation/      Allocation, AllocationStatus, AllocationService, AllocationBoard,
+│                    capacity rules, student / supervisor / coordinator controllers
+├── common/          exceptions, GlobalExceptionHandler
+├── evaluation/      RubricCriterion, Evaluation, EvaluationService, MarkSheet,
+│                    SupervisorEvaluationController, StudentResultController
+├── review/          ReviewComment, ReviewService, ReviewCommentController
 ├── security/        SecurityConfig, CustomUserDetailsService, AuthzService
-├── user/            User, Role, Programme, StudentProfile, SupervisorProfile,
-│                    UserRepository, StudentProfileRepository,
-│                    SupervisorProfileRepository, DataSeeder
-└── web/             HomeController, DashboardController
-```
-
-Planned as later phases land:
-
-```
-├── common/          BaseEntity, exceptions, GlobalExceptionHandler, AuditLog, DomainEvent
 ├── session/         AcademicSession, Milestone
-├── topic/           Topic, TopicService, TopicController, TopicForm
-├── allocation/      Allocation, AllocationService, capacity rules
-├── submission/      Submission, SubmissionVersion, SubmissionService, StorageService
-├── review/          ReviewComment, ReviewService
-├── evaluation/      RubricCriterion, Evaluation, ScoreCalculator
-├── viva/            VivaSchedule, PanelMember, VivaService
+├── storage/         StorageService, LocalDiskStorageService, StoredFile
+├── submission/      Submission, SubmissionVersion, SubmissionStatus, SubmissionService,
+│                    student / supervisor / download controllers
+├── topic/           Topic, TopicStatus, TopicService, TopicForm, controllers
+├── user/            User, Role, Programme, StudentProfile, SupervisorProfile,
+│                    repositories, DataSeeder, AdminUserController
+├── viva/            VivaSchedule, VivaStatus, VivaService, CoordinatorVivaController
+└── web/             HomeController, DashboardController, DashboardService, Dashboards
+```
+
+Still planned:
+
+```
 ├── notification/    Notification, NotificationService
 └── ai/              VectorIngestService, SimilarityService, TopicNoveltyService, RagChatService
 ```
@@ -304,30 +345,62 @@ the navbar, driven entirely by `sec:authorize`.
 This table is extended one phase ahead of the controllers that serve it, so attribute names are
 settled before either the controller or the template is written.
 
+Every route below is built and reachable. `board` is used as the model attribute name
+throughout: each page gets exactly one assembled view record rather than a scatter of
+loose attributes, which is what keeps a lazy entity from ever reaching a template.
+
 | Route | Method | View | Model attributes | Form object |
 |---|---|---|---|---|
 | `/` | GET | `home` | — | — |
 | `/login` | GET | `auth/login` | — | — |
 | `/dashboard` | GET | redirect by role | — | — |
-| `/student/dashboard` | GET | `student/dashboard` | `topic`, `allocation`, `milestones`, `pendingCount` | — |
-| `/student/topic` | GET | `student/topic-form` | `topicForm`, `supervisors` | `TopicForm` |
-| `/student/topic` | POST | redirect `/student/dashboard` | — | `TopicForm` |
-| `/supervisor/topics` | GET | `supervisor/topic-approvals` | `pendingTopics` | — |
+| `/student/dashboard` | GET | `student/dashboard` | `board` | — |
+| `/student/topic` | GET | `student/topic/view` | `topic`, `hasTopic`, `canEdit` | — |
+| `/student/topic/new` | GET | `student/topic/form` | `form`, `supervisors`, `mode` | `TopicForm` |
+| `/student/topic/submit` | POST | redirect `/student/topic` | — | `TopicForm` |
+| `/student/guide` | GET | `student/guide` | `allocation`, `history`, `seatsTaken` | `AllocationRequestForm` |
+| `/student/guide/request` | POST | redirect | — | `AllocationRequestForm` |
+| `/student/submissions` | GET | `student/submissions` | `board` | `SubmissionUploadForm` |
+| `/student/submissions/{milestoneId}/upload` | POST | redirect | — | `SubmissionUploadForm` |
+| `/student/submissions/{id}` | GET | `student/submission` | `detail`, `comments` | — |
+| `/student/result` | GET | `student/result` | `result`, `viva` | — |
+| `/supervisor/dashboard` | GET | `supervisor/dashboard` | `board` | — |
+| `/supervisor/topics` | GET | `supervisor/topics` | `pending`, `decided` | `TopicDecisionForm` |
 | `/supervisor/topics/{id}/decide` | POST | redirect | — | `TopicDecisionForm` |
-| `/coordinator/allocate` | GET | `coordinator/allocate` | `unallocated`, `supervisorsWithLoad` | — |
+| `/supervisor/requests` | GET | `supervisor/requests` | `pending`, `decided` | `AllocationDecisionForm` |
+| `/supervisor/submissions` | GET | `supervisor/submissions` | `queue` | — |
+| `/supervisor/submissions/{id}` | GET | `supervisor/submission` | `detail`, `comments` | `SubmissionDecisionForm` |
+| `/supervisor/submissions/{id}/start` | POST | redirect | — | — |
+| `/supervisor/submissions/{id}/decide` | POST | redirect | — | `SubmissionDecisionForm` |
+| `/supervisor/evaluate` | GET | `supervisor/evaluate` | `students` | — |
+| `/supervisor/evaluate/{id}` | GET | `supervisor/evaluate-form` | `allocation`, `rubric` | `EvaluationForm` |
+| `/coordinator/dashboard` | GET | `coordinator/dashboard` | `board` | — |
+| `/coordinator/allocate` | GET | `coordinator/allocate` | `board`, `programme` | `AllocationAssignForm` |
+| `/coordinator/allocate/assign` | POST | redirect | — | `AllocationAssignForm` |
+| `/coordinator/viva` | GET | `coordinator/viva` | `schedules`, `placed` | `VivaScheduleForm` |
+| `/coordinator/marksheet` | GET | `coordinator/marksheet` | `sheet` | — |
+| `/admin/dashboard` | GET | `admin/dashboard` | `board`, `recentTopics` | — |
+| `/admin/users` | GET | `admin/users` | `users`, `students`, `supervisors` | — |
+| `/admin/audit` | GET | `admin/audit` | `entries` | — |
+| `/files/submissions/versions/{id}` | GET | file download | — | — |
+| `/review/comments` | POST | redirect | — | `ReviewCommentForm` |
+
+Two routes sit outside the role prefixes on purpose. A submission file and a comment
+thread are both legitimately touched by the student, their guide, the coordinator and the
+admin, so `/files/**` and `/review/**` authorise by ownership in the service rather than by
+URL, and the uploads directory is never served as a static resource.
 
 Template tree:
 
 ```
 templates/
-├── layout/base.html, _navbar.html, _flash.html
+├── layout/      base, _navbar, _flash, _footer, _pagehero, _versions, _comments
 ├── home.html
-├── auth/login.html
-├── student/     dashboard, topic-form, milestones, submit, submission-detail, feedback
-├── supervisor/  dashboard, my-students, topic-approvals, review, evaluate
-├── coordinator/ dashboard, allocate, sessions, milestones, viva-schedule, reports
-├── admin/       users, audit-log
-├── archive/     search, thesis-detail
+├── auth/        login
+├── student/     dashboard, topic/form, topic/view, guide, submissions, submission, result
+├── supervisor/  dashboard, topics, requests, submissions, submission, evaluate, evaluate-form
+├── coordinator/ dashboard, allocate, viva, marksheet
+├── admin/       dashboard, users, audit
 └── error/       403, 404, 409, 500
 ```
 
