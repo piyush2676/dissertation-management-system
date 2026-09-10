@@ -6,6 +6,7 @@ import com.dms.allocation.AllocationRepository;
 import com.dms.allocation.AllocationService;
 import com.dms.allocation.AllocationStatus;
 import com.dms.audit.AuditLogRepository;
+import com.dms.review.ReviewService;
 import com.dms.submission.StudentSubmissionBoard;
 import com.dms.submission.SubmissionRepository;
 import com.dms.submission.SubmissionService;
@@ -35,6 +36,7 @@ public class DashboardService {
     private final TopicService topicService;
     private final AllocationService allocationService;
     private final SubmissionService submissionService;
+    private final ReviewService reviewService;
 
     private final TopicRepository topicRepository;
     private final AllocationRepository allocationRepository;
@@ -68,6 +70,7 @@ public class DashboardService {
                 board.submittedCount(),
                 board.approvedCount(),
                 board.rows().stream().filter(StudentSubmissionBoard.MilestoneRow::awaitingGuide).count(),
+                reviewService.openCountForStudent(email),
                 nextMilestone,
                 nextDue.map(StudentSubmissionBoard.MilestoneRow::dueDate).orElse(null));
     }

@@ -21,6 +21,7 @@ public final class Dashboards {
             long milestonesFiled,
             long milestonesApproved,
             long withGuide,
+            long openComments,
             String nextMilestone,
             LocalDate nextDueDate) {
 
