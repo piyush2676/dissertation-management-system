@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Submission history</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'प्रस्तुति अभिलेख',
+            'Submission history',
+            'Every version you have filed against this milestone.',
+            'STUDENT')}"></div>
+
+    <div class="hero">
+        <div th:replace="~{layout/_versions :: versions(${detail})}"></div>
+    </div>
+
+    <div class="btn-row no-print" style="justify-content:flex-start">
+        <a th:href="@{/student/submissions}" class="btn btn-ghost">Back to milestones</a>
+        <button type="button" class="btn btn-ghost" data-print>Print record</button>
+    </div>
+
+</section>
+</body>
+</html>

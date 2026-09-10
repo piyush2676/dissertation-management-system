@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Review submission</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'समीक्षा',
+            'Review submission',
+            'Read the latest version, then record what happens next.',
+            'SUPERVISOR')}"></div>
+
+    <div class="hero">
+        <div th:replace="~{layout/_versions :: versions(${detail})}"></div>
+    </div>
+
+    <!-- Picking the work up is its own step, so the student can see it was read. -->
+    <div th:if="${detail.status.name() == 'SUBMITTED'}" class="hero no-print">
+        <h3 style="margin-top:0">Start the review</h3>
+        <p class="lead">
+            Marking this under review tells the student their work has been picked up.
+            A decision can only be recorded once the review has started.
+        </p>
+        <form th:action="@{/supervisor/submissions/{id}/start(id=${detail.submissionId})}" method="post">
+            <button type="submit" class="btn btn-primary">Mark as under review</button>
+        </form>
+    </div>
+
+    <div th:if="${detail.status.name() == 'UNDER_REVIEW'}" class="hero no-print">
+        <h3 style="margin-top:0">Record a decision</h3>
+
+        <form th:action="@{/supervisor/submissions/{id}/decide(id=${detail.submissionId})}"
+              method="post" th:object="${form}">
+
+            <div class="field">
+                <label for="decision">Decision</label>
+                <select id="decision" th:field="*{decision}" required>
+                    <option value="">Choose</option>
+                    <option th:each="d : ${decisions}" th:value="${d}"
+                            th:text="${#strings.replace(d, '_', ' ')}">APPROVED</option>
+                </select>
+                <p class="field-error" th:if="${#fields.hasErrors('decision')}"
+                   th:errors="*{decision}">Choose a decision</p>
+            </div>
+
+            <div class="field">
+                <label for="note">Note to the student</label>
+                <textarea id="note" th:field="*{note}" rows="4" maxlength="2000"
+                          placeholder="Required unless you are approving the work."></textarea>
+                <p class="field-error" th:if="${#fields.hasErrors('note')}"
+                   th:errors="*{note}">Tell the student what to change</p>
+                <p class="field-error" th:if="${#fields.hasGlobalErrors()}"
+                   th:each="e : ${#fields.globalErrors()}" th:text="${e}">Tell the student what to change</p>
+            </div>
+
+            <div class="btn-row" style="justify-content:flex-start">
+                <button type="submit" class="btn btn-primary">Record decision</button>
+                <a th:href="@{/supervisor/submissions}" class="btn btn-ghost">Back to the desk</a>
+            </div>
+        </form>
+    </div>
+
+    <div th:if="${detail.status.isTerminal() or detail.status.name() == 'REVISION_REQUESTED'}"
+         class="btn-row no-print" style="justify-content:flex-start">
+        <a th:href="@{/supervisor/submissions}" class="btn btn-ghost">Back to the desk</a>
+        <button type="button" class="btn btn-ghost" data-print>Print record</button>
+    </div>
+
+</section>
+</body>
+</html>

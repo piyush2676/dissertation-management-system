@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Submissions</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'समीक्षा पटल',
+            'Submissions',
+            'Milestone work from the students you supervise.',
+            'SUPERVISOR')}"></div>
+
+    <h2>Waiting on you</h2>
+
+    <p th:if="${#lists.isEmpty(queue.pending)}" class="status-note">
+        Nothing waiting. New work appears here the moment a student files it.
+    </p>
+
+    <div th:unless="${#lists.isEmpty(queue.pending)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Student</th>
+                <th scope="col">Milestone</th>
+                <th scope="col">Ver</th>
+                <th scope="col">Status</th>
+                <th scope="col">Due</th>
+                <th scope="col" class="no-print">&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${queue.pending}">
+                <td>
+                    <span th:text="${r.studentName}">Avika Singh</span><br>
+                    <span class="status-note" th:text="${r.rollNo}">24MCS001</span>
+                </td>
+                <td th:text="${r.milestoneName}">Interim Report</td>
+                <td>
+                    <span th:text="|v${r.currentVersionNo}|">v2</span>
+                    <span th:if="${r.resubmission}" class="badge badge-pending">RESUBMITTED</span>
+                </td>
+                <td>
+                    <span class="badge badge-pending"
+                          th:text="${#strings.replace(r.status, '_', ' ')}">SUBMITTED</span>
+                    <span th:if="${r.late}" class="badge badge-rejected">LATE</span>
+                </td>
+                <td th:text="${#temporals.format(r.dueDate, 'dd MMM yyyy')}">20 Dec 2025</td>
+                <td class="no-print">
+                    <a class="btn btn-primary btn-sm"
+                       th:href="@{/supervisor/submissions/{id}(id=${r.submissionId})}">Open</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 style="margin-top:44px">Already decided</h2>
+
+    <p th:if="${#lists.isEmpty(queue.decided)}" class="status-note">No decisions recorded yet.</p>
+
+    <div th:unless="${#lists.isEmpty(queue.decided)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Student</th>
+                <th scope="col">Milestone</th>
+                <th scope="col">Ver</th>
+                <th scope="col">Outcome</th>
+                <th scope="col">Decided</th>
+                <th scope="col" class="no-print">&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${queue.decided}">
+                <td>
+                    <span th:text="${r.studentName}">Avika Singh</span><br>
+                    <span class="status-note" th:text="${r.rollNo}">24MCS001</span>
+                </td>
+                <td th:text="${r.milestoneName}">Interim Report</td>
+                <td th:text="|v${r.currentVersionNo}|">v2</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${r.status.name() == 'APPROVED'} ? 'badge-approved' : 'badge-rejected'"
+                          th:text="${#strings.replace(r.status, '_', ' ')}">APPROVED</span>
+                </td>
+                <td th:text="${#temporals.format(r.updatedAt.atZone(zone), 'dd MMM yyyy')}">01 Jan 2026</td>
+                <td class="no-print">
+                    <a class="btn btn-ghost btn-sm"
+                       th:href="@{/supervisor/submissions/{id}(id=${r.submissionId})}">Open</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</section>
+</body>
+</html>

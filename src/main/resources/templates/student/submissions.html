@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>My submissions</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'प्रस्तुतियाँ',
+            'My submissions',
+            'Every milestone in the session, and what you have filed against it.',
+            'STUDENT')}"></div>
+
+    <div th:unless="${board.hasAllocation}" class="hero">
+        <span class="eyebrow">Not yet</span>
+        <h2>You need an accepted guide first</h2>
+        <p class="lead">
+            Milestone submissions open once a guide has accepted you, or the coordinator
+            has placed you. Get your topic approved, then request a guide.
+        </p>
+        <a th:href="@{/student/guide}" class="btn btn-ghost">Go to my guide</a>
+    </div>
+
+    <div th:if="${board.hasAllocation}">
+
+        <div class="stat-grid reveal">
+            <div class="stat">
+                <span class="stat-value" th:text="${board.sessionLabel}">2025-26</span>
+                <span class="stat-label">Session</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${board.supervisorName}">Dr A Sharma</span>
+                <span class="stat-label">Guide</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value"
+                      th:text="|${board.submittedCount} / ${#lists.size(board.rows)}|">0 / 5</span>
+                <span class="stat-label">Milestones filed</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${board.approvedCount}">0</span>
+                <span class="stat-label">Approved</span>
+            </div>
+        </div>
+
+        <div th:each="row : ${board.rows}" class="hero" style="margin-top:24px">
+
+            <div class="page-head" style="margin-bottom:14px">
+                <div>
+                    <h2 style="margin:0">
+                        <span th:text="${row.sequenceNo}">1</span>.
+                        <span th:text="${row.name}">Interim Report</span>
+                    </h2>
+                    <p class="lead" style="margin:4px 0 0">
+                        <span th:text="${row.description}">Design and methodology</span>
+                        &middot; due <span th:text="${#temporals.format(row.dueDate, 'dd MMM yyyy')}">20 Dec 2025</span>
+                        &middot; <span th:text="|${row.weightage}% of the total|">25% of the total</span>
+                    </p>
+                </div>
+
+                <div>
+                    <span th:if="${row.status == null}" class="badge badge-draft">NOT STARTED</span>
+                    <span th:if="${row.status != null}" class="badge"
+                          th:classappend="${row.status.name() == 'APPROVED'} ? 'badge-approved'
+                                        : (${row.status.name() == 'REJECTED'} ? 'badge-rejected' : 'badge-pending')"
+                          th:text="${#strings.replace(row.status, '_', ' ')}">SUBMITTED</span>
+                    <span th:if="${row.late}" class="badge badge-rejected">LATE</span>
+                    <span th:if="${row.overdue}" class="badge badge-rejected">OVERDUE</span>
+                </div>
+            </div>
+
+            <p th:if="${row.started}" class="status-note" style="margin-top:0">
+                Version <span th:text="${row.currentVersionNo}">1</span> on record
+                <span th:if="${row.lastSubmittedAt != null}">
+                    &middot; filed <span th:text="${#temporals.format(row.lastSubmittedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan</span>
+                </span>
+            </p>
+
+            <div th:if="${row.decisionNote != null}" class="alert alert-info">
+                <strong>Guide's note:</strong>
+                <span th:text="${row.decisionNote}">Tighten the evaluation section.</span>
+            </div>
+
+            <p th:if="${row.awaitingGuide}" class="status-note">
+                With your guide. You will see the decision here.
+            </p>
+
+            <form th:if="${row.acceptsUpload}"
+                  th:action="@{/student/submissions/{id}/upload(id=${row.milestoneId})}"
+                  method="post" enctype="multipart/form-data" class="no-print">
+
+                <div class="field">
+                    <label th:for="|file-${row.milestoneId}|">
+                        <span th:if="${row.currentVersionNo == 0}">Upload your document</span>
+                        <span th:unless="${row.currentVersionNo == 0}">Upload the revised document</span>
+                        (PDF or Word, up to 25 MB)
+                    </label>
+                    <input type="file" name="file" th:id="|file-${row.milestoneId}|"
+                           accept=".pdf,.doc,.docx" required>
+                </div>
+
+                <div class="field">
+                    <label th:for="|note-${row.milestoneId}|">What changed (optional)</label>
+                    <input type="text" name="note" th:id="|note-${row.milestoneId}|"
+                           maxlength="500" placeholder="Reworked chapter 4 after the last review">
+                </div>
+
+                <div class="btn-row" style="justify-content:flex-start">
+                    <button type="submit" class="btn btn-primary">
+                        <span th:if="${row.currentVersionNo == 0}">Submit</span>
+                        <span th:unless="${row.currentVersionNo == 0}"
+                              th:text="|Submit version ${row.currentVersionNo + 1}|">Submit version 2</span>
+                    </button>
+                    <a th:if="${row.started}" class="btn btn-ghost"
+                       th:href="@{/student/submissions/{id}(id=${row.submissionId})}">View history</a>
+                </div>
+            </form>
+
+            <div th:unless="${row.acceptsUpload}" class="btn-row no-print" style="justify-content:flex-start">
+                <a th:if="${row.started}" class="btn btn-ghost"
+                   th:href="@{/student/submissions/{id}(id=${row.submissionId})}">View history</a>
+            </div>
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

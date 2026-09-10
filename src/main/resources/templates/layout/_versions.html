@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Version history for one submission slot, newest first. Shared by the student and
+  the guide so both read exactly the same record.
+-->
+<div th:fragment="versions(detail)"
+     th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div class="page-head" style="margin-bottom:14px">
+        <div>
+            <h2 style="margin:0" th:text="${detail.milestoneName}">Interim Report</h2>
+            <p class="lead" style="margin:4px 0 0">
+                <span th:text="${detail.studentName}">Avika Singh</span>
+                (<span th:text="${detail.rollNo}">24MCS001</span>)
+                &middot; guide <span th:text="${detail.supervisorName}">Dr A Sharma</span>
+                &middot; due <span th:text="${#temporals.format(detail.dueDate, 'dd MMM yyyy')}">20 Dec 2025</span>
+            </p>
+        </div>
+        <div>
+            <span class="badge"
+                  th:classappend="${detail.status.name() == 'APPROVED'} ? 'badge-approved'
+                                : (${detail.status.name() == 'REJECTED'} ? 'badge-rejected' : 'badge-pending')"
+                  th:text="${#strings.replace(detail.status, '_', ' ')}">UNDER REVIEW</span>
+            <span th:if="${detail.late}" class="badge badge-rejected">LATE</span>
+        </div>
+    </div>
+
+    <div class="field" th:if="${detail.topicTitle != null}">
+        <label>Topic</label>
+        <p style="margin:0" th:text="${detail.topicTitle}">Adaptive load balancing</p>
+    </div>
+
+    <div th:if="${detail.decisionNote != null}" class="alert"
+         th:classappend="${detail.status.name() == 'APPROVED'} ? 'alert-info' : 'alert-error'">
+        <strong>Guide's note:</strong>
+        <span th:text="${detail.decisionNote}">Tighten the evaluation section.</span>
+        <span th:if="${detail.decidedByName != null}">
+            &mdash; <span th:text="${detail.decidedByName}">Dr A Sharma</span><span
+                th:if="${detail.decidedAt != null}">,
+            <span th:text="${#temporals.format(detail.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan</span></span>
+        </span>
+    </div>
+
+    <h3 style="margin-top:32px">Version history</h3>
+
+    <p th:unless="${detail.hasVersions}" class="status-note">Nothing uploaded yet.</p>
+
+    <div th:if="${detail.hasVersions}" class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Ver</th>
+                <th scope="col">File</th>
+                <th scope="col">Size</th>
+                <th scope="col">SHA-256</th>
+                <th scope="col">Filed</th>
+                <th scope="col">Note</th>
+                <th scope="col" class="no-print">&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="v, it : ${detail.versions}">
+                <td>
+                    <strong th:text="|v${v.versionNo}|">v2</strong>
+                    <span th:if="${it.first}" class="badge badge-approved">LATEST</span>
+                </td>
+                <td th:text="${v.originalFilename}">interim-report.pdf</td>
+                <td th:text="${v.sizeReadable}">1.4 MB</td>
+                <td><code th:text="${v.shortSha}">a1b2c3d4e5f6</code></td>
+                <td th:text="${#temporals.format(v.submittedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</td>
+                <td th:text="${v.note} ?: '—'">Reworked chapter 4</td>
+                <td class="no-print">
+                    <a class="btn btn-ghost btn-sm"
+                       th:href="@{/files/submissions/versions/{id}(id=${v.versionId})}">Download</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="status-note">
+        Versions are append-only. A revision is filed as a new version; nothing already
+        submitted is overwritten or removed.
+    </p>
+</div>
+
+</body>
+</html>
