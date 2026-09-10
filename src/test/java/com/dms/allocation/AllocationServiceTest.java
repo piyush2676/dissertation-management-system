@@ -22,13 +22,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -475,5 +478,93 @@ class AllocationServiceTest {
         allocation.setSession(session);
         allocation.setStatus(status);
         return allocation;
+    }
+    // ---- board() -------------------------------------------------------------
+
+    @Test
+    void boardSplitsPlacedStudentsFromThoseAwaitingAGuide() {
+        StudentProfile placed = student(1L);
+        StudentProfile waiting = student(2L);
+        SupervisorProfile guide = supervisor(7L, 5);
+        AcademicSession session = session(30L);
+        Allocation live = allocation(50L, placed, guide, session, AllocationStatus.ACCEPTED);
+
+        stubBoard(session, List.of(placed, waiting), List.of(live), List.of(guide));
+        when(topicRepository.findByStudentInOrderByCreatedAtDesc(any()))
+                .thenReturn(List.of(topic(10L, placed, TopicStatus.APPROVED)));
+
+        AllocationBoard board = service.board(Programme.MTECH);
+
+        assertEquals(1, board.allocated().size());
+        assertEquals(1, board.unallocated().size());
+        assertEquals(placed.getRollNo(), board.allocated().get(0).rollNo());
+        assertEquals(waiting.getRollNo(), board.unallocated().get(0).rollNo());
+        assertEquals("2025-26", board.sessionLabel());
+    }
+
+    @Test
+    void boardLeavesTopicFieldsNullWhenTheStudentHasNoTopic() {
+        StudentProfile waiting = student(2L);
+        SupervisorProfile guide = supervisor(7L, 5);
+        AcademicSession session = session(30L);
+
+        stubBoard(session, List.of(waiting), List.of(), List.of(guide));
+        when(topicRepository.findByStudentInOrderByCreatedAtDesc(any())).thenReturn(List.of());
+
+        AllocationBoard.UnallocatedRow row = service.board(Programme.MTECH).unallocated().get(0);
+
+        assertNull(row.topicTitle());
+        assertNull(row.topicStatus());
+        assertFalse(row.topicApproved(), "a missing topic must not read as approved");
+    }
+
+    @Test
+    void boardReportsZeroSeatsForAGuideWithNoStudents() {
+        SupervisorProfile guide = supervisor(7L, 5);
+        AcademicSession session = session(30L);
+
+        stubBoard(session, List.of(), List.of(), List.of(guide));
+
+        AllocationBoard.SupervisorLoad load = service.board(Programme.MTECH).supervisors().get(0);
+
+        assertEquals(0L, load.taken());
+        assertEquals(5L, load.remaining());
+        assertFalse(load.isFull());
+    }
+
+    @Test
+    void boardMarksAGuideFullAtCapacity() {
+        SupervisorProfile guide = supervisor(7L, 2);
+        AcademicSession session = session(30L);
+
+        stubBoard(session, List.of(), List.of(), List.of(guide));
+        when(allocationRepository.countPerSupervisor(session, AllocationStatus.OCCUPIES_A_SEAT))
+                .thenReturn(List.<Object[]>of(new Object[]{7L, 2L}));
+
+        AllocationBoard.SupervisorLoad load = service.board(Programme.MTECH).supervisors().get(0);
+
+        assertTrue(load.isFull());
+        assertEquals(0L, load.remaining(), "remaining must never go negative");
+    }
+
+    @Test
+    void boardThrowsWhenNoSessionIsActiveForTheProgramme() {
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.MTECH))
+                .thenReturn(Optional.empty());
+
+        assertThrows(IllegalStateException.class, () -> service.board(Programme.MTECH));
+    }
+
+    /** Common stubbing for the reads board() makes. */
+    private void stubBoard(AcademicSession session,
+                           List<StudentProfile> students,
+                           List<Allocation> cohort,
+                           List<SupervisorProfile> guides) {
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.MTECH))
+                .thenReturn(Optional.of(session));
+        when(studentProfileRepository.findByProgrammeOrderByRollNoAsc(Programme.MTECH))
+                .thenReturn(students);
+        when(allocationRepository.findBySessionOrderByRequestedAtDesc(session)).thenReturn(cohort);
+        when(supervisorProfileRepository.findAllBy()).thenReturn(guides);
     }
 }
