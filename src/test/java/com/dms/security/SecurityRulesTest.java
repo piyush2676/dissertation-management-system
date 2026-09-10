@@ -1,5 +1,6 @@
 package com.dms.security;
 
+import com.dms.notification.NotificationService;
 import com.dms.web.DashboardController;
 import com.dms.web.DashboardService;
 import com.dms.web.Dashboards;
@@ -38,6 +39,8 @@ class SecurityRulesTest {
     @MockitoBean private DashboardService dashboardService;
     @MockitoBean private CustomUserDetailsService userDetailsService;
     @MockitoBean private AuthzService authzService;
+    // GlobalModelAdvice is part of the web slice and needs this for the navbar bell.
+    @MockitoBean private NotificationService notificationService;
 
     // ---- anonymous ----------------------------------------------------------
 

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 
@@ -37,6 +38,7 @@ class ReviewServiceTest {
     @Mock private SubmissionVersionRepository versionRepository;
     @Mock private SubmissionService submissionService;
     @Mock private UserRepository userRepository;
+    @Mock private ApplicationEventPublisher events;
 
     @InjectMocks private ReviewService service;
 
