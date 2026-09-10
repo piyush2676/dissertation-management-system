@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Evaluate</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'मूल्यांकन',
+            'Evaluate',
+            'Score your students against the session rubric.',
+            'SUPERVISOR')}"></div>
+
+    <p th:if="${#lists.isEmpty(students)}" class="status-note">
+        You are not supervising anyone this session yet.
+    </p>
+
+    <div th:unless="${#lists.isEmpty(students)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Roll no</th>
+                <th scope="col">Student</th>
+                <th scope="col">Topic</th>
+                <th scope="col" class="no-print">&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${students}">
+                <td th:text="${a.student.rollNo}">24MCS001</td>
+                <td th:text="${a.student.user.fullName}">Avika Singh</td>
+                <td th:text="${a.topic != null} ? ${a.topic.title} : '—'">Adaptive load balancing</td>
+                <td class="no-print">
+                    <a class="btn btn-primary btn-sm"
+                       th:href="@{/supervisor/evaluate/{id}(id=${a.id})}">Score</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="status-note">
+        The rubric is a set of rows scoped to the session, so the department can reweight
+        it between years without a code change. Marks are stored per examiner.
+    </p>
+
+</section>
+</body>
+</html>

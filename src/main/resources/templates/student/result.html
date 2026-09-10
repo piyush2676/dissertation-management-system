@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>My result</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'परिणाम',
+            'My result',
+            'Your viva and your final standing.',
+            'STUDENT')}"></div>
+
+    <div th:if="${result == null}" class="hero">
+        <span class="eyebrow">Nothing yet</span>
+        <h2>Your result opens once you have a guide</h2>
+        <p class="lead">
+            Marks and the viva schedule appear here after allocation, once the department
+            has scheduled your defence.
+        </p>
+        <a th:href="@{/student/guide}" class="btn btn-ghost">Go to my guide</a>
+    </div>
+
+    <div th:if="${result != null}">
+
+        <div class="stat-grid reveal">
+            <div class="stat">
+                <span class="stat-value" th:text="${result.scored()} ? ${result.average} : '—'">78.50</span>
+                <span class="stat-label">Weighted average</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${result.outcome()}">Pending</span>
+                <span class="stat-label">Outcome</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${result.examinerCount}">0</span>
+                <span class="stat-label">Examiners</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${result.vivaStatus} ?: '—'">SCHEDULED</span>
+                <span class="stat-label">Viva</span>
+            </div>
+        </div>
+
+        <div th:if="${viva != null}" class="hero reveal">
+            <span class="eyebrow">Your viva</span>
+            <h2 th:text="${#temporals.format(viva.scheduledAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">
+                01 Jan 2027, 10:30</h2>
+            <div class="field">
+                <label>Venue</label>
+                <p style="margin:0" th:text="${viva.venue}">Seminar Hall, CSE Block</p>
+            </div>
+            <div class="field" th:if="${viva.panel != null}">
+                <label>Panel</label>
+                <p style="margin:0" th:text="${viva.panel}">Dr A Sharma, Dr B Pandey</p>
+            </div>
+        </div>
+
+        <p th:if="${viva == null}" class="status-note">
+            No viva scheduled yet. The coordinator books these once the final thesis is in.
+        </p>
+
+        <div class="hero reveal">
+            <span class="eyebrow">On record</span>
+            <div class="field">
+                <label>Topic</label>
+                <p style="margin:0" th:text="${result.topicTitle} ?: '—'">Adaptive load balancing</p>
+            </div>
+            <div class="field">
+                <label>Guide</label>
+                <p style="margin:0" th:text="${result.supervisorName}">Dr A Sharma</p>
+            </div>
+        </div>
+
+        <div class="btn-row no-print" style="justify-content:flex-start">
+            <button type="button" class="btn btn-ghost" data-print>Print result</button>
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

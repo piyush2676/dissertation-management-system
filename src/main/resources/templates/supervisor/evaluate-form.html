@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Score a dissertation</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'अंकन',
+            'Score a dissertation',
+            'Every criterion carries its own weight in the total.',
+            'SUPERVISOR')}"></div>
+
+    <div class="hero">
+        <div class="page-head" style="margin-bottom:14px">
+            <div>
+                <h2 style="margin:0" th:text="${allocation.student.user.fullName}">Avika Singh</h2>
+                <p class="lead" style="margin:4px 0 0">
+                    <span th:text="${allocation.student.rollNo}">24MCS001</span>
+                    <span th:if="${allocation.topic != null}">
+                        &middot; <span th:text="${allocation.topic.title}">Adaptive load balancing</span>
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        <p th:if="${#lists.isEmpty(rubric)}" class="alert alert-error">
+            No rubric has been set for this session, so nothing can be scored yet.
+        </p>
+
+        <form th:unless="${#lists.isEmpty(rubric)}" method="post" th:object="${form}"
+              th:action="@{/supervisor/evaluate/{id}(id=${allocation.id})}">
+
+            <div class="field" th:each="c : ${rubric}">
+                <label th:for="|score-${c.id}|">
+                    <span th:text="${c.name}">Methodology</span>
+                    &middot; <span th:text="|out of ${c.maxMarks}|">out of 10</span>
+                    &middot; <span th:text="|weight ${c.weightage}%|">weight 25%</span>
+                </label>
+                <p class="status-note" style="margin:0 0 6px" th:text="${c.description}">
+                    Soundness of the approach and design
+                </p>
+                <input type="number" th:id="|score-${c.id}|"
+                       th:field="*{scores[__${c.id}__]}"
+                       min="0" th:max="${c.maxMarks}" required>
+            </div>
+
+            <div class="field">
+                <label for="remarks">Remarks</label>
+                <textarea id="remarks" th:field="*{remarks}" rows="3" maxlength="2000"
+                          placeholder="Optional note for the record."></textarea>
+            </div>
+
+            <div class="btn-row" style="justify-content:flex-start">
+                <button type="submit" class="btn btn-primary">Record marks</button>
+                <a th:href="@{/supervisor/evaluate}" class="btn btn-ghost">Back</a>
+            </div>
+        </form>
+    </div>
+
+    <p class="status-note">
+        The total is weighted: each criterion contributes its weight scaled by how much of
+        its own maximum was earned. Submitting again replaces your earlier marks rather
+        than adding a second set.
+    </p>
+
+</section>
+</body>
+</html>

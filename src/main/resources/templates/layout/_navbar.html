@@ -25,6 +25,9 @@
             <li sec:authorize="hasRole('STUDENT')">
                 <a th:href="@{/student/submissions}">Submissions</a>
             </li>
+            <li sec:authorize="hasRole('STUDENT')">
+                <a th:href="@{/student/result}">Result</a>
+            </li>
 
             <li sec:authorize="hasRole('SUPERVISOR')">
                 <a th:href="@{/supervisor/dashboard}">Dashboard</a>
@@ -38,12 +41,21 @@
             <li sec:authorize="hasRole('SUPERVISOR')">
                 <a th:href="@{/supervisor/submissions}">Submissions</a>
             </li>
+            <li sec:authorize="hasRole('SUPERVISOR')">
+                <a th:href="@{/supervisor/evaluate}">Evaluate</a>
+            </li>
 
             <li sec:authorize="hasRole('COORDINATOR')">
                 <a th:href="@{/coordinator/dashboard}">Dashboard</a>
             </li>
             <li sec:authorize="hasRole('COORDINATOR')">
                 <a th:href="@{/coordinator/allocate}">Allocate guides</a>
+            </li>
+            <li sec:authorize="hasRole('COORDINATOR')">
+                <a th:href="@{/coordinator/viva}">Viva</a>
+            </li>
+            <li sec:authorize="hasRole('COORDINATOR')">
+                <a th:href="@{/coordinator/marksheet}">Mark sheet</a>
             </li>
 
             <li sec:authorize="hasRole('ADMIN')">

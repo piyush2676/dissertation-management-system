@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Mark sheet</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'अंक तालिका',
+            'Mark sheet',
+            'The cohort result, against the rubric it was marked on.',
+            'COORDINATOR')}"></div>
+
+    <div class="btn-row no-print" style="justify-content:flex-start">
+        <a th:each="p : ${programmes}"
+           th:href="@{/coordinator/marksheet(programme=${p})}"
+           th:text="${#strings.replace(p, '_', ' ')}"
+           th:class="${p == programme} ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'">M.TECH</a>
+        <button type="button" class="btn btn-ghost btn-sm" data-print>Print</button>
+    </div>
+
+    <p th:if="${sheet.isEmpty()}" class="status-note">
+        No allocated students in this programme yet.
+    </p>
+
+    <div th:unless="${sheet.isEmpty()}">
+
+        <div class="stat-grid reveal">
+            <div class="stat">
+                <span class="stat-value" th:text="${sheet.sessionLabel} ?: '—'">2026-27</span>
+                <span class="stat-label">Session</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value"
+                      th:text="|${sheet.scoredCount()} / ${#lists.size(sheet.rows)}|">0 / 4</span>
+                <span class="stat-label">Scored</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${#lists.size(sheet.rubric)}">5</span>
+                <span class="stat-label">Rubric criteria</span>
+            </div>
+        </div>
+
+        <h2 style="margin-top:44px">Result</h2>
+        <div class="table-wrap reveal">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Roll no</th>
+                    <th scope="col">Student</th>
+                    <th scope="col">Guide</th>
+                    <th scope="col">Examiners</th>
+                    <th scope="col">Average</th>
+                    <th scope="col">Viva</th>
+                    <th scope="col">Outcome</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${sheet.rows}">
+                    <td th:text="${r.rollNo}">24MCS001</td>
+                    <td th:text="${r.studentName}">Avika Singh</td>
+                    <td th:text="${r.supervisorName}">Dr A Sharma</td>
+                    <td th:text="${r.examinerCount}">1</td>
+                    <td th:text="${r.scored()} ? ${r.average} : '—'">78.50</td>
+                    <td>
+                        <span th:if="${r.vivaScheduled()}"
+                              th:text="${#temporals.format(r.vivaAt.atZone(zone), 'dd MMM, HH:mm')}">01 Jan</span>
+                        <span th:unless="${r.vivaScheduled()}">—</span>
+                        <span th:if="${r.vivaStatus != null}" class="badge badge-draft"
+                              th:text="${r.vivaStatus}">SCHEDULED</span>
+                    </td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${r.outcome() == 'Pass'} ? 'badge-approved'
+                                            : (${r.outcome() == 'Fail'} ? 'badge-rejected' : 'badge-pending')"
+                              th:text="${r.outcome()}">Pending</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 style="margin-top:44px">Rubric in force</h2>
+        <div class="table-wrap reveal">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Criterion</th>
+                    <th scope="col">Out of</th>
+                    <th scope="col">Weight</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${sheet.rubric}">
+                    <td th:text="${c.sequenceNo}">1</td>
+                    <td th:text="${c.name}">Methodology</td>
+                    <td th:text="${c.maxMarks}">10</td>
+                    <td th:text="|${c.weightage}%|">25%</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <p class="status-note">
+        Averages are the mean of every examiner total. A pass is 40, and a student nobody
+        has marked yet reads as pending rather than failing.
+    </p>
+
+</section>
+</body>
+</html>

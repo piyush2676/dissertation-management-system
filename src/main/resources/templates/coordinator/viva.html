@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Viva scheduling</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'मौखिकी',
+            'Viva scheduling',
+            'Book the defence, name the panel, record the outcome.',
+            'COORDINATOR')}"></div>
+
+    <div class="btn-row no-print" style="justify-content:flex-start">
+        <a th:each="p : ${programmes}"
+           th:href="@{/coordinator/viva(programme=${p})}"
+           th:text="${#strings.replace(p, '_', ' ')}"
+           th:class="${p == programme} ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'">M.TECH</a>
+    </div>
+
+    <h2 style="margin-top:44px">Scheduled</h2>
+
+    <p th:if="${#lists.isEmpty(schedules)}" class="status-note">Nothing scheduled yet.</p>
+
+    <div th:unless="${#lists.isEmpty(schedules)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Student</th>
+                <th scope="col">When</th>
+                <th scope="col">Venue</th>
+                <th scope="col">Panel</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="no-print">&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="v : ${schedules}">
+                <td>
+                    <span th:text="${v.allocation.student.user.fullName}">Avika Singh</span><br>
+                    <span class="status-note" th:text="${v.allocation.student.rollNo}">24MCS001</span>
+                </td>
+                <td th:text="${#temporals.format(v.scheduledAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan</td>
+                <td th:text="${v.venue}">Seminar Hall</td>
+                <td th:text="${v.panel} ?: '—'">Dr A Sharma, Dr B Pandey</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${v.status.name() == 'HELD'} ? 'badge-approved'
+                                        : (${v.status.name() == 'CANCELLED'} ? 'badge-rejected' : 'badge-pending')"
+                          th:text="${v.status}">SCHEDULED</span>
+                </td>
+                <td class="no-print">
+                    <form th:if="${!v.status.isTerminal()}" method="post" class="inline-form"
+                          th:action="@{/coordinator/viva/{id}/mark(id=${v.id}, programme=${programme})}">
+                        <input type="hidden" name="status" value="HELD">
+                        <button type="submit" class="btn btn-ghost btn-sm">Mark held</button>
+                    </form>
+                    <form th:if="${!v.status.isTerminal()}" method="post" class="inline-form"
+                          th:action="@{/coordinator/viva/{id}/mark(id=${v.id}, programme=${programme})}">
+                        <input type="hidden" name="status" value="CANCELLED">
+                        <button type="submit" class="btn btn-ghost btn-sm">Cancel</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 style="margin-top:44px">Book a defence</h2>
+
+    <p th:if="${#lists.isEmpty(placed)}" class="status-note">
+        Nobody is allocated in this programme yet, so there is nothing to schedule.
+    </p>
+
+    <div th:unless="${#lists.isEmpty(placed)}" class="hero no-print">
+        <form method="post" th:object="${form}"
+              th:action="@{/coordinator/viva/schedule(programme=${programme})}">
+
+            <div class="field">
+                <label for="allocationId">Student</label>
+                <select id="allocationId" th:field="*{allocationId}" required>
+                    <option value="">Choose a student</option>
+                    <option th:each="a : ${placed}" th:value="${a.allocationId}"
+                            th:text="|${a.rollNo} — ${a.studentName}|">24MCS001 — Avika Singh</option>
+                </select>
+                <span class="field-error" th:if="${#fields.hasErrors('allocationId')}"
+                      th:errors="*{allocationId}">Choose a student</span>
+            </div>
+
+            <div class="field">
+                <label for="scheduledAt">Date and time</label>
+                <input type="datetime-local" id="scheduledAt" th:field="*{scheduledAt}" required>
+                <span class="field-error" th:if="${#fields.hasErrors('scheduledAt')}"
+                      th:errors="*{scheduledAt}">Pick a date and time</span>
+            </div>
+
+            <div class="field">
+                <label for="venue">Venue</label>
+                <input type="text" id="venue" th:field="*{venue}" maxlength="255" required
+                       placeholder="Seminar Hall, CSE Block">
+                <span class="field-error" th:if="${#fields.hasErrors('venue')}"
+                      th:errors="*{venue}">A venue is required</span>
+            </div>
+
+            <div class="field">
+                <label for="panel">Panel</label>
+                <input type="text" id="panel" th:field="*{panel}" maxlength="1000"
+                       placeholder="Internal and external examiners, comma separated">
+            </div>
+
+            <div class="btn-row" style="justify-content:flex-start">
+                <button type="submit" class="btn btn-primary">Schedule</button>
+            </div>
+        </form>
+    </div>
+
+    <p class="status-note">
+        Scheduling the same student again moves the existing booking rather than creating
+        a second one. The panel is recorded as names because external examiners are
+        usually not accounts on this system.
+    </p>
+
+</section>
+</body>
+</html>
