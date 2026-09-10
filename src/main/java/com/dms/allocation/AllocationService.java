@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -214,7 +215,7 @@ public class AllocationService {
 
     @Transactional(readOnly = true)
     public List<Allocation> cohortFor(Programme programme) {
-        return allocationRepository.findBySessionOrderByRequestedAtDesc(activeSessionFor(programme));
+        return cohortIn(activeSessionFor(programme));
     }
 
     @Transactional(readOnly = true)
@@ -224,18 +225,80 @@ public class AllocationService {
 
     @Transactional(readOnly = true)
     public Map<Long, Allocation> liveAllocationsIn(Programme programme) {
-        Map<Long, Allocation> live = new HashMap<>();
-        for (Allocation allocation : cohortFor(programme)) {
-            if (AllocationStatus.LIVE.contains(allocation.getStatus())) {
-                live.put(allocation.getStudent().getId(), allocation);
+        return liveAllocationsIn(activeSessionFor(programme));
+    }
+
+    /**
+     * Everything the coordinator allocation page renders, resolved against one
+     * academic session so the page costs a flat number of queries whatever the
+     * cohort size. Rows are views, not entities: open-in-view is false, so a lazy
+     * association handed to Thymeleaf would throw once this transaction closes.
+     */
+    @Transactional(readOnly = true)
+    public AllocationBoard board(Programme programme) {
+        AcademicSession session = activeSessionFor(programme);
+
+        List<StudentProfile> students = studentProfileRepository.findByProgrammeOrderByRollNoAsc(programme);
+        Map<Long, Allocation> live = liveAllocationsIn(session);
+        Map<Long, Topic> topics = latestTopicsFor(students);
+        Map<Long, Long> seats = seatsTakenIn(session);
+
+        List<AllocationBoard.UnallocatedRow> unallocated = new ArrayList<>();
+        List<AllocationBoard.AllocatedRow> allocated = new ArrayList<>();
+
+        for (StudentProfile student : students) {
+            Allocation allocation = live.get(student.getId());
+            Topic topic = topics.get(student.getId());
+
+            if (allocation == null) {
+                unallocated.add(new AllocationBoard.UnallocatedRow(
+                        student.getId(),
+                        student.getRollNo(),
+                        student.getUser().getFullName(),
+                        student.getSemester(),
+                        topic == null ? null : topic.getTitle(),
+                        topic == null ? null : topic.getStatus()));
+            } else {
+                allocated.add(new AllocationBoard.AllocatedRow(
+                        allocation.getId(),
+                        student.getRollNo(),
+                        student.getUser().getFullName(),
+                        allocation.getSupervisor().getUser().getFullName(),
+                        allocation.getStatus(),
+                        allocation.getTopic() == null ? null : allocation.getTopic().getTitle(),
+                        allocation.getDecidedAt()));
             }
         }
-        return live;
+
+        List<AllocationBoard.SupervisorLoad> supervisors = selectableSupervisors().stream()
+                .map(sp -> new AllocationBoard.SupervisorLoad(
+                        sp.getId(),
+                        sp.getUser().getFullName(),
+                        sp.getDesignation(),
+                        seats.getOrDefault(sp.getId(), 0L),
+                        sp.getMaxStudents()))
+                .toList();
+
+        return new AllocationBoard(programme, session.getLabel(), unallocated, allocated, supervisors);
     }
 
     @Transactional(readOnly = true)
     public Map<Long, Long> seatsTakenIn(Programme programme) {
         return seatsTakenIn(activeSessionFor(programme));
+    }
+
+    private List<Allocation> cohortIn(AcademicSession session) {
+        return allocationRepository.findBySessionOrderByRequestedAtDesc(session);
+    }
+
+    private Map<Long, Allocation> liveAllocationsIn(AcademicSession session) {
+        Map<Long, Allocation> live = new HashMap<>();
+        for (Allocation allocation : cohortIn(session)) {
+            if (AllocationStatus.LIVE.contains(allocation.getStatus())) {
+                live.put(allocation.getStudent().getId(), allocation);
+            }
+        }
+        return live;
     }
 
     private Map<Long, Long> seatsTakenIn(AcademicSession session) {
