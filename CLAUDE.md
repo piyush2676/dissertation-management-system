@@ -22,8 +22,9 @@ Owner: Piyush Pandey. Repo: `github.com/piyush2676/dissertation-management-syste
 | Java | 21 | |
 | Spring Boot | 4.1.0 | starters renamed vs 3.x — see below |
 | PostgreSQL | 18 | database `dms`, service `postgresql-x64-18` |
-| Flyway | via `spring-boot-starter-flyway` | currently at **V9** |
+| Flyway | via `spring-boot-starter-flyway` | currently at **V10** |
 | Thymeleaf | + `thymeleaf-extras-springsecurity6` | |
+| Spring AI | 2.0.1 | Gemini via Google AI Studio; off unless a key is set |
 | Build | Maven wrapper (`.\mvnw.cmd`) | no global Maven |
 
 **Boot 4 renamed starters.** `spring-boot-starter-web` → `-webmvc`. `spring-boot-starter-test`
@@ -34,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-10)
 
-Phases 0–6 complete, verified in a browser, 115 tests green, 97 commits.
+Phases 0–7 complete, verified in a browser, 125 tests green, 103 commits. Flyway at V10.
 
 | Phase | Covers | State |
 |---|---|---|
@@ -45,19 +46,39 @@ Phases 0–6 complete, verified in a browser, 115 tests green, 97 commits.
 | 4 | Submissions with immutable version history + audit trail | done |
 | 5 | Review comments pinned to a version | done |
 | 6 | Rubric, weighted evaluation, viva, mark sheet | done |
-| 7 | Spring AI | **not started — blocked, see below** |
+| 7 | Topic overlap check + guide matching (Gemini) | done — key optional |
 | 8 | End-to-end acceptance | chain runs; notifications cut |
 
-### Phase 7 is blocked on the environment, not the code
+### Phase 7 — Google AI Studio, not Anthropic
 
-- **pgvector is NOT installed.** `SELECT * FROM pg_available_extensions WHERE name = 'vector'`
-  returns nothing on this PostgreSQL 18.
-- Needs an `ANTHROPIC_API_KEY`, and calls cost real money.
+**Anthropic ships no embedding model.** Three of the five planned AI features are
+embedding-driven, so `docs/guide.md` §10 always needed a second provider. Gemini via AI Studio
+covers chat *and* embeddings on one free-tier key.
 
-Both are the user's decision. Do not install a DB extension or start spending on their behalf
-without asking. Two viable paths: install pgvector, or use Spring AI's in-memory
-`SimpleVectorStore` (fine at demo scale). The seam already exists — `StorageService` shows the
-interface-per-external-dependency pattern the AI services would follow.
+**The features are off by default and the app must keep starting without a key.** The Google
+auto-configuration builds its client eagerly and throws at startup when none is set — no guard
+in application code can catch that, because it happens first. Three properties hold the line:
+
+```properties
+spring.ai.model.chat=none
+spring.ai.model.embedding.text=none
+spring.autoconfigure.exclude=...GoogleGenAiEmbeddingConnectionAutoConfiguration,...GoogleGenAiImageConnectionAutoConfiguration
+```
+
+The two `*ConnectionAutoConfiguration` exclusions are separate from the switches and demand a
+Vertex `project-id`; excluding them is the only way off. To enable, uncomment the three lines in
+`application-local.properties.example` and supply a key from `aistudio.google.com/apikey`.
+
+**pgvector is still NOT installed and cannot be built here** — the VS 2022 BuildTools install is
+headers-only (no `cl.exe`, no `nmake`, no Windows SDK), and `Program Files\PostgreSQL\18\` needs
+elevation. Vectors are stored as JSONB and scanned exactly in `CosineSimilarityProvider`, behind
+the `SimilarityProvider` interface. At department scale that is instant. Swapping to pgvector
+later = one class + a migration copying the arrays into a `vector(768)` column.
+
+**Hard constraint, enforced in the service not the template:** the model never approves, rejects
+or grades. The novelty prompt forbids it explicitly, output renders inside the AI-labelled panel,
+and similarity is described as overlap with the department archive — it is not plagiarism
+detection and there is no web-wide corpus behind it.
 
 ### Open decision, deliberately not taken
 
@@ -70,14 +91,16 @@ plus a revoke action — but it reverses an invariant `AllocationStatusTest` pin
 ### Cut from scope
 
 Email notifications, admin user CRUD (read-only roll instead), viva panel as its own table
-(free-text names instead), archive search UI, and three of the five planned AI features.
+(free-text names instead), archive search UI, and three of the five planned AI features
+(regulations Q&A, chapter summary, and the standalone archive search page -- retrieval itself
+ships inside the overlap check).
 
 ---
 
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (115 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (125 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -135,6 +158,8 @@ com.dms
 ├── session/      AcademicSession, Milestone
 ├── storage/      StorageService, LocalDiskStorageService, StoredFile
 ├── submission/   Submission, SubmissionVersion, SubmissionStatus, SubmissionService, controllers
+├── ai/           Embedding, SimilarityProvider, CosineSimilarityProvider, EmbeddingService,
+│                TopicNoveltyService, SupervisorMatchingService, AiIndexingListener
 ├── topic/        Topic, TopicStatus, TopicService, controllers
 ├── user/         User, Role, Programme, profiles, DataSeeder, AdminUserController
 ├── viva/         VivaSchedule, VivaStatus, VivaService, CoordinatorVivaController
@@ -240,4 +265,4 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
-| `src/main/resources/db/migration/` | V1–V9 |
+| `src/main/resources/db/migration/` | V1–V10 |
