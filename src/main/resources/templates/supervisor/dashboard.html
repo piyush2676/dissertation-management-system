@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
     <title>Supervisor dashboard</title>
@@ -11,28 +10,61 @@
     <div th:replace="~{layout/_pagehero :: hero(
             'मार्गदर्शक पटल',
             'Supervisor dashboard',
-            'Your students, their topics, and everything waiting on your decision.',
+            'What is waiting on you, and how much room you have left.',
             'SUPERVISOR')}"></div>
+
+    <div class="alert alert-info reveal" th:if="${board.totalWaiting() > 0}">
+        <strong th:text="|${board.totalWaiting()} items waiting on you|">3 items waiting on you</strong>
+        &mdash; clear the oldest first.
+    </div>
+
+    <p class="status-note" th:if="${board.totalWaiting() == 0}">
+        Nothing waiting. New topics, guide requests and submissions land here as they arrive.
+    </p>
+
+    <div class="stat-grid reveal">
+        <div class="stat">
+            <span class="stat-value" th:text="${board.pendingTopics}">0</span>
+            <span class="stat-label">Topics to approve</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.pendingGuideRequests}">0</span>
+            <span class="stat-label">Guide requests</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.pendingSubmissions}">0</span>
+            <span class="stat-label">Submissions to read</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value"
+                  th:text="|${board.studentsSupervised} / ${board.capacity}|">0 / 5</span>
+            <span class="stat-label">
+                <span th:if="${board.isFull()}">At capacity</span>
+                <span th:unless="${board.isFull()}"
+                      th:text="|${board.seatsLeft()} seats free|">3 seats free</span>
+            </span>
+        </div>
+    </div>
 
     <div class="card-grid reveal">
         <article class="card">
             <h3>Topic approvals</h3>
-            <p>Proposals waiting on your decision.</p>
-            <p class="phase-tag">Phase 2</p>
+            <p>Approve, request changes, or reject a proposed topic.</p>
+            <a th:href="@{/supervisor/topics}" class="btn btn-ghost btn-sm">Open</a>
         </article>
         <article class="card">
-            <h3>My students</h3>
-            <p>Students allocated to you, and your remaining capacity.</p>
-            <p class="phase-tag">Phase 3</p>
+            <h3>Guide requests</h3>
+            <p>Accept or decline students who have named you.</p>
+            <a th:href="@{/supervisor/requests}" class="btn btn-ghost btn-sm">Open</a>
         </article>
         <article class="card">
-            <h3>Submissions to review</h3>
-            <p>Latest version of each milestone submission.</p>
-            <p class="phase-tag">Phase 5</p>
+            <h3>Submissions</h3>
+            <p>Read the latest version and record a decision.</p>
+            <a th:href="@{/supervisor/submissions}" class="btn btn-ghost btn-sm">Open</a>
         </article>
         <article class="card">
             <h3>Evaluation</h3>
-            <p>Score against the rubric and record viva remarks.</p>
+            <p>Rubric scoring and the viva panel.</p>
             <p class="phase-tag">Phase 6</p>
         </article>
     </div>

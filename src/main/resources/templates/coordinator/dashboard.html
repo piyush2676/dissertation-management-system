@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
     <title>Coordinator dashboard</title>
@@ -11,23 +10,50 @@
     <div th:replace="~{layout/_pagehero :: hero(
             'समन्वयक पटल',
             'Coordinator dashboard',
-            'Allocation, milestones, viva scheduling and the mark sheet for the cohort.',
+            'Allocation, milestones and progress across the cohort.',
             'COORDINATOR')}"></div>
+
+    <div class="alert alert-error reveal" th:if="${board.unallocated > 0}">
+        <strong th:text="|${board.unallocated} students still have no guide|">2 students still have no guide</strong>
+        &mdash; place them from the allocation board.
+    </div>
+
+    <div class="stat-grid reveal">
+        <div class="stat">
+            <span class="stat-value" th:text="${board.sessionLabel} ?: '—'">2026-27</span>
+            <span class="stat-label">Active session</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value"
+                  th:text="|${board.placed} / ${board.students}|">0 / 4</span>
+            <span class="stat-label"
+                  th:text="|Placed (${board.placedPercent()}%)|">Placed (0%)</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value"
+                  th:text="|${board.guidesFull} / ${board.guides}|">0 / 2</span>
+            <span class="stat-label">Guides at capacity</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.submissionsFiled}">0</span>
+            <span class="stat-label">Milestones filed</span>
+        </div>
+    </div>
 
     <div class="card-grid reveal">
         <article class="card">
             <h3>Allocate guides</h3>
-            <p>Assign supervisors within capacity limits.</p>
-            <p class="phase-tag">Phase 3</p>
+            <p>Place a student directly when the request route stalls. Capacity is still enforced.</p>
+            <a th:href="@{/coordinator/allocate}" class="btn btn-ghost btn-sm">Open</a>
         </article>
         <article class="card">
             <h3>Sessions &amp; milestones</h3>
-            <p>Set deadlines per programme. M.Tech and the integrated route differ only here.</p>
-            <p class="phase-tag">Phase 4</p>
+            <p>Deadlines per programme. M.Tech and the integrated route differ only here.</p>
+            <p class="phase-tag">Seeded</p>
         </article>
         <article class="card">
             <h3>Viva scheduling</h3>
-            <p>Panels, slots, and clash detection.</p>
+            <p>Panels, slots and clash detection.</p>
             <p class="phase-tag">Phase 6</p>
         </article>
         <article class="card">

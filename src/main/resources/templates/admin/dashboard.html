@@ -1,29 +1,90 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
     <title>Admin dashboard</title>
 </head>
 <body>
-<section>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
 
     <div th:replace="~{layout/_pagehero :: hero(
             'प्रशासन पटल',
             'Admin dashboard',
-            'Accounts, roles and the audit trail behind every state change.',
+            'Accounts, records and the audit trail behind them.',
             'ADMIN')}"></div>
+
+    <div class="stat-grid reveal">
+        <div class="stat">
+            <span class="stat-value" th:text="${board.users}">8</span>
+            <span class="stat-label">Accounts</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.topics}">0</span>
+            <span class="stat-label">Topics</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.allocations}">0</span>
+            <span class="stat-label">Allocations</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.auditEntries}">0</span>
+            <span class="stat-label">Audit entries</span>
+        </div>
+    </div>
+
+    <div class="stat-grid reveal">
+        <div class="stat">
+            <span class="stat-value" th:text="${board.students}">4</span>
+            <span class="stat-label">Students</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.guides}">2</span>
+            <span class="stat-label">Guides</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.submissions}">0</span>
+            <span class="stat-label">Submission slots</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.submissionVersions}">0</span>
+            <span class="stat-label">Versions on record</span>
+        </div>
+    </div>
+
+    <h2 style="margin-top:44px">Recently approved topics</h2>
+
+    <p th:if="${#lists.isEmpty(recentTopics)}" class="status-note">No approved topics yet.</p>
+
+    <div th:unless="${#lists.isEmpty(recentTopics)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Student</th>
+                <th scope="col">Title</th>
+                <th scope="col">Approved</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="t : ${recentTopics}">
+                <td th:text="${t.student.user.fullName}">Avika Singh</td>
+                <td th:text="${t.title}">Adaptive load balancing</td>
+                <td th:text="${t.decidedAt != null}
+                             ? ${#temporals.format(t.decidedAt.atZone(zone), 'dd MMM yyyy')} : '—'">01 Jan 2026</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
     <div class="card-grid reveal">
         <article class="card">
-            <h3>Users &amp; roles</h3>
-            <p>Create accounts, assign roles, enable and disable users.</p>
-            <p class="phase-tag">Phase 1</p>
+            <h3>Users</h3>
+            <p>Every account and the roles it holds.</p>
+            <a th:href="@{/admin/users}" class="btn btn-ghost btn-sm">Open</a>
         </article>
         <article class="card">
-            <h3>Audit log</h3>
-            <p>Every state change, with actor and timestamp.</p>
-            <p class="phase-tag">Phase 8</p>
+            <h3>Audit trail</h3>
+            <p>Who did what, to which record, and when.</p>
+            <a th:href="@{/admin/audit}" class="btn btn-ghost btn-sm">Open</a>
         </article>
     </div>
 

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
 <head>
     <title>Student dashboard</title>
@@ -14,78 +13,78 @@
             'Your topic, your guide, your deadlines — all in one register.',
             'STUDENT')}"></div>
 
-    <ol class="pipeline reveal">
-        <li class="stage" data-state="current">
-            <span class="stage-marker">1</span>
-            <span class="stage-name">Topic</span>
-            <span class="stage-note">Propose and get approval</span>
-        </li>
-        <li class="stage" data-state="pending">
-            <span class="stage-marker">2</span>
-            <span class="stage-name">Guide</span>
-            <span class="stage-note">Allocation within capacity</span>
-        </li>
-        <li class="stage" data-state="pending">
-            <span class="stage-marker">3</span>
-            <span class="stage-name">Milestones</span>
-            <span class="stage-note">Submit each version</span>
-        </li>
-        <li class="stage" data-state="pending">
-            <span class="stage-marker">4</span>
-            <span class="stage-name">Review</span>
-            <span class="stage-note">Feedback and revision</span>
-        </li>
-        <li class="stage" data-state="pending">
-            <span class="stage-marker">5</span>
-            <span class="stage-name">Viva</span>
-            <span class="stage-note">Panel and schedule</span>
-        </li>
-        <li class="stage" data-state="pending">
-            <span class="stage-marker">6</span>
-            <span class="stage-name">Result</span>
-            <span class="stage-note">Mark sheet issued</span>
+    <ol class="pipeline reveal" th:with="stage=${board.stage()}">
+        <li class="stage" th:each="s,it : ${ {'Topic','Guide','Milestones','Review','Viva','Result'} }"
+            th:attr="data-state=${it.index + 1 < stage} ? 'done' : (${it.index + 1 == stage} ? 'current' : 'pending')">
+            <span class="stage-marker" th:text="${it.index + 1}">1</span>
+            <span class="stage-name" th:text="${s}">Topic</span>
+            <span class="stage-note" th:switch="${it.index}">
+                <span th:case="0">Propose and get approval</span>
+                <span th:case="1">Allocation within capacity</span>
+                <span th:case="2">Submit each version</span>
+                <span th:case="3">Feedback and revision</span>
+                <span th:case="4">Panel and schedule</span>
+                <span th:case="*">Mark sheet issued</span>
+            </span>
         </li>
     </ol>
 
     <div class="stat-grid reveal">
         <div class="stat">
-            <span class="stat-value">—</span>
+            <span class="stat-value"
+                  th:text="${board.hasTopic()} ? ${#strings.replace(board.topicStatus, '_', ' ')} : '—'">—</span>
             <span class="stat-label">Topic status</span>
         </div>
         <div class="stat">
-            <span class="stat-value">—</span>
+            <span class="stat-value" th:text="${board.guideName} ?: '—'">—</span>
             <span class="stat-label">Allocated guide</span>
         </div>
         <div class="stat">
-            <span class="stat-value">0</span>
-            <span class="stat-label">Milestones submitted</span>
+            <span class="stat-value"
+                  th:text="|${board.milestonesFiled} / ${board.milestonesTotal}|">0 / 5</span>
+            <span class="stat-label">Milestones filed</span>
         </div>
         <div class="stat">
-            <span class="stat-value">0</span>
-            <span class="stat-label">Open feedback items</span>
+            <span class="stat-value" th:text="${board.withGuide}">0</span>
+            <span class="stat-label">With your guide</span>
         </div>
+    </div>
+
+    <div th:if="${board.topicTitle != null}" class="hero reveal">
+        <span class="eyebrow">Your topic</span>
+        <h2 th:text="${board.topicTitle}">Adaptive load balancing for edge inference clusters</h2>
+        <p class="lead" th:if="${board.sessionLabel != null}">
+            Session <span th:text="${board.sessionLabel}">2026-27</span><span th:if="${board.guideName != null}">
+            &middot; supervised by <span th:text="${board.guideName}">Dr A Sharma</span></span>
+        </p>
+    </div>
+
+    <div th:if="${board.nextMilestone != null}" class="alert alert-info reveal">
+        <strong>Next up:</strong>
+        <span th:text="${board.nextMilestone}">Synopsis</span>
+        &mdash; due <span th:text="${#temporals.format(board.nextDueDate, 'dd MMM yyyy')}">01 Oct 2026</span>
     </div>
 
     <div class="card-grid reveal">
         <article class="card">
             <h3>My topic</h3>
             <p>Propose a dissertation topic and track its approval.</p>
-            <p class="phase-tag">Phase 2</p>
+            <a th:href="@{/student/topic}" class="btn btn-ghost btn-sm">Open</a>
         </article>
         <article class="card">
             <h3>My guide</h3>
             <p>Supervisor allocation and contact details.</p>
-            <p class="phase-tag">Phase 3</p>
+            <a th:href="@{/student/guide}" class="btn btn-ghost btn-sm">Open</a>
         </article>
         <article class="card">
-            <h3>Milestones</h3>
-            <p>Deadlines, submission status, and version history.</p>
-            <p class="phase-tag">Phase 4</p>
+            <h3>Submissions</h3>
+            <p>File each milestone and follow the review.</p>
+            <a th:href="@{/student/submissions}" class="btn btn-ghost btn-sm">Open</a>
         </article>
         <article class="card">
-            <h3>Feedback</h3>
-            <p>Comments from your guide and requested revisions.</p>
-            <p class="phase-tag">Phase 5</p>
+            <h3>Viva &amp; result</h3>
+            <p>Panel, schedule and the final mark sheet.</p>
+            <p class="phase-tag">Phase 6</p>
         </article>
     </div>
 
