@@ -271,7 +271,10 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 
 | Path | What |
 |---|---|
+| `README.md` | Repo front door: what it is, how to run it, known limitations |
 | `docs/guide.md` | Living design doc — status, architecture, view contract, rationale |
+| `docs/demo.md` | Click-by-click presentation walkthrough (~10 min) |
+| `scripts/demo-reset.sh` | Resets one student so the walkthrough is repeatable |
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
