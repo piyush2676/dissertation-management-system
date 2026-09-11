@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Verify a certificate</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'प्रमाणपत्र सत्यापन',
+            'Verify a certificate',
+            'Check a dissertation record against the register that issued it.',
+            'PUBLIC')}"></div>
+
+    <form th:action="@{/verify}" method="get" class="search-page-form no-print">
+        <input type="text" name="code" placeholder="NIET-ABCDE-FGHIJ"
+               th:value="${result != null} ? ${result.code()} : ''">
+        <button type="submit" class="btn btn-primary">Verify</button>
+    </form>
+
+    <p th:if="${result == null}" class="status-note">
+        Type the certificate code printed on the document, or scan its QR code.
+        No account is needed — an external examiner holding a printed record should
+        not have to sign in to check it.
+    </p>
+
+    <div th:if="${result != null}">
+
+        <!-- Matches -->
+        <div th:if="${result.status().name() == 'MATCHES'}" class="hero"
+             style="border-left:4px solid var(--ok)">
+            <span class="eyebrow" style="color:var(--ok)">Verified</span>
+            <h2 style="margin-top:8px">This record matches the register</h2>
+            <p class="lead">
+                Every sealed fact — the student, the guide, the topic, the digest of every
+                file submitted, the marks and the viva — is unchanged since this certificate
+                was issued.
+            </p>
+        </div>
+
+        <!-- Changed since issue -->
+        <div th:if="${result.status().name() == 'CHANGED'}" class="hero"
+             style="border-left:4px solid var(--warn)">
+            <span class="eyebrow" style="color:var(--warn)">Does not match</span>
+            <h2 style="margin-top:8px">The register has changed since this was issued</h2>
+            <p class="lead">
+                The certificate is genuine, but at least one sealed fact differs from the
+                record as it stands now. That is not in itself evidence of wrongdoing — a
+                mark may have been legitimately corrected. Ask the dissertation cell for a
+                re-issued certificate.
+            </p>
+            <div class="field">
+                <label>Sealed digest</label>
+                <p style="margin:0"><code th:text="${result.sealedDigest()}">abc</code></p>
+            </div>
+            <div class="field">
+                <label>Digest of the record now</label>
+                <p style="margin:0"><code th:text="${result.currentDigest()}">def</code></p>
+            </div>
+        </div>
+
+        <!-- Revoked -->
+        <div th:if="${result.status().name() == 'REVOKED'}" class="hero"
+             style="border-left:4px solid var(--danger)">
+            <span class="eyebrow" style="color:var(--danger)">Withdrawn</span>
+            <h2 style="margin-top:8px">This certificate has been withdrawn</h2>
+            <p class="lead">The dissertation cell has revoked it. Treat it as void.</p>
+        </div>
+
+        <!-- Unknown -->
+        <div th:if="${result.status().name() == 'UNKNOWN'}" class="hero"
+             style="border-left:4px solid var(--danger)">
+            <span class="eyebrow" style="color:var(--danger)">Not found</span>
+            <h2 style="margin-top:8px">No certificate with that code</h2>
+            <p class="lead">
+                Check the code against the document — it is printed beneath the digest.
+                The letters I, O and the digits 0 and 1 are never used, so a character that
+                looks like one of those is something else.
+            </p>
+        </div>
+
+        <!-- What the certificate claimed -->
+        <div th:if="${result.isKnown()}" class="hero">
+            <h3 style="margin-top:0">What this certificate states</h3>
+
+            <div class="table-wrap">
+                <table>
+                    <tbody>
+                    <tr th:each="fact : ${result.claimed()}">
+                        <th scope="row" style="text-align:left; width:170px"
+                            th:text="${fact.key}">student</th>
+                        <td th:text="${#strings.isEmpty(fact.value)} ? '—' : ${fact.value}">Avika Singh</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="status-note" style="margin-top:18px">
+                Issued <span th:text="${#temporals.format(result.issuedAt().atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan</span><span
+                    th:if="${result.issuedBy() != null}"> by <span th:text="${result.issuedBy()}">Coordinator</span></span>.
+                Certificate <code th:text="${result.code()}">NIET-ABCDE-FGHIJ</code>.
+            </p>
+        </div>
+    </div>
+
+    <p class="status-note" style="margin-top:28px">
+        Verification recomputes the digest from the live register and compares it with the one
+        sealed at issue. The certificate is therefore tamper-evident rather than tamper-proof:
+        it cannot stop a record being changed, but it makes a change impossible to hide.
+    </p>
+
+</section>
+</body>
+</html>

@@ -22,7 +22,11 @@ public class SecurityConfig {
                                 // Someone who has forgotten their password cannot sign in
                                 // to ask for a reset, so these are open by necessity.
                                 "/forgot-password","/forgot-password-sent",
-                                "/reset-password","/verify-email")
+                                "/reset-password","/verify-email",
+                                // An external examiner holding a printed certificate
+                                // has no account, and a check that needs a login
+                                // checks nothing for the person who most needs it.
+                                "/verify","/verify/**")
                         .permitAll().requestMatchers("/student/**").hasRole("STUDENT").
                         requestMatchers("/supervisor/**").hasRole("SUPERVISOR")
                         .requestMatchers("/coordinator/**").hasRole("COORDINATOR").

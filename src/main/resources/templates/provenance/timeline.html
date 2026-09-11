@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Provenance</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'अभिलेख वंशावली',
+            'Provenance',
+            'Who did what to this dissertation, and when.',
+            'ALL')}"></div>
+
+    <div class="hero">
+        <div class="page-head" style="margin-bottom:14px">
+            <div>
+                <h2 style="margin:0" th:text="${timeline.studentName}">Avika Singh</h2>
+                <p class="lead" style="margin:4px 0 0">
+                    <span th:text="${timeline.rollNo}">24MCS001</span>
+                    &middot; <span th:text="${timeline.programme}">MTECH</span>
+                    &middot; session <span th:text="${timeline.sessionLabel}">2025-26</span>
+                    &middot; guide <span th:text="${timeline.supervisorName}">Dr A Sharma</span>
+                </p>
+            </div>
+            <span th:if="${timeline.hasCertificate()}" class="badge badge-approved"
+                  th:text="${timeline.certificateCode}">NIET-ABCDE-FGHIJ</span>
+        </div>
+
+        <div class="field" th:if="${timeline.topicTitle != null}">
+            <label>Topic</label>
+            <p style="margin:0" th:text="${timeline.topicTitle}">Adaptive load balancing</p>
+        </div>
+
+        <div class="field">
+            <label>Record digest (SHA-256 over the sealed facts)</label>
+            <p style="margin:0"><code th:text="${timeline.digest}">abc123</code></p>
+        </div>
+
+        <div class="btn-row no-print" style="justify-content:flex-start">
+            <form th:if="${canIssue}" th:action="@{/provenance/{id}/certificate(id=${timeline.allocationId})}"
+                  method="post" class="inline-form">
+                <button type="submit" class="btn btn-primary"
+                        th:text="${timeline.hasCertificate()} ? 'Re-issue certificate' : 'Issue certificate'">
+                    Issue certificate</button>
+            </form>
+            <a th:if="${timeline.hasCertificate()}" class="btn btn-ghost"
+               th:href="@{/provenance/{id}/certificate.pdf(id=${timeline.allocationId})}">Download PDF</a>
+            <a th:if="${timeline.hasCertificate()}" class="btn btn-ghost"
+               th:href="@{/verify/{code}(code=${timeline.certificateCode})}">Verify it</a>
+            <button type="button" class="btn btn-ghost" data-print>Print</button>
+        </div>
+    </div>
+
+    <h2 style="margin-top:44px">Submitted work</h2>
+    <p th:if="${#lists.isEmpty(timeline.versions)}" class="status-note">Nothing filed yet.</p>
+
+    <div th:unless="${#lists.isEmpty(timeline.versions)}" class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">Milestone</th>
+                <th scope="col">Ver</th>
+                <th scope="col">SHA-256</th>
+                <th scope="col">Filed</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="v : ${timeline.versions}">
+                <td th:text="${v.milestone()}">Synopsis</td>
+                <td th:text="'v' + ${v.versionNo()}">v1</td>
+                <td><code th:text="${v.shortSha()}">a1b2c3</code></td>
+                <td th:text="${#temporals.format(v.submittedAt().atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 style="margin-top:44px">Everything that happened</h2>
+    <p th:if="${#lists.isEmpty(timeline.entries)}" class="status-note">
+        No recorded acts. The audit trail began after this record was created.
+    </p>
+
+    <ul class="notice-list" th:unless="${#lists.isEmpty(timeline.entries)}">
+        <li th:each="e : ${timeline.entries}">
+            <span class="notice-date"
+                  th:text="${#temporals.format(e.at().atZone(zone), 'dd MMM yyyy, HH:mm:ss')} + ' · ' + ${e.actorEmail()}">
+                01 Jan · someone@college.edu</span>
+            <span class="notice-title" th:text="${e.readableAction()}">topic approved</span>
+            <span th:if="${!#strings.isEmpty(e.detail())}" class="status-note"
+                  th:text="${e.detail()}">PROPOSED -> APPROVED</span>
+        </li>
+    </ul>
+
+    <p class="status-note" style="margin-top:28px">
+        Reconstructed from the audit trail, which is written inside the transaction that made each
+        change. Nothing here was entered by hand, and nothing here can be edited.
+    </p>
+
+</section>
+</body>
+</html>

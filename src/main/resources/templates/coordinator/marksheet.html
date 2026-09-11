@@ -55,6 +55,7 @@
                     <th scope="col">Average</th>
                     <th scope="col">Viva</th>
                     <th scope="col">Outcome</th>
+                    <th scope="col" class="no-print">Record</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -76,6 +77,10 @@
                               th:classappend="${r.outcome() == 'Pass'} ? 'badge-approved'
                                             : (${r.outcome() == 'Fail'} ? 'badge-rejected' : 'badge-pending')"
                               th:text="${r.outcome()}">Pending</span>
+                    </td>
+                    <td class="no-print">
+                        <a class="btn btn-ghost btn-sm"
+                           th:href="@{/provenance/{id}(id=${r.allocationId})}">Provenance</a>
                     </td>
                 </tr>
                 </tbody>

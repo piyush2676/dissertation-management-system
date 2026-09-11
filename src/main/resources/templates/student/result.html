@@ -75,6 +75,8 @@
         </div>
 
         <div class="btn-row no-print" style="justify-content:flex-start">
+            <a class="btn btn-primary"
+               th:href="@{/provenance/{id}(id=${result.allocationId()})}">My provenance record</a>
             <button type="button" class="btn btn-ghost" data-print>Print result</button>
         </div>
     </div>
