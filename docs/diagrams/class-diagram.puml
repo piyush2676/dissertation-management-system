@@ -1,8 +1,17 @@
 @startuml DMS-Class-Diagram
-' Dissertation Management System -- domain class diagram
-' Render at: http://www.plantuml.com/plantuml  or the IntelliJ PlantUML plugin.
-' If the layout comes out too wide for a slide, comment out the "left to right"
-' line below and let PlantUML stack it vertically instead.
+' Dissertation Management System -- domain class diagram.
+'
+' Checked against the shipped entities and migrations V1-V11, not against the
+' original plan. Where the two differ, the code wins and the difference is noted.
+'
+' Rendered PNG and SVG sit beside this file and are committed, so slides can use
+' them without anyone installing PlantUML. To regenerate after an edit:
+'   java -jar plantuml.jar -tpng -tsvg -o . docs/diagrams/*.puml
+' This diagram is wide. For a slide, use the SVG and crop, or present it as two
+' halves -- identity and session on one, the workflow chain on the other.
+' Audit, notifications and the AI package are deliberately NOT here -- none of
+' them is referenced by the workflow services, which publish events instead.
+' They have their own diagram: cross-cutting-diagram.puml.
 
 title Dissertation Management System — Domain Class Diagram
 
@@ -79,8 +88,9 @@ package "com.dms.session" #F7F9FA {
   class Milestone {
     - Long id
     - String name
+    - String description
     - LocalDate dueDate
-    - BigDecimal weightage
+    - int weightage
     - int sequenceNo
   }
 }
@@ -93,7 +103,10 @@ package "com.dms.topic" #F7F9FA {
     - String abstractText
     - String keywords
     - TopicStatus status
-    - int version
+    - Integer version
+    - String decisionReason
+    - User decidedBy
+    - Instant decidedAt
   }
 
   enum TopicStatus {
@@ -110,8 +123,10 @@ package "com.dms.allocation" #F7F9FA {
   class Allocation {
     - Long id
     - AllocationStatus status
-    - LocalDate allocatedOn
+    - String decisionReason
     - User allocatedBy
+    - Instant requestedAt
+    - Instant decidedAt
   }
 
   enum AllocationStatus {
@@ -119,6 +134,7 @@ package "com.dms.allocation" #F7F9FA {
     ACCEPTED
     DECLINED
     COORDINATOR_ASSIGNED
+    WITHDRAWN
   }
 }
 
@@ -126,9 +142,12 @@ package "com.dms.submission" #F7F9FA {
 
   class Submission {
     - Long id
-    - int currentVersionNo
     - SubmissionStatus status
-    - boolean lateFlag
+    - int currentVersionNo
+    - boolean late
+    - String decisionNote
+    - User decidedBy
+    - Instant decidedAt
   }
 
   enum SubmissionStatus {
@@ -144,8 +163,11 @@ package "com.dms.submission" #F7F9FA {
     - Long id
     - int versionNo
     - String storagePath
+    - String originalFilename
+    - String contentType
     - String sha256
     - long sizeBytes
+    - String note
     - Instant submittedAt
   }
 }
@@ -154,9 +176,10 @@ package "com.dms.review" #F7F9FA {
 
   class ReviewComment {
     - Long id
-    - int pageNo
+    - Integer pageNo
     - String body
     - boolean resolved
+    - Instant resolvedAt
     - Instant createdAt
   }
 }
@@ -166,13 +189,15 @@ package "com.dms.evaluation" #F7F9FA {
   class RubricCriterion {
     - Long id
     - String name
-    - BigDecimal maxMarks
-    - BigDecimal weightage
+    - String description
+    - int maxMarks
+    - int weightage
+    - int sequenceNo
   }
 
   class Evaluation {
     - Long id
-    - Map<Long, BigDecimal> scores
+    - Map<String, Integer> scores <<jsonb>>
     - BigDecimal total
     - String remarks
     - Instant submittedAt
@@ -185,12 +210,16 @@ package "com.dms.viva" #F7F9FA {
     - Long id
     - Instant scheduledAt
     - String venue
+    - String panel
     - VivaStatus status
+    - User scheduledBy
   }
 
-  class PanelMember {
-    - Long id
-    - String role
+  enum VivaStatus {
+    SCHEDULED
+    RESCHEDULED
+    HELD
+    CANCELLED
   }
 }
 
@@ -214,6 +243,7 @@ Topic --> TopicStatus
 StudentProfile "1" -- "0..*" Allocation
 SupervisorProfile "1" -- "0..*" Allocation
 Allocation "0..*" --> "1" AcademicSession
+Allocation "0..*" --> "0..1" Topic : topic on record
 Allocation --> AllocationStatus
 
 ' ---------- submission ----------
@@ -225,11 +255,12 @@ SubmissionVersion "1" -- "0..*" ReviewComment
 ReviewComment "0..*" --> "1" User : reviewer
 
 ' ---------- evaluation and viva ----------
-Submission "1" -- "0..*" Evaluation
+' Evaluation hangs off Allocation, not Submission: a student is marked once for
+' the dissertation, not once per milestone upload.
+Allocation "1" -- "0..*" Evaluation
 Evaluation "0..*" --> "1" User : examiner
 Allocation "1" -- "0..1" VivaSchedule
-VivaSchedule "1" *-- "1..*" PanelMember
-PanelMember "0..*" --> "1" User
+VivaSchedule --> VivaStatus
 
 note bottom of SubmissionVersion
   Versions are append-only.
@@ -243,6 +274,23 @@ note right of Milestone
   share one codebase and differ
   only in Milestone rows. Adding a
   milestone is an INSERT, not a release.
+end note
+
+note right of Evaluation
+  scores is JSONB keyed by criterion id,
+  so adding a rubric criterion needs
+  no migration. The weighted total is
+  stored so a mark sheet never has to
+  recompute history.
+end note
+
+note bottom of VivaSchedule
+  The panel is free text, not its own
+  table: external examiners are common
+  and are usually not users of this
+  system, so modelling them as accounts
+  would mean logins for people who
+  never sign in.
 end note
 
 @enduml

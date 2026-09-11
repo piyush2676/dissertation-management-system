@@ -70,26 +70,27 @@ object "topic101 : Topic" as topic101 {
 object "alloc55 : Allocation" as alloc55 {
   id = 55
   status = ACCEPTED
-  allocatedOn = 2025-08-12
+  requestedAt = 2025-08-10T09:20
+  decidedAt = 2025-08-12T16:05
 }
 
 object "sub900 : Submission" as sub900 {
   id = 900
   currentVersionNo = 2
   status = UNDER_REVIEW
-  lateFlag = false
+  late = false
 }
 
 object "v1 : SubmissionVersion" as v1 #EEEEEE {
   versionNo = 1
-  storagePath = "uploads/2025-26/900/v1.pdf"
+  storagePath = "55/3/1f9c...-v1.pdf"
   sha256 = "a91f3c...", sizeBytes = 2411008
   submittedAt = 2025-11-28T21:04
 }
 
 object "v2 : SubmissionVersion" as v2 {
   versionNo = 2
-  storagePath = "uploads/2025-26/900/v2.pdf"
+  storagePath = "55/3/8b2e...-v2.pdf"
   sha256 = "7c30be...", sizeBytes = 2698441
   submittedAt = 2025-12-05T18:37
 }

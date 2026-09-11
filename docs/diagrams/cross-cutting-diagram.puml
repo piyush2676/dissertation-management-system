@@ -1,0 +1,178 @@
+@startuml DMS-Cross-Cutting
+' Everything that reacts to the workflow rather than being part of it.
+'
+' This is a separate diagram on purpose. None of these classes is referenced by
+' TopicService, AllocationService, SubmissionService or ReviewService -- they
+' publish domain events and these listen. That is the whole point, and putting
+' them on the domain diagram would draw arrows that do not exist in the code.
+
+title Dissertation Management System — Events, Audit, Notifications and AI
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam class {
+  BackgroundColor White
+  BorderColor #4A6572
+  ArrowColor #4A6572
+}
+skinparam package {
+  BackgroundColor #F7F9FA
+  BorderColor #B0BEC5
+}
+hide empty members
+
+package "com.dms.audit" #F7F9FA {
+
+  interface DomainEvent {
+    + String actorEmail()
+    + String action()
+    + String entityType()
+    + Long entityId()
+    + String oldValue()
+    + String newValue()
+  }
+
+  class DomainEvents <<records>> {
+    TopicProposed
+    TopicDecided
+    GuideRequested
+    GuideDecided
+    GuideAssigned
+    SubmissionFiled
+    SubmissionReviewStarted
+    SubmissionDecided
+    ReviewCommented
+  }
+
+  class AuditLogListener <<@EventListener>> {
+    + void on(DomainEvent)
+  }
+
+  class AuditLog {
+    - Long id
+    - User actor
+    - String actorEmail
+    - String action
+    - String entityType
+    - Long entityId
+    - String oldValue
+    - String newValue
+    - Instant at
+  }
+}
+
+package "com.dms.notification" #F7F9FA {
+
+  class NotificationListener <<@EventListener>> {
+    + void on(TopicProposed)
+    + void on(TopicDecided)
+    + void on(GuideRequested)
+    + void on(GuideDecided)
+    + void on(GuideAssigned)
+    + void on(SubmissionFiled)
+    + void on(SubmissionReviewStarted)
+    + void on(SubmissionDecided)
+    + void on(ReviewCommented)
+  }
+
+  class Notification {
+    - Long id
+    - User recipient
+    - NotificationType type
+    - String title
+    - String body
+    - String link
+    - Instant readAt
+    - Instant createdAt
+  }
+}
+
+package "com.dms.ai" #F7F9FA {
+
+  class AiIndexingListener <<@TransactionalEventListener>> {
+    + void onTopicDecided(TopicDecided)
+  }
+
+  interface SimilarityProvider {
+    + List<Scored<Long>> mostSimilar(query, kind, topK, exclude)
+  }
+
+  class CosineSimilarityProvider
+
+  class Embedding {
+    - Long id
+    - EmbeddingKind kind
+    - Long refId
+    - String model
+    - int dimensions
+    - List<Double> vector <<jsonb>>
+    - String sourceHash
+  }
+
+  class AiReport {
+    - Long id
+    - ReportKind kind
+    - Long refId
+    - String model
+    - String body
+    - boolean aiGenerated
+  }
+}
+
+package "com.dms.storage" #F7F9FA {
+  interface StorageService {
+    + StoredFile store(file, folder)
+    + Resource load(storagePath)
+    + void delete(storagePath)
+  }
+  class LocalDiskStorageService
+}
+
+DomainEvents ..|> DomainEvent
+
+DomainEvent <.. AuditLogListener : listens
+DomainEvent <.. NotificationListener : listens
+DomainEvent <.. AiIndexingListener : listens
+
+AuditLogListener --> AuditLog : writes
+NotificationListener --> Notification : writes
+AiIndexingListener --> Embedding : writes
+
+SimilarityProvider <|.. CosineSimilarityProvider
+CosineSimilarityProvider --> Embedding : scans
+StorageService <|.. LocalDiskStorageService
+
+note bottom of AuditLogListener
+  A plain @EventListener, so the audit
+  row joins the publishing transaction.
+  An action that rolls back leaves no
+  entry, and no entry can describe
+  something that never happened.
+end note
+
+note bottom of AiIndexingListener
+  After commit and in its own transaction,
+  unlike the other two: embedding is a call
+  to a third party. Holding an approval open
+  across it, or rolling one back on a quota
+  error, would be indefensible.
+end note
+
+note right of Embedding
+  kind + refId rather than a foreign key,
+  so topics and supervisor profiles share
+  one table without either entity knowing
+  the AI package exists.
+
+  Vectors are JSONB because pgvector is not
+  installed on the target server. Swapping
+  to it means one new SimilarityProvider.
+end note
+
+note right of SimilarityProvider
+  The seam. Exact cosine today; a pgvector
+  implementation later changes no caller.
+end note
+
+@enduml
