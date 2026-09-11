@@ -6,8 +6,12 @@
 <nav class="navbar" th:fragment="navbar">
     <div class="container navbar-inner">
 
+        <!-- Drop a real logo file in /static/images and swap the mark for an <img>.
+             The institute SVG on niet.co.in is a 900 KB base64 PNG wrapper, far too
+             heavy to serve on every page, so this is a wordmark until a proper
+             asset is supplied. -->
         <a class="brand" th:href="@{/}">
-            <span class="brand-mark">DMS</span>
+            <span class="brand-mark">NIET</span>
             <span class="brand-text">Dissertation Management</span>
         </a>
 

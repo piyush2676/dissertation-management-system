@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <title th:replace="${title}">Dissertation Management System</title>
+
+    <!-- Mulish is the institute typeface. preconnect first so the font request
+         starts before the stylesheet has finished parsing. For an air-gapped
+         deployment, self-host these two files and drop the CDN links. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;600;700;800&display=swap">
+
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <script th:src="@{/js/app.js}" defer></script>
 </head>
@@ -15,7 +24,9 @@
 <div class="container">
     <div class="ambient">
         <span class="ambient-clock" data-clock aria-hidden="true"></span>
-        <span class="ambient-note">Dissertation cell &middot; established record</span>
+        <span class="ambient-note">
+            Noida Institute of Engineering and Technology &middot; Dissertation cell
+        </span>
     </div>
 </div>
 

@@ -1,58 +1,68 @@
 
 
 :root {
-    
-    --paper:       #f4ece0;   
-    --paper-2:     #ede2d2;   
-    --paper-3:     #e3d5c0;   
-    --ink:         #1c1712;   
-    --ink-soft:    #5b5044;
-    --ink-faint:   #8b7d6c;
 
-    
-    --line:        rgba(28, 23, 18, .18);
-    --line-strong: rgba(28, 23, 18, .42);
-    --rule:        rgba(47, 93, 138, .22);   
+    /* Institute palette, taken from niet.co.in: red #cf1427 with a gold
+       accent on white. Token NAMES are unchanged from the previous theme so
+       nothing outside this block had to move. */
 
-    
-    --red:         #d6342a;
-    --red-dark:    #a8241c;
-    --blue:        #2f5d8a;
-    --blue-dark:   #1e3f66;
-    --leaf:        #4b7a3f;
-    --rust:        #b4531f;
-    --mustard:     #c8912a;
+    --brand:       #cf1427;   /* NIET primary red */
+    --brand-dark:  #b71c1c;
+    --brand-soft:  #cf3242;
+    --brand-gold:  #ffb300;
 
-    
-    --ok:          #3d6634;
-    --ok-bg:       rgba(75, 122, 63, .13);
-    --warn:        #8a6110;
-    --warn-bg:     rgba(200, 145, 42, .16);
-    --danger:      #96301f;
-    --danger-bg:   rgba(180, 83, 31, .13);
+    --paper:       #ffffff;
+    --paper-2:     #fafafa;
+    --paper-3:     #f3f3f3;
+    --ink:         #333333;
+    --ink-soft:    #707070;
+    --ink-faint:   #8d8d8d;
 
-    --radius:      3px;       
-    --radius-sm:   2px;
-    --shadow:      2px 3px 0 rgba(28, 23, 18, .10);
-    --shadow-lift: 3px 5px 0 rgba(28, 23, 18, .16);
+    --line:        rgba(51, 51, 51, .14);
+    --line-strong: rgba(51, 51, 51, .30);
+    --rule:        rgba(207, 20, 39, .28);
 
-    
-    --font-display: "Nirmala UI", "Noto Sans Devanagari", "Mangal",
-                    "Kohinoor Devanagari", "Devanagari Sangam MN", serif;
-    --font-serif:   "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
-                    "Times New Roman", serif;
-    --font-sans:    "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
-    --font-mono:    "Courier New", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --red:         #cf1427;
+    --red-dark:    #b71c1c;
+    --blue:        #33566f;   /* no blue in the institute palette; kept neutral
+                                 so anything still referencing it stays sane */
+    --blue-dark:   #22394a;
+    --leaf:        #2e7d32;
+    --rust:        #cf3242;
+    --mustard:     #ffb300;
+
+    /* Status colours stay green / amber / red. Danger is a shade off the brand
+       red so a rejected badge does not read as a brand element. */
+    --ok:          #2e7d32;
+    --ok-bg:       rgba(46, 125, 50, .12);
+    --warn:        #a06700;
+    --warn-bg:     rgba(255, 179, 0, .18);
+    --danger:      #b3261e;
+    --danger-bg:   rgba(179, 38, 30, .10);
+
+    --radius:      6px;
+    --radius-sm:   4px;
+    --shadow:      0 1px 3px rgba(51, 51, 51, .10), 0 1px 2px rgba(51, 51, 51, .06);
+    --shadow-lift: 0 6px 18px rgba(51, 51, 51, .14);
+
+    /* Mulish is the institute typeface. It carries no Devanagari, so the
+       Devanagari stack follows it and the browser falls back per character:
+       Latin renders in Mulish, the Hindi headings in Nirmala UI. */
+    --font-display: "Mulish", "Nirmala UI", "Noto Sans Devanagari", "Mangal",
+                    "Kohinoor Devanagari", "Devanagari Sangam MN", sans-serif;
+    --font-serif:   "Mulish", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    --font-sans:    "Mulish", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    --font-mono:    "Cascadia Mono", Consolas, ui-monospace, "Courier New", monospace;
 }
 
 :root {
     --scene-lamp: linear-gradient(transparent, transparent);
     --scene-tint: linear-gradient(transparent, transparent);
     --scene-scrim: linear-gradient(180deg,
-        rgba(28, 23, 18, .52) 0%,
-        rgba(28, 23, 18, .20) 30%,
-        rgba(28, 23, 18, .16) 58%,
-        rgba(28, 23, 18, .62) 100%);
+        rgba(51, 51, 51, .52) 0%,
+        rgba(51, 51, 51, .20) 30%,
+        rgba(51, 51, 51, .16) 58%,
+        rgba(51, 51, 51, .62) 100%);
 }
 
 :root[data-daypart="dawn"] {
@@ -61,10 +71,10 @@
         rgba(255, 196, 140, .16) 60%,
         rgba(120, 96, 150, .18) 100%);
     --scene-scrim: linear-gradient(180deg,
-        rgba(28, 23, 18, .46) 0%,
-        rgba(28, 23, 18, .14) 32%,
-        rgba(28, 23, 18, .14) 58%,
-        rgba(28, 23, 18, .58) 100%);
+        rgba(51, 51, 51, .46) 0%,
+        rgba(51, 51, 51, .14) 32%,
+        rgba(51, 51, 51, .14) 58%,
+        rgba(51, 51, 51, .58) 100%);
 }
 
 :root[data-daypart="dusk"] {
@@ -236,7 +246,7 @@ a:hover { color: var(--red); }
     height: 7px;
     border-radius: 50%;
     background: var(--leaf);
-    box-shadow: 0 0 0 3px rgba(75, 122, 63, .18);
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, .18);
 }
 
 .navbar {
@@ -244,7 +254,7 @@ a:hover { color: var(--red); }
     top: 0;
     z-index: 40;
     background: var(--paper);
-    border-bottom: 3px double var(--line-strong);
+    border-bottom: 3px solid var(--brand-gold);
 }
 
 .navbar-inner {
@@ -362,7 +372,7 @@ h3 {
 .display-hi {
     display: block;
     color: var(--blue-dark);
-    text-shadow: 2px 3px 0 rgba(28, 23, 18, .13);
+    text-shadow: 2px 3px 0 rgba(51, 51, 51, .13);
 }
 
 .display-sub {
@@ -462,12 +472,15 @@ code {
 }
 
 .hero-wash::before {
-    background-image: var(--scene-tint), url("scene-bg.svg");
+    background-image:
+        radial-gradient(ellipse at 50% 120%, rgba(255, 179, 0, .22) 0%, rgba(255, 179, 0, 0) 62%),
+        linear-gradient(160deg, var(--brand-dark) 0%, var(--brand) 55%, #a5101f 100%);
     transform: translate3d(calc(var(--px) * 10px), calc(var(--py) * 7px), 0) scale(1.03);
 }
 
 .hero-wash::after {
-    background-image: var(--scene-lamp), var(--scene-scrim), url("scene-fg.svg");
+    background-image:
+        radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, .26) 100%);
     transform: translate3d(calc(var(--px) * 26px), calc(var(--py) * 16px), 0) scale(1.05);
 }
 
@@ -496,7 +509,7 @@ code {
     font-size: 12px;
     letter-spacing: .06em;
     text-transform: uppercase;
-    color: rgba(244, 236, 224, .82);
+    color: rgba(255, 255, 255, .84);
     margin: 0;
 }
 
@@ -508,20 +521,20 @@ code {
 }
 
 .hero-wash .display      { color: var(--paper); }
-.hero-wash .display-hi   { color: #4a8fd6; text-shadow: 3px 4px 0 rgba(28, 23, 18, .55); }
+.hero-wash .display-hi   { color: var(--brand-gold); text-shadow: 3px 4px 0 rgba(51, 51, 51, .55); }
 .hero-wash .display-sub  { color: rgba(244, 236, 224, .86); }
 .hero-wash .lead         { color: rgba(244, 236, 224, .92); margin-left: auto; margin-right: auto; }
 
 .hero-wash .eyebrow {
     color: var(--paper);
     border-color: rgba(244, 236, 224, .7);
-    background: rgba(28, 23, 18, .38);
+    background: rgba(51, 51, 51, .38);
 }
 
 .hero-wash .prompt-box {
     background: rgba(244, 236, 224, .93);
-    border-color: rgba(28, 23, 18, .8);
-    box-shadow: 4px 5px 0 rgba(28, 23, 18, .3);
+    border-color: rgba(51, 51, 51, .8);
+    box-shadow: 4px 5px 0 rgba(51, 51, 51, .3);
 }
 
 .hero-wash .btn-ghost { color: var(--paper); border-color: rgba(244, 236, 224, .75); }
@@ -644,7 +657,7 @@ code {
     color: var(--paper);
     background: var(--red);
     border: 1px solid var(--ink);
-    box-shadow: 5px 6px 0 rgba(28, 23, 18, .18);
+    box-shadow: 5px 6px 0 rgba(51, 51, 51, .18);
     outline: 2px solid var(--paper);
     outline-offset: -9px;
 }
@@ -732,7 +745,7 @@ code {
 .tile:hover .tile-thumb,
 .tile:focus-visible .tile-thumb {
     transform: rotateX(7deg) rotateY(-9deg) translateZ(18px);
-    box-shadow: 10px 12px 0 rgba(28, 23, 18, .16);
+    box-shadow: 10px 12px 0 rgba(51, 51, 51, .16);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -784,7 +797,7 @@ code {
     color: var(--paper);
     background: var(--red);
     border: 1px solid var(--ink);
-    box-shadow: 6px 7px 0 rgba(28, 23, 18, .18);
+    box-shadow: 6px 7px 0 rgba(51, 51, 51, .18);
     outline: 2px solid var(--paper);
     outline-offset: -10px;
 }
@@ -819,8 +832,8 @@ code {
 .btn-sm { padding: 6px 13px; font-size: 12px; }
 .btn-lg { padding: 13px 26px; font-size: 15px; }
 
-.btn-primary { background: var(--ink); color: var(--paper); }
-.btn-primary:hover { background: #2b241c; color: var(--paper); }
+.btn-primary { background: var(--brand); color: #fff; border-color: var(--brand-dark); }
+.btn-primary:hover { background: var(--brand-dark); color: #fff; }
 
 .btn-gradient { background: var(--red); color: var(--paper); border-color: var(--ink); }
 .btn-gradient:hover { background: var(--red-dark); color: var(--paper); }
@@ -871,7 +884,7 @@ code {
 .field select:focus,
 .field textarea:focus {
     outline: none;
-    background: #fffaf1;
+    background: #fff7f7;
     border-color: var(--red);
     box-shadow: inset 0 -2px 0 var(--red);
 }
@@ -973,7 +986,7 @@ code {
     line-height: 1;
     letter-spacing: -.02em;
     color: var(--paper);
-    text-shadow: 4px 5px 0 rgba(28, 23, 18, .45);
+    text-shadow: 4px 5px 0 rgba(51, 51, 51, .45);
 }
 
 .form-sheet-head {
@@ -1204,12 +1217,12 @@ th {
 td { font-variant-numeric: tabular-nums; }
 
 tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: rgba(200, 145, 42, .09); }
+tbody tr:hover td { background: rgba(207, 20, 39, .05); }
 
 .ai-panel {
-    background: #eae6f2;
-    border: 1px dashed var(--blue);
-    border-left: 4px solid var(--blue);
+    background: var(--warn-bg);
+    border: 1px dashed var(--warn);
+    border-left: 4px solid var(--warn);
     padding: 16px 18px;
     margin: 18px 0;
 }
@@ -1248,7 +1261,7 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
     max-width: 430px;
     background: var(--paper);
     border: 1px solid var(--ink);
-    box-shadow: 5px 6px 0 rgba(28, 23, 18, .16);
+    box-shadow: 5px 6px 0 rgba(51, 51, 51, .16);
     padding: 30px 32px;
 }
 
@@ -1382,7 +1395,7 @@ tbody tr:hover td { background: rgba(200, 145, 42, .09); }
         margin-bottom: 20px;
     }
 
-    .record-head h2 { font-size: 20pt; margin: 0 0 2px; color: #1e3f66; }
+    .record-head h2 { font-size: 20pt; margin: 0 0 2px; color: var(--blue-dark); }
     .record-head p  { margin: 0; font-size: 9pt; letter-spacing: .18em; text-transform: uppercase; }
 
     .record-meta {
