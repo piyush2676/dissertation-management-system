@@ -1,7 +1,7 @@
 # Demo walkthrough
 
-A click-by-click run for a presentation or viva. Roughly **12 minutes** at a steady pace, or
-18 with the optional detours.
+A click-by-click run for a presentation or viva. Roughly **14 minutes** at a steady pace, or
+20 with the optional detours.
 
 The run uses **`student4@gmail.com`** — the integrated M.Tech student, who starts with no topic,
 no guide and no submissions, and whose address is deliberately unconfirmed. Students 1 to 3
@@ -156,7 +156,36 @@ Coordinator window (`coordinator@college.edu` / `coord123`):
 
 Student window: **Result** shows marks and viva.
 
-### 8 · The audit trail — 1 min
+### 8 · Provenance and the verifiable certificate — 2 min
+
+**Finish on this.** It is the thing no other project in the room will have.
+
+Coordinator window: **Mark sheet** → **Provenance** on any row.
+
+> "This dissertation's entire life, rebuilt from the audit trail. Proposed, approved by whom
+> and when, guide accepted, every version filed with the digest of its bytes, revision
+> requested, marks, viva. None of it was typed by hand and none of it can be edited."
+
+- **Issue certificate** → **Download PDF**.
+- Open the PDF. Point at the digest and the QR code.
+- **Scan the QR with your phone**, on the projector.
+
+> "No account needed — an external examiner holding a printed certificate has none. The page
+> recomputes the digest from the live register and compares it with the one sealed at issue."
+
+**If you are feeling confident**, have a second terminal ready and run:
+
+```sql
+UPDATE evaluations SET total = 95.00 WHERE allocation_id = <id>;
+```
+
+Reload the verify page. It now reports **the register has changed since this was issued**.
+Put the mark back and reload again: it passes.
+
+> "Tamper-evident, not tamper-proof. It cannot stop someone editing the database. It makes
+> the edit impossible to hide."
+
+### 9 · The audit trail — 1 min
 
 Sign in as `admin@college.edu` / `admin123` → **Audit trail**.
 
@@ -205,3 +234,6 @@ If you only get to say three things, make them these.
    transition is impossible rather than merely discouraged."**
 3. **"Role checks get you to the page; ownership checks get you to the record — and every change
    leaves an audit row written in the same transaction."**
+
+And if you get a fourth: **"Every dissertation can be reduced to one digest, printed on a
+certificate, and checked by a stranger with a phone."**

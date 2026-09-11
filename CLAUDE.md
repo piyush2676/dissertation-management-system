@@ -22,7 +22,7 @@ Owner: Piyush Pandey. Repo: `github.com/piyush2676/dissertation-management-syste
 | Java | 21 | |
 | Spring Boot | 4.1.0 | starters renamed vs 3.x — see below |
 | PostgreSQL | 18 | database `dms`, service `postgresql-x64-18` |
-| Flyway | via `spring-boot-starter-flyway` | currently at **V11** |
+| Flyway | via `spring-boot-starter-flyway` | currently at **V13** |
 | Thymeleaf | + `thymeleaf-extras-springsecurity6` | |
 | Spring AI | 2.0.1 | Gemini via Google AI Studio; off unless a key is set |
 | Build | Maven wrapper (`.\mvnw.cmd`) | no global Maven |
@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-10)
 
-Phases 0–9 complete, verified in a browser, 151 tests green, 112 commits. Flyway at V11.
+Phases 0–11 complete, verified in a browser, 191 tests green, 125 commits. Flyway at V13.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 19 assertions, all green.
 
 | Phase | Covers | State |
@@ -50,6 +50,8 @@ The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 19 asser
 | 7 | Topic overlap check + guide matching (Gemini) | done — key optional |
 | 8 | End-to-end acceptance | done — scripted, 19/19 |
 | 9 | In-app notifications | done |
+| 10 | Email confirmation, password reset | done — mail optional |
+| 11 | Verifiable provenance: timeline, certificate, public verify | done |
 
 ### Phase 7 — Google AI Studio, not Anthropic
 
@@ -104,7 +106,7 @@ ships inside the overlap check).
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (151 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (191 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -278,4 +280,4 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
-| `src/main/resources/db/migration/` | V1–V11 |
+| `src/main/resources/db/migration/` | V1–V13 |
