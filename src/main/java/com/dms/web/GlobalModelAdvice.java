@@ -1,6 +1,7 @@
 package com.dms.web;
 
 import com.dms.notification.NotificationService;
+import com.dms.user.UserRepository;
 import com.dms.submission.StudentSubmissionBoard;
 import com.dms.submission.SubmissionService;
 
@@ -25,6 +26,7 @@ import java.util.Set;
 public class GlobalModelAdvice {
 
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
     private final SubmissionService submissionService;
 
     @ModelAttribute
@@ -35,6 +37,10 @@ public class GlobalModelAdvice {
 
         String email = authentication.getName();
         model.addAttribute("unreadNotifications", notificationService.unreadCountFor(email));
+
+        model.addAttribute("emailUnconfirmed", userRepository.findByEmail(email)
+                .map(user -> user.getEmailVerifiedAt() == null)
+                .orElse(false));
 
         // Only students have a next deadline, and only they pay for the lookup.
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());

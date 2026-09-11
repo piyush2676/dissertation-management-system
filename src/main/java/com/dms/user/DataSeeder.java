@@ -105,6 +105,12 @@ public class DataSeeder implements CommandLineRunner {
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setFullName(fullName);
         user.setRoles(new HashSet<>(roles));
+        // Seeded accounts come from institute records, so their addresses count as
+        // confirmed. The one on a public mail domain deliberately does not, which
+        // gives the confirmation flow something real to demonstrate.
+        if (!email.endsWith("@gmail.com")) {
+            user.setEmailVerifiedAt(Instant.now());
+        }
         return userRepository.save(user);
     }
     private void createStudentProfile(User user,String rollNo,Programme programme,String department,String batch,Integer semester){

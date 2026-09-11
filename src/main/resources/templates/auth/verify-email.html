@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Address confirmation</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'पता सत्यापन',
+            'Address confirmation',
+            'Confirming that the dissertation cell can reach you.',
+            'ALL')}"></div>
+
+    <div class="auth-card">
+
+        <div th:if="${confirmed}">
+            <h2 style="margin-top:0">Address confirmed</h2>
+            <p class="lead">
+                Thank you. Decisions on your topic, guide allocation and submissions will
+                reach this address.
+            </p>
+        </div>
+
+        <div th:unless="${confirmed}">
+            <h2 style="margin-top:0">That link did not work</h2>
+            <p class="lead">
+                It may have expired, already been used, or been copied incompletely. Sign in
+                and ask for a fresh one.
+            </p>
+        </div>
+
+        <div class="btn-row" style="justify-content:flex-start">
+            <a th:href="@{/dashboard}" class="btn btn-primary">Go to my dashboard</a>
+            <a th:href="@{/login}" class="btn btn-ghost">Sign in</a>
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

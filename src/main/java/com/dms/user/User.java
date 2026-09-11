@@ -47,6 +47,10 @@ public class User {
 
     @Column(nullable = false)
     private boolean enabled = true;
+    /** Null until the address has been confirmed reachable. */
+    @Column(name = "email_verified_at")
+    private Instant emailVerifiedAt;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 }

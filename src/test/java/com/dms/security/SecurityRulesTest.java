@@ -2,6 +2,7 @@ package com.dms.security;
 
 import com.dms.notification.NotificationService;
 import com.dms.submission.SubmissionService;
+import com.dms.user.UserRepository;
 import com.dms.web.DashboardController;
 import com.dms.web.DashboardService;
 import com.dms.web.Dashboards;
@@ -44,6 +45,7 @@ class SecurityRulesTest {
     // deadline strip both come from it.
     @MockitoBean private NotificationService notificationService;
     @MockitoBean private SubmissionService submissionService;
+    @MockitoBean private UserRepository userRepository;
 
     // ---- anonymous ----------------------------------------------------------
 

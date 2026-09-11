@@ -18,7 +18,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth ->
-                auth.requestMatchers("/","/login","/css/**","/js/**","/images/**","/favicon.ico","/error")
+                auth.requestMatchers("/","/login","/css/**","/js/**","/images/**","/favicon.ico","/error",
+                                // Someone who has forgotten their password cannot sign in
+                                // to ask for a reset, so these are open by necessity.
+                                "/forgot-password","/forgot-password-sent",
+                                "/reset-password","/verify-email")
                         .permitAll().requestMatchers("/student/**").hasRole("STUDENT").
                         requestMatchers("/supervisor/**").hasRole("SUPERVISOR")
                         .requestMatchers("/coordinator/**").hasRole("COORDINATOR").

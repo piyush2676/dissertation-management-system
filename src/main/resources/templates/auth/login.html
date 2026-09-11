@@ -37,7 +37,10 @@
                            autocomplete="current-password" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+                <p style="text-align:right; margin:-8px 0 16px">
+                    <a th:href="@{/forgot-password}" class="status-note">Forgotten your password?</a>
+                </p>
+            <button type="submit" class="btn btn-primary btn-block">Sign in</button>
             </form>
 
             <p class="auth-foot">

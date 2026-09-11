@@ -44,6 +44,18 @@
 
     <main class="container">
         <div th:replace="~{layout/_flash :: flash}"></div>
+
+        <!-- Shown until the address is confirmed. Notifications are in-app, so an
+             address nobody checked is a silent failure until it matters. -->
+        <div th:if="${emailUnconfirmed}" class="alert alert-error no-print">
+            <strong>Your email address is not confirmed.</strong>
+            Decisions on your topic and submissions are recorded here, but we cannot
+            reach you outside the system until you confirm it.
+            <form th:action="@{/account/resend-verification}" method="post" class="inline-form"
+                  style="margin-left:8px">
+                <button type="submit" class="btn btn-ghost btn-sm">Send me the link</button>
+            </form>
+        </div>
         <div th:replace="${content}"></div>
     </main>
 
