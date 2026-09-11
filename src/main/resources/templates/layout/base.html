@@ -12,32 +12,47 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;600;700;800&display=swap">
+          href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;600;700;800;900&display=swap">
 
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <script th:src="@{/js/app.js}" defer></script>
 </head>
 <body>
 
-<div class="scroll-rule" aria-hidden="true"></div>
-
-<div class="container">
-    <div class="ambient">
-        <span class="ambient-clock" data-clock aria-hidden="true"></span>
-        <span class="ambient-note">
-            Noida Institute of Engineering and Technology &middot; Dissertation cell
-        </span>
-    </div>
+<!-- The red rail down the left edge, as on the institute site. -->
+<div class="niet-rail">
+    <button type="button" class="rail-menu" data-rail-menu aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
 </div>
 
-<div th:replace="~{layout/_navbar :: navbar}"></div>
+<div class="page-shell">
 
-<main class="container">
-    <div th:replace="~{layout/_flash :: flash}"></div>
-    <div th:replace="${content}"></div>
-</main>
+    <div class="scroll-rule" aria-hidden="true"></div>
 
-<div th:replace="~{layout/_footer :: footer}"></div>
+    <div class="container">
+        <div class="ambient">
+            <span>Noida Institute of Engineering and Technology &middot; An Autonomous Institute</span>
+            <span class="ambient-clock" data-clock aria-hidden="true"></span>
+        </div>
+    </div>
+
+    <div th:replace="~{layout/_navbar :: navbar}"></div>
+
+    <main class="container">
+        <div th:replace="~{layout/_flash :: flash}"></div>
+        <div th:replace="${content}"></div>
+    </main>
+
+    <div th:replace="~{layout/_footer :: footer}"></div>
+</div>
+
+<!-- Text-size controls, as the institute site offers. -->
+<div class="a11y no-print">
+    <button type="button" data-text-scale="up" aria-label="Increase text size">A+</button>
+    <button type="button" data-text-scale="reset" aria-label="Reset text size">A</button>
+    <button type="button" data-text-scale="down" aria-label="Decrease text size">A&minus;</button>
+</div>
 
 </body>
 </html>

@@ -84,4 +84,44 @@
         event.preventDefault();
         window.print();
     });
+    /* Text-size controls, as the institute site offers. Scales the root font
+       size, which every rem-based rule follows, and remembers the choice. */
+    (function initTextScale() {
+        var KEY = "dms-text-scale";
+        var MIN = 87.5;
+        var MAX = 125;
+        var STEP = 6.25;
+
+        function apply(percent) {
+            document.documentElement.style.fontSize = percent + "%";
+            try { window.localStorage.setItem(KEY, String(percent)); } catch (ignored) {}
+        }
+
+        function current() {
+            var stored = null;
+            try { stored = window.localStorage.getItem(KEY); } catch (ignored) {}
+            var value = parseFloat(stored);
+            return isNaN(value) ? 100 : value;
+        }
+
+        if (current() !== 100) { apply(current()); }
+
+        document.addEventListener("click", function (event) {
+            var trigger = event.target.closest ? event.target.closest("[data-text-scale]") : null;
+            if (!trigger) { return; }
+            var mode = trigger.getAttribute("data-text-scale");
+            if (mode === "reset") { apply(100); return; }
+            var next = current() + (mode === "up" ? STEP : -STEP);
+            apply(Math.min(MAX, Math.max(MIN, next)));
+        });
+    })();
+
+    /* The rail button reveals the workflow links on a narrow screen, where the
+       second header row is hidden. */
+    document.addEventListener("click", function (event) {
+        var trigger = event.target.closest ? event.target.closest("[data-rail-menu]") : null;
+        if (!trigger) { return; }
+        var links = document.querySelector(".nav-links");
+        if (links) { links.classList.toggle("open"); }
+    });
 })();

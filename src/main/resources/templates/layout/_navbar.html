@@ -4,114 +4,82 @@
 <body>
 
 <nav class="navbar" th:fragment="navbar">
-    <div class="container navbar-inner">
+    <div class="container">
 
-        <!-- Drop a real logo file in /static/images and swap the mark for an <img>.
-             The institute SVG on niet.co.in is a 900 KB base64 PNG wrapper, far too
-             heavy to serve on every page, so this is a wordmark until a proper
-             asset is supplied. -->
-        <a class="brand" th:href="@{/}">
-            <span class="brand-mark">NIET</span>
-            <span class="brand-text">Dissertation Management</span>
-        </a>
+        <!-- Header row: mark and wordmark, the strapline behind a divider, and the
+             identity block on the right -- the shape of the institute header.
+             Drop a real logo file in /static/images and swap .brand-mark for an
+             <img> when the college supplies one. The SVG on niet.co.in is a
+             900 KB base64 PNG wrapper, far too heavy to serve on every page. -->
+        <div class="navbar-inner">
 
+            <a class="brand" th:href="@{/}">
+                <span class="brand-mark">NIET</span>
+                <span class="brand-text">
+                    Dissertation Management
+                    <span class="brand-sub">Dissertation cell &middot; M.Tech &amp; integrated M.Tech</span>
+                </span>
+            </a>
+
+            <span class="brand-tagline">Get<br>Future<br>Ready!</span>
+
+            <div class="nav-help">
+                <span sec:authorize="isAuthenticated()">
+                    <span class="nav-help-label">Signed in as</span>
+                    <span class="nav-user" sec:authentication="name">user</span>
+                </span>
+                <span sec:authorize="isAnonymous()">
+                    <span class="nav-help-label">Dissertation cell</span>
+                    <span class="nav-user">dissertation@niet.co.in</span>
+                </span>
+
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="inline-form">
+                    <button type="submit" class="btn btn-primary btn-sm">Sign out</button>
+                </form>
+                <a sec:authorize="isAnonymous()" th:href="@{/login}" class="btn btn-primary btn-sm">Sign in</a>
+            </div>
+        </div>
+
+        <!-- Second row for the workflow links. The institute site hides its menu
+             behind the rail, which suits a brochure site; an application people
+             work in all day needs its navigation visible. -->
         <ul class="nav-links">
 
-            <li sec:authorize="hasRole('STUDENT')">
-                <a th:href="@{/student/dashboard}">Dashboard</a>
-            </li>
-            <li sec:authorize="hasRole('STUDENT')">
-                <a th:href="@{/student/topic}">My topic</a>
-            </li>
-            <li sec:authorize="hasRole('STUDENT')">
-                <a th:href="@{/student/guide}">My guide</a>
-            </li>
-            <li sec:authorize="hasRole('STUDENT')">
-                <a th:href="@{/student/submissions}">Submissions</a>
-            </li>
-            <li sec:authorize="hasRole('STUDENT')">
-                <a th:href="@{/student/result}">Result</a>
-            </li>
-            <li sec:authorize="hasRole('STUDENT')">
-                <a th:href="@{/student/ai/novelty}">Overlap check</a>
-            </li>
-            <li sec:authorize="hasRole('STUDENT')">
-                <a th:href="@{/student/ai/match}">Suggested guides</a>
-            </li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/dashboard}">Dashboard</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/topic}">My topic</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/guide}">My guide</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/submissions}">Submissions</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/result}">Result</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/ai/novelty}">Overlap check</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/ai/match}">Suggested guides</a></li>
 
-            <li sec:authorize="hasRole('SUPERVISOR')">
-                <a th:href="@{/supervisor/dashboard}">Dashboard</a>
-            </li>
-            <li sec:authorize="hasRole('SUPERVISOR')">
-                <a th:href="@{/supervisor/topics}">Topic approvals</a>
-            </li>
-            <li sec:authorize="hasRole('SUPERVISOR')">
-                <a th:href="@{/supervisor/requests}">Guide requests</a>
-            </li>
-            <li sec:authorize="hasRole('SUPERVISOR')">
-                <a th:href="@{/supervisor/submissions}">Submissions</a>
-            </li>
-            <li sec:authorize="hasRole('SUPERVISOR')">
-                <a th:href="@{/supervisor/evaluate}">Evaluate</a>
-            </li>
+            <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/dashboard}">Dashboard</a></li>
+            <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/topics}">Topic approvals</a></li>
+            <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/requests}">Guide requests</a></li>
+            <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/submissions}">Submissions</a></li>
+            <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/evaluate}">Evaluate</a></li>
 
-            <li sec:authorize="hasRole('COORDINATOR')">
-                <a th:href="@{/coordinator/dashboard}">Dashboard</a>
-            </li>
-            <li sec:authorize="hasRole('COORDINATOR')">
-                <a th:href="@{/coordinator/allocate}">Allocate guides</a>
-            </li>
-            <li sec:authorize="hasRole('COORDINATOR')">
-                <a th:href="@{/coordinator/viva}">Viva</a>
-            </li>
-            <li sec:authorize="hasRole('COORDINATOR')">
-                <a th:href="@{/coordinator/marksheet}">Mark sheet</a>
-            </li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/dashboard}">Dashboard</a></li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/allocate}">Allocate guides</a></li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/viva}">Viva</a></li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/marksheet}">Mark sheet</a></li>
 
-            <li sec:authorize="hasRole('ADMIN')">
-                <a th:href="@{/admin/users}">Users</a>
-            </li>
-            <li sec:authorize="hasRole('ADMIN')">
-                <a th:href="@{/admin/audit}">Audit trail</a>
-            </li>
+            <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Dashboard</a></li>
+            <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/users}">Users</a></li>
+            <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/audit}">Audit trail</a></li>
 
-            <li sec:authorize="isAnonymous()">
-                <a th:href="@{/#steps}">How it works</a>
-            </li>
-            <li sec:authorize="isAnonymous()">
-                <a th:href="@{/#roles}">Roles</a>
-            </li>
-            <li sec:authorize="isAnonymous()">
-                <a th:href="@{/#numbers}">In numbers</a>
-            </li>
-
-            <li class="nav-spacer"></li>
+            <li sec:authorize="isAnonymous()"><a th:href="@{/#steps}">How it works</a></li>
+            <li sec:authorize="isAnonymous()"><a th:href="@{/#roles}">Roles</a></li>
+            <li sec:authorize="isAnonymous()"><a th:href="@{/#numbers}">In numbers</a></li>
 
             <li sec:authorize="isAuthenticated()">
-                <a th:href="@{/notifications}" title="Notifications">
+                <a th:href="@{/notifications}">
                     Alerts<span th:if="${unreadNotifications != null and unreadNotifications > 0}"
-                          class="badge badge-pending" style="margin-left:6px"
-                          th:text="${unreadNotifications}">3</span>
+                                class="badge badge-pending" style="margin-left:6px"
+                                th:text="${unreadNotifications}">3</span>
                 </a>
             </li>
-            <li sec:authorize="isAuthenticated()">
-                <span class="nav-user" sec:authentication="name">user</span>
-            </li>
-            <li sec:authorize="isAuthenticated()">
-                <form th:action="@{/logout}" method="post" class="inline-form">
-                    <button type="submit" class="btn btn-ghost btn-sm">Sign out</button>
-                </form>
-            </li>
-
-            <li sec:authorize="isAnonymous()">
-                <a th:href="@{/login}" class="btn btn-ghost btn-sm">Log in</a>
-            </li>
-            <li sec:authorize="isAnonymous()">
-                <a th:href="@{/login}" class="btn btn-primary btn-sm">Get started</a>
-            </li>
-
         </ul>
-
     </div>
 </nav>
 
