@@ -39,6 +39,19 @@ public interface AllocationRepository extends JpaRepository<Allocation, Long> {
     boolean existsByStudentIdAndSupervisorUserEmailAndStatusIn(Long studentId, String email, Collection<AllocationStatus> statuses);
     long countBySupervisorUserEmailAndStatusIn(String supervisorEmail, Collection<AllocationStatus> statuses);
 
+    /** Students this guide actually supervises, matched on roll number or name. */
+    @EntityGraph(attributePaths = {"student", "student.user", "topic"})
+    @Query("""
+           select a from Allocation a
+           where a.supervisor.user.email = :email
+             and a.status in :statuses
+             and (lower(a.student.rollNo) like lower(concat('%', :q, '%'))
+                  or lower(a.student.user.fullName) like lower(concat('%', :q, '%')))
+           order by a.student.rollNo
+           """)
+    List<Allocation> searchSupervised(@Param("q") String q, @Param("email") String email,
+                                      @Param("statuses") Collection<AllocationStatus> statuses);
+
     @EntityGraph(attributePaths = {"student", "student.user", "topic", "session"})
     List<Allocation> findBySupervisorUserEmailAndStatusInOrderByRequestedAtDesc(
             String supervisorEmail, Collection<AllocationStatus> statuses);

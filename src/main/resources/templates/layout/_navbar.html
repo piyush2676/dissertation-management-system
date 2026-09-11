@@ -35,6 +35,15 @@
                     <a href="tel:+918010500700">+91-8010-500-700</a>
                 </div>
 
+                <!-- Scoped search. What it can find is decided in the query, so a
+                     guide searching cannot reach another guide's student. -->
+                <form sec:authorize="isAuthenticated()" th:action="@{/search}" method="get"
+                      class="nav-search no-print" role="search">
+                    <input type="search" name="q" placeholder="Search"
+                           aria-label="Search topics, students and submissions">
+                    <button type="submit" aria-label="Search">&#9906;</button>
+                </form>
+
                 <div class="nav-identity">
                     <span sec:authorize="isAuthenticated()">
                         <span class="nav-help-label">Signed in as</span>

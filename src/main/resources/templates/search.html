@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Search</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'खोज',
+            'Search',
+            'Topics, students and submissions you are allowed to see.',
+            'ALL')}"></div>
+
+    <form th:action="@{/search}" method="get" class="search-page-form no-print">
+        <input type="search" name="q" th:value="${results.query}"
+               placeholder="Roll number, name, topic or milestone" autofocus>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    <p th:if="${#strings.isEmpty(results.query)}" class="status-note">
+        Type at least two characters. What you find depends on your role: a student
+        searches their own record, a guide searches the students they supervise, the
+        coordinator searches the cohort.
+    </p>
+
+    <p th:if="${!#strings.isEmpty(results.query) and results.isEmpty()}" class="status-note">
+        Nothing matched <strong th:text="${results.query}">query</strong>.
+    </p>
+
+    <div th:each="group : ${results.groups}">
+        <h2 style="margin-top:38px" th:text="${group.label}">Topics</h2>
+
+        <ul class="notice-list">
+            <li th:each="hit : ${group.hits}">
+                <a th:href="@{${hit.link}}" class="search-hit">
+                    <span class="notice-title" th:text="${hit.title}">Adaptive load balancing</span>
+                    <span th:if="${hit.hasBadge()}" class="badge badge-draft"
+                          th:text="${hit.badge}">APPROVED</span>
+                    <span class="notice-date" th:text="${hit.subtitle}">24MCS001</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <p th:if="${!results.isEmpty()}" class="status-note" style="margin-top:32px">
+        Results are scoped in the query, not filtered afterwards — searching cannot
+        reach a record the pages would refuse you.
+    </p>
+
+</section>
+</body>
+</html>

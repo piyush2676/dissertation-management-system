@@ -5,6 +5,8 @@ import com.dms.session.Milestone;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
@@ -39,4 +41,28 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     long countByAllocationStudentUserEmailAndStatusIn(
             String studentEmail, Collection<SubmissionStatus> statuses);
+
+    // ---- search -------------------------------------------------------------
+
+    @EntityGraph(attributePaths = {"milestone", "allocation", "allocation.student",
+            "allocation.student.user"})
+    @Query("""
+           select s from Submission s
+           where lower(s.milestone.name) like lower(concat('%', :q, '%'))
+             and s.allocation.student.user.email = :email
+           order by s.milestone.sequenceNo
+           """)
+    List<Submission> searchOwnedBy(@Param("q") String q, @Param("email") String email);
+
+    @EntityGraph(attributePaths = {"milestone", "allocation", "allocation.student",
+            "allocation.student.user"})
+    @Query("""
+           select s from Submission s
+           where s.allocation.supervisor.user.email = :email
+             and (lower(s.milestone.name) like lower(concat('%', :q, '%'))
+                  or lower(s.allocation.student.rollNo) like lower(concat('%', :q, '%'))
+                  or lower(s.allocation.student.user.fullName) like lower(concat('%', :q, '%')))
+           order by s.updatedAt desc
+           """)
+    List<Submission> searchSupervised(@Param("q") String q, @Param("email") String email);
 }
