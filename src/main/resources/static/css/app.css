@@ -1723,3 +1723,107 @@ html { overflow-x: clip; }
     .nav-links { display: none; }
     .nav-links.open { display: flex; }
 }
+
+/* ---- institute mark, help block and deadline strip ---------------------- */
+
+.brand-logo {
+    height: 56px;
+    width: auto;
+    display: block;
+}
+
+/* The mark carries the institute name, so the wordmark beside it names the
+   system instead of repeating it. */
+.brand-text {
+    padding-left: 14px;
+    border-left: 1px solid var(--line);
+}
+
+.nav-help {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding-left: 24px;
+    border-left: 1px solid var(--line);
+}
+
+.nav-contact {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+.nav-contact a {
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.nav-contact a:hover { color: var(--brand); text-decoration: underline; }
+.nav-contact-sep { display: none; }
+
+.nav-identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* Standing reminder of what is due next, in place of their counselling ticker.
+   Rendered only when the signed-in student actually has something outstanding,
+   so it never becomes furniture people stop reading. */
+.deadline-strip {
+    background: var(--brand-dark);
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 14px;
+}
+
+.deadline-strip.is-overdue { background: #8a1119; }
+
+.deadline-strip .container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    flex-wrap: wrap;
+}
+
+.deadline-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, .18);
+    padding: 3px 9px;
+    border-radius: 999px;
+}
+
+.deadline-session {
+    margin-left: auto;
+    color: rgba(255, 255, 255, .72);
+    font-size: 13px;
+}
+
+.deadline-action {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, .5);
+}
+
+.deadline-action:hover { border-bottom-color: #fff; }
+
+@media (max-width: 1100px) {
+    .nav-contact { display: none; }
+}
+
+@media (max-width: 900px) {
+    .brand-logo { height: 42px; }
+    .brand-text { display: none; }
+    .deadline-session { margin-left: 0; }
+}
+

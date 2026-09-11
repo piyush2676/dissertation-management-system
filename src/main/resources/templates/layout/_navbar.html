@@ -6,15 +6,16 @@
 <nav class="navbar" th:fragment="navbar">
     <div class="container">
 
-        <!-- Header row: mark and wordmark, the strapline behind a divider, and the
-             identity block on the right -- the shape of the institute header.
-             Drop a real logo file in /static/images and swap .brand-mark for an
-             <img> when the college supplies one. The SVG on niet.co.in is a
-             900 KB base64 PNG wrapper, far too heavy to serve on every page. -->
+        <!-- Header row: the institute mark, the strapline behind a divider, then
+             the help block and the primary action -- the shape of their header.
+             The logo is the mark from niet.co.in, extracted from their 900 KB
+             base64-wrapped SVG and resized to 293x112 so it costs 28 KB. -->
         <div class="navbar-inner">
 
             <a class="brand" th:href="@{/}">
-                <span class="brand-mark">NIET</span>
+                <img class="brand-logo" th:src="@{/images/niet-logo.png}"
+                     alt="Noida Institute of Engineering and Technology"
+                     width="293" height="112">
                 <span class="brand-text">
                     Dissertation Management
                     <span class="brand-sub">Dissertation cell &middot; M.Tech &amp; integrated M.Tech</span>
@@ -24,19 +25,27 @@
             <span class="brand-tagline">Get<br>Future<br>Ready!</span>
 
             <div class="nav-help">
-                <span sec:authorize="isAuthenticated()">
-                    <span class="nav-help-label">Signed in as</span>
-                    <span class="nav-user" sec:authentication="name">user</span>
-                </span>
-                <span sec:authorize="isAnonymous()">
-                    <span class="nav-help-label">Dissertation cell</span>
-                    <span class="nav-user">dissertation@niet.co.in</span>
-                </span>
 
-                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="inline-form">
-                    <button type="submit" class="btn btn-primary btn-sm">Sign out</button>
-                </form>
-                <a sec:authorize="isAnonymous()" th:href="@{/login}" class="btn btn-primary btn-sm">Sign in</a>
+                <!-- Who to contact, mirroring their admission-help block. Someone
+                     stuck on this system needs a person, not a 404. -->
+                <div class="nav-contact no-print">
+                    <span class="nav-help-label">Dissertation cell</span>
+                    <a href="mailto:dissertation@niet.co.in">dissertation@niet.co.in</a>
+                    <span class="nav-contact-sep">&middot;</span>
+                    <a href="tel:+918010500700">+91-8010-500-700</a>
+                </div>
+
+                <div class="nav-identity">
+                    <span sec:authorize="isAuthenticated()">
+                        <span class="nav-help-label">Signed in as</span>
+                        <span class="nav-user" sec:authentication="name">user</span>
+                    </span>
+
+                    <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="inline-form">
+                        <button type="submit" class="btn btn-primary btn-sm">Sign out</button>
+                    </form>
+                    <a sec:authorize="isAnonymous()" th:href="@{/login}" class="btn btn-primary btn-sm">Sign in</a>
+                </div>
             </div>
         </div>
 
@@ -80,6 +89,21 @@
                 </a>
             </li>
         </ul>
+    </div>
+
+    <!-- Deadline strip, in place of their counselling ticker. Only rendered when
+         the signed-in student actually has something outstanding. -->
+    <div th:if="${nextMilestone != null}" class="deadline-strip no-print"
+         th:classappend="${nextMilestoneOverdue} ? 'is-overdue' : ''">
+        <div class="container">
+            <span class="deadline-label"
+                  th:text="${nextMilestoneOverdue} ? 'Overdue' : 'Next deadline'">Next deadline</span>
+            <strong th:text="${nextMilestone}">Literature Review</strong>
+            <span th:text="'due ' + ${#temporals.format(nextMilestoneDue, 'dd MMM yyyy')}">due 10 Oct 2025</span>
+            <span th:if="${sessionLabel != null}" class="deadline-session"
+                  th:text="'Session ' + ${sessionLabel}">Session 2025-26</span>
+            <a th:href="@{/student/submissions}" class="deadline-action">File it &rarr;</a>
+        </div>
     </div>
 </nav>
 
