@@ -6,6 +6,7 @@ import com.dms.allocation.AllocationStatus;
 import com.dms.common.InvalidStateTransitionException;
 import com.dms.common.NotFoundException;
 import com.dms.session.AcademicSession;
+import com.dms.session.DissertationPhase;
 import com.dms.session.Milestone;
 import com.dms.session.MilestoneRepository;
 import com.dms.storage.StorageService;
@@ -254,6 +255,20 @@ class SubmissionServiceTest {
     }
 
     @Test
+    void aStudentOutsideTheDissertationSemestersHasNoMilestonesToFile() {
+        Allocation allocation = allocation(AllocationStatus.ACCEPTED);
+        allocation.getStudent().setSemester(2);
+        when(allocationService.currentAllocationFor(STUDENT_EMAIL)).thenReturn(Optional.of(allocation));
+        when(submissionRepository.findByAllocationOrderByMilestoneSequenceNoAsc(allocation)).thenReturn(List.of());
+
+        StudentSubmissionBoard board = service.boardFor(STUDENT_EMAIL);
+
+        assertTrue(board.hasAllocation());
+        assertTrue(board.rows().isEmpty(), "no phase means no review track, not the wrong one");
+        verify(milestoneRepository, never()).findBySessionAndPhaseOrderBySequenceNoAsc(any(), any());
+    }
+
+    @Test
     void theBoardListsEveryMilestoneIncludingUntouchedOnes() {
         Allocation allocation = allocation(AllocationStatus.ACCEPTED);
         Milestone one = milestone(3L, LocalDate.now().plusDays(10));
@@ -261,7 +276,7 @@ class SubmissionServiceTest {
         Submission filed = submission(allocation, one, SubmissionStatus.SUBMITTED, 1);
 
         when(allocationService.currentAllocationFor(STUDENT_EMAIL)).thenReturn(Optional.of(allocation));
-        when(milestoneRepository.findBySessionOrderBySequenceNoAsc(allocation.getSession()))
+        when(milestoneRepository.findBySessionAndPhaseOrderBySequenceNoAsc(allocation.getSession(), DissertationPhase.FINAL))
                 .thenReturn(List.of(one, two));
         when(submissionRepository.findByAllocationOrderByMilestoneSequenceNoAsc(allocation))
                 .thenReturn(List.of(filed));
@@ -307,6 +322,8 @@ class SubmissionServiceTest {
         StudentProfile student = new StudentProfile();
         student.setId(1L);
         student.setRollNo("24MCS001");
+        student.setProgramme(Programme.MTECH);
+        student.setSemester(4);
         student.setUser(user(1L, STUDENT_EMAIL, "Test Student"));
 
         SupervisorProfile guide = new SupervisorProfile();

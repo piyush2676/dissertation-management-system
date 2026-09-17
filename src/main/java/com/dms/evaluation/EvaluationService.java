@@ -5,7 +5,9 @@ import com.dms.allocation.AllocationRepository;
 import com.dms.allocation.AllocationService;
 import com.dms.allocation.AllocationStatus;
 import com.dms.common.NotFoundException;
+import com.dms.session.DissertationPhase;
 import com.dms.user.Programme;
+import com.dms.user.StudentProfile;
 import com.dms.user.User;
 import com.dms.user.UserRepository;
 import com.dms.viva.VivaSchedule;
@@ -19,9 +21,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,9 +39,26 @@ public class EvaluationService {
     private final VivaScheduleRepository vivaRepository;
     private final UserRepository userRepository;
 
+    /**
+     * The scheme this student is marked on: the session's rows for the phase their
+     * semester puts them in. A student outside both dissertation semesters has no
+     * rubric, which the callers already treat as "nothing can be scored yet".
+     */
     @Transactional(readOnly = true)
     public List<RubricCriterion> rubricFor(Allocation allocation) {
-        return rubricRepository.findBySessionOrderBySequenceNoAsc(allocation.getSession());
+        return phaseOf(allocation)
+                .map(phase -> rubricRepository.findBySessionAndPhaseOrderBySequenceNoAsc(
+                        allocation.getSession(), phase))
+                .orElse(List.of());
+    }
+
+    private static Optional<DissertationPhase> phaseOf(Allocation allocation) {
+        StudentProfile student = allocation.getStudent();
+        return DissertationPhase.forSemester(student.getProgramme(), student.getSemester());
+    }
+
+    private static int maxTotalOf(List<RubricCriterion> rubric) {
+        return rubric.stream().mapToInt(RubricCriterion::getWeightage).sum();
     }
 
     /**
@@ -112,40 +133,29 @@ public class EvaluationService {
             cohort = allocationService.cohortFor(programme);
             label = cohort.isEmpty() ? null : cohort.get(0).getSession().getLabel();
         } catch (IllegalStateException ex) {
-            return new MarkSheet(programme, null, List.of(), List.of());
+            return new MarkSheet(programme, null, Map.of(), List.of());
         }
 
-        List<RubricCriterion> rubric = cohort.isEmpty()
-                ? List.of()
-                : rubricRepository.findBySessionOrderBySequenceNoAsc(cohort.get(0).getSession());
+        // One rubric read per phase, not per student: the cohort shares a session.
+        Map<DissertationPhase, List<RubricCriterion>> rubrics = new EnumMap<>(DissertationPhase.class);
+        if (!cohort.isEmpty()) {
+            for (DissertationPhase phase : DissertationPhase.values()) {
+                rubrics.put(phase, rubricRepository.findBySessionAndPhaseOrderBySequenceNoAsc(
+                        cohort.get(0).getSession(), phase));
+            }
+        }
 
         List<MarkSheet.Row> rows = new ArrayList<>();
         for (Allocation allocation : cohort) {
             if (!allocation.getStatus().occupiesASeat()) {
                 continue;
             }
-
-            List<Evaluation> evaluations = evaluationRepository.findByAllocation(allocation);
-            BigDecimal average = evaluations.isEmpty() ? null : evaluations.stream()
-                    .map(Evaluation::getTotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add)
-                    .divide(BigDecimal.valueOf(evaluations.size()), 2, RoundingMode.HALF_UP);
-
-            VivaSchedule viva = vivaRepository.findByAllocation(allocation).orElse(null);
-
-            rows.add(new MarkSheet.Row(
-                    allocation.getId(),
-                    allocation.getStudent().getRollNo(),
-                    allocation.getStudent().getUser().getFullName(),
-                    allocation.getSupervisor().getUser().getFullName(),
-                    allocation.getTopic() == null ? null : allocation.getTopic().getTitle(),
-                    evaluations.size(),
-                    average,
-                    viva == null ? null : viva.getStatus().name(),
-                    viva == null ? null : viva.getScheduledAt()));
+            DissertationPhase phase = phaseOf(allocation).orElse(null);
+            int maxTotal = phase == null ? 0 : maxTotalOf(rubrics.get(phase));
+            rows.add(row(allocation, phase, maxTotal));
         }
 
-        return new MarkSheet(programme, label, rubric, rows);
+        return new MarkSheet(programme, label, rubrics, rows);
     }
 
     /** One student's own result, for the student page. */
@@ -157,7 +167,11 @@ public class EvaluationService {
         if (allocation == null) {
             return null;
         }
+        DissertationPhase phase = phaseOf(allocation).orElse(null);
+        return row(allocation, phase, maxTotalOf(rubricFor(allocation)));
+    }
 
+    private MarkSheet.Row row(Allocation allocation, DissertationPhase phase, int maxTotal) {
         List<Evaluation> evaluations = evaluationRepository.findByAllocation(allocation);
         BigDecimal average = evaluations.isEmpty() ? null : evaluations.stream()
                 .map(Evaluation::getTotal)
@@ -172,6 +186,8 @@ public class EvaluationService {
                 allocation.getStudent().getUser().getFullName(),
                 allocation.getSupervisor().getUser().getFullName(),
                 allocation.getTopic() == null ? null : allocation.getTopic().getTitle(),
+                phase,
+                maxTotal,
                 evaluations.size(),
                 average,
                 viva == null ? null : viva.getStatus().name(),

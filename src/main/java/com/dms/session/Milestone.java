@@ -19,6 +19,10 @@ public class Milestone {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false)
     AcademicSession session;
+    /** Which half of the dissertation this review belongs to; the student's semester picks it. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    DissertationPhase phase;
     @Column(nullable = false,length = 128)
     String name;
     @Column(columnDefinition = "TEXT")

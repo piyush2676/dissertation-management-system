@@ -4,6 +4,7 @@ import com.dms.evaluation.RubricCriterion;
 import com.dms.evaluation.RubricCriterionRepository;
 import com.dms.session.AcademicSession;
 import com.dms.session.AcademicSessionRepository;
+import com.dms.session.DissertationPhase;
 import com.dms.session.Milestone;
 import com.dms.session.MilestoneRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) throws Exception {
         seedUsers();
         seedSessions();
+        seedMilestones();
         seedRubrics();
     }
 
@@ -79,23 +81,55 @@ public class DataSeeder implements CommandLineRunner {
         String label = start.getYear() + "-" + String.valueOf(start.plusYears(1).getYear()).substring(2);
 
         for (Programme programme : Programme.values()) {
-            AcademicSession session = createSession(label, programme, start, end, true);
-            seedMilestones(session, programme, today);
+            createSession(label, programme, start, end, true);
         }
     }
 
-    private void seedMilestones(AcademicSession session, Programme programme, LocalDate today) {
-        if (programme == MTECH) {
-            createMilestone(session, "Synopsis", "Problem statement, objectives and scope", today.plusDays(15), 10, 1);
-            createMilestone(session, "Literature Review", "Survey of prior work with a gap analysis", today.plusDays(60), 15, 2);
-            createMilestone(session, "Interim Report", "Design, methodology and progress to date", today.plusDays(120), 25, 3);
-            createMilestone(session, "Pre-submission Seminar", "Departmental presentation before final submission", today.plusDays(190), 20, 4);
-            createMilestone(session, "Final Thesis", "Complete thesis with results and evaluation", today.plusDays(230), 30, 5);
+    /**
+     * Guarded per session and phase rather than on a global count, so a database
+     * that predates the phase split -- whose rows V14 backfilled as FINAL -- still
+     * gains a PRE track on the next start without touching what is there.
+     */
+    private void seedMilestones() {
+        LocalDate today = LocalDate.now();
+        for (AcademicSession session : academicSessionRepository.findAll()) {
+            for (DissertationPhase phase : DissertationPhase.values()) {
+                if (!milestoneRepository.existsBySessionAndPhase(session, phase)) {
+                    seedReviews(session, phase, today);
+                }
+            }
+        }
+    }
+
+    /**
+     * The three review presentations per semester the guidelines prescribe
+     * (§4.12, §5.6), with the deliverable each one is filed against. Weightage is
+     * the share the matching rubric row carries (Format 6 / Format 15), so the
+     * student page's "% of the total" agrees with the mark sheet. Due dates are
+     * spaced as the guidelines space the reviews: second, third and fourth month
+     * of the semester.
+     */
+    private void seedReviews(AcademicSession session, DissertationPhase phase, LocalDate today) {
+        if (phase == DissertationPhase.PRE) {
+            createMilestone(session, phase, "Review 1 - Problem statement",
+                    "Title finalisation, problem statement, literature survey and objectives. File the synopsis.",
+                    today.plusDays(30), 10, 1);
+            createMilestone(session, phase, "Review 2 - Synopsis and methodology",
+                    "Synopsis with the proposed methodology and the first draft of the thesis.",
+                    today.plusDays(75), 20, 2);
+            createMilestone(session, phase, "Review 3 - Implementation and paper 1",
+                    "Initial implementation, the first research paper and the second draft of the thesis.",
+                    today.plusDays(120), 35, 3);
         } else {
-            createMilestone(session, "Synopsis", "Problem statement, objectives and scope", today.plusDays(25), 15, 1);
-            createMilestone(session, "Interim Report", "Design, methodology and progress to date", today.plusDays(110), 25, 2);
-            createMilestone(session, "Pre-submission Seminar", "Departmental presentation before final submission", today.plusDays(200), 20, 3);
-            createMilestone(session, "Final Thesis", "Complete thesis with results and evaluation", today.plusDays(240), 40, 4);
+            createMilestone(session, phase, "Review 1 - Implementation",
+                    "Methodology in use and implementation status, with the third draft of the thesis.",
+                    today.plusDays(30), 15, 1);
+            createMilestone(session, phase, "Review 2 - Results and paper 2",
+                    "Final implementation, result analysis, the second research paper and the pre-final draft.",
+                    today.plusDays(75), 20, 2);
+            createMilestone(session, phase, "Review 3 - Final thesis",
+                    "Final thesis and documentation for evaluation.",
+                    today.plusDays(120), 15, 3);
         }
     }
 
@@ -142,9 +176,11 @@ public class DataSeeder implements CommandLineRunner {
         session.setCreatedAt(Instant.now());
         return academicSessionRepository.save(session);
     }
-    private void createMilestone(AcademicSession session,String name,String description,LocalDate dueDate,int weightage,int sequenceNo){
+    private void createMilestone(AcademicSession session, DissertationPhase phase, String name, String description,
+                                 LocalDate dueDate, int weightage, int sequenceNo) {
         Milestone milestone = new Milestone();
         milestone.setSession(session);
+        milestone.setPhase(phase);
         milestone.setName(name);
         milestone.setDescription(description);
         milestone.setDueDate(dueDate);
@@ -155,35 +191,81 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     /**
-     * Guarded on its own count rather than folded into seedSessions, so a database
-     * seeded before the rubric existed still picks one up on the next start.
+     * Guarded per session and phase, for the same reason as the milestones: a
+     * database seeded before the rubric had a phase keeps its rows and gains the
+     * scheme it lacks.
      */
     private void seedRubrics() {
-        if (rubricRepository.count() > 0) {
-            return;
-        }
         for (AcademicSession session : academicSessionRepository.findAll()) {
-            seedRubric(session);
+            for (DissertationPhase phase : DissertationPhase.values()) {
+                if (!rubricRepository.existsBySessionAndPhase(session, phase)) {
+                    seedRubric(session, phase);
+                }
+            }
         }
     }
 
-    /** A workable default marking scheme. Rows, so the department can change it without a release. */
-    private void seedRubric(AcademicSession session) {
-        createCriterion(session, "Problem definition", "Clarity of the problem and its scope", 10, 15, 1);
-        createCriterion(session, "Literature and novelty", "Depth of survey and the gap identified", 10, 15, 2);
-        createCriterion(session, "Methodology", "Soundness of the approach and design", 10, 25, 3);
-        createCriterion(session, "Results and evaluation", "Rigour of experiments and analysis", 10, 25, 4);
-        createCriterion(session, "Presentation and viva", "Report quality and the defence", 10, 20, 5);
+    /**
+     * The internal marking schemes as the guidelines print them: Format 6 for the
+     * Pre-Dissertation semester (100 marks) and Format 15 for the Final (200).
+     * Rows, so the department can change them without a release. maxMarks equals
+     * weightage so a total reads as marks out of the phase maximum. The CO and PO
+     * codes are copied verbatim, including Format 15's CO4 and CO5 that the
+     * guidelines' own outcome list never defines -- that is theirs to correct.
+     */
+    private void seedRubric(AcademicSession session, DissertationPhase phase) {
+        if (phase == DissertationPhase.PRE) {
+            createCriterion(session, phase, "Problem statement (Review 1)",
+                    "Clearly defined problem statement meeting the objectives of the work.",
+                    10, "CO1", "PO1,PO2,PO4,PO6,PO7,PO11", 1);
+            createCriterion(session, phase, "Literature review (Review 2)",
+                    "Recent papers relevant to the topic, with the gaps in knowledge identified.",
+                    20, "CO1", "PO2", 2);
+            createCriterion(session, phase, "Methodology and implementation (Review 3)",
+                    "Methodology with defined input and expected output; concepts implemented against the objectives.",
+                    35, "CO2", "PO1,PO2,PO3,PO4,PO5,PO7,PO11", 3);
+            createCriterion(session, phase, "Presentation",
+                    "Quality of the presentation and the result discussion.",
+                    10, "CO3", "PO10", 4);
+            createCriterion(session, phase, "Documentation",
+                    "Report, first research paper and thesis draft, with every concept described.",
+                    15, "CO2", "PO10,PO11", 5);
+            createCriterion(session, phase, "Ethics",
+                    "Originality, attribution and responsible conduct of the work.",
+                    10, "CO3", "PO8,PO9", 6);
+        } else {
+            createCriterion(session, phase, "Implementation (Review 1)",
+                    "Required concepts implemented, meeting the objectives.",
+                    20, "CO1", "PO1,PO2,PO3,PO4,PO5,PO7,PO11", 1);
+            createCriterion(session, phase, "Result analysis and outcomes (Review 2)",
+                    "Results analysed with appropriate tools, linked to the objectives and validated.",
+                    40, "CO2", "PO1,PO2,PO3,PO4,PO5,PO7,PO11", 2);
+            createCriterion(session, phase, "Presentation (Review 3)",
+                    "Quality of the presentation and the result discussion.",
+                    30, "CO4", "PO10", 3);
+            createCriterion(session, phase, "Documentation",
+                    "Report submission, with every concept described.",
+                    30, "CO4", "PO10,PO11", 4);
+            createCriterion(session, phase, "Research paper, patent or thesis",
+                    "SCI/Scopus paper or utility patent filed at the top; no publication or patent at the bottom.",
+                    30, "CO5", "PO1,PO2,PO3,PO4,PO5,PO7,PO10,PO11", 5);
+            createCriterion(session, phase, "Ethics",
+                    "Originality, attribution and responsible conduct of the work.",
+                    20, "CO3", "PO8,PO9", 6);
+        }
     }
 
-    private void createCriterion(AcademicSession session, String name, String description,
-                                 int maxMarks, int weightage, int sequenceNo) {
+    private void createCriterion(AcademicSession session, DissertationPhase phase, String name, String description,
+                                 int marks, String coCode, String poMapping, int sequenceNo) {
         RubricCriterion criterion = new RubricCriterion();
         criterion.setSession(session);
+        criterion.setPhase(phase);
         criterion.setName(name);
         criterion.setDescription(description);
-        criterion.setMaxMarks(maxMarks);
-        criterion.setWeightage(weightage);
+        criterion.setMaxMarks(marks);
+        criterion.setWeightage(marks);
+        criterion.setCoCode(coCode);
+        criterion.setPoMapping(poMapping);
         criterion.setSequenceNo(sequenceNo);
         criterion.setCreatedAt(Instant.now());
         rubricRepository.save(criterion);

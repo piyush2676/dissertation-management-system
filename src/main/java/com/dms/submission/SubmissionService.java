@@ -6,10 +6,12 @@ import com.dms.allocation.AllocationStatus;
 import com.dms.audit.DomainEvents;
 import com.dms.common.InvalidStateTransitionException;
 import com.dms.common.NotFoundException;
+import com.dms.session.DissertationPhase;
 import com.dms.session.Milestone;
 import com.dms.session.MilestoneRepository;
 import com.dms.storage.StoredFile;
 import com.dms.storage.StorageService;
+import com.dms.user.StudentProfile;
 import com.dms.user.User;
 import com.dms.user.UserRepository;
 
@@ -57,7 +59,12 @@ public class SubmissionService {
         }
 
         Allocation allocation = maybe.get();
-        List<Milestone> milestones = milestoneRepository.findBySessionOrderBySequenceNoAsc(allocation.getSession());
+        // The reviews a student files against are the ones for the phase their
+        // semester puts them in; outside both dissertation semesters the track is empty.
+        StudentProfile student = allocation.getStudent();
+        List<Milestone> milestones = DissertationPhase.forSemester(student.getProgramme(), student.getSemester())
+                .map(phase -> milestoneRepository.findBySessionAndPhaseOrderBySequenceNoAsc(allocation.getSession(), phase))
+                .orElse(List.of());
 
         Map<Long, Submission> byMilestone = new HashMap<>();
         for (Submission submission : submissionRepository.findByAllocationOrderByMilestoneSequenceNoAsc(allocation)) {

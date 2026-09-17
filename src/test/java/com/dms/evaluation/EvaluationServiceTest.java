@@ -6,6 +6,7 @@ import com.dms.allocation.AllocationService;
 import com.dms.allocation.AllocationStatus;
 import com.dms.common.NotFoundException;
 import com.dms.session.AcademicSession;
+import com.dms.session.DissertationPhase;
 import com.dms.user.Programme;
 import com.dms.user.StudentProfile;
 import com.dms.user.SupervisorProfile;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -115,7 +117,7 @@ class EvaluationServiceTest {
     void scoringWithNoRubricInPlaceIsRefused() {
         when(allocationRepository.findWithGraphById(1L)).thenReturn(Optional.of(allocation()));
         when(allocationRepository.existsByIdAndSupervisorUserEmail(1L, GUIDE_EMAIL)).thenReturn(true);
-        when(rubricRepository.findBySessionOrderBySequenceNoAsc(any())).thenReturn(List.of());
+        when(rubricRepository.findBySessionAndPhaseOrderBySequenceNoAsc(any(), eq(DissertationPhase.FINAL))).thenReturn(List.of());
 
         assertThrows(IllegalStateException.class,
                 () -> service.score(GUIDE_EMAIL, 1L, Map.of(1L, 8), null));
@@ -140,7 +142,7 @@ class EvaluationServiceTest {
         Allocation allocation = allocation();
         when(allocationRepository.findWithGraphById(1L)).thenReturn(Optional.of(allocation));
         when(allocationRepository.existsByIdAndSupervisorUserEmail(1L, GUIDE_EMAIL)).thenReturn(true);
-        when(rubricRepository.findBySessionOrderBySequenceNoAsc(any()))
+        when(rubricRepository.findBySessionAndPhaseOrderBySequenceNoAsc(any(), eq(DissertationPhase.FINAL)))
                 .thenReturn(List.of(criterion(1L, "Methodology", 10, 60), criterion(2L, "Viva", 10, 40)));
         // Lenient: the validation tests throw before reaching either of these.
         lenient().when(userRepository.findByEmail(GUIDE_EMAIL)).thenReturn(Optional.of(user("Dr Test")));
@@ -167,6 +169,8 @@ class EvaluationServiceTest {
         StudentProfile student = new StudentProfile();
         student.setId(1L);
         student.setRollNo("24MCS001");
+        student.setProgramme(Programme.MTECH);
+        student.setSemester(4);
         student.setUser(user("Test Student"));
 
         SupervisorProfile guide = new SupervisorProfile();
