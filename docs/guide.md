@@ -18,9 +18,22 @@ Built, verified in a browser, and covered by tests:
 | 5 | Review comments pinned to a version | done |
 | 6 | Rubric, weighted evaluation, viva scheduling, mark sheet | done |
 | 7 | Topic overlap check, guide matching (Gemini) | done — needs a key to run |
-| 8 | End-to-end acceptance pass | partly: the chain below runs, notifications do not exist |
+| 8 | End-to-end acceptance pass | done — `scripts/acceptance.sh`, 19 assertions |
+| 9 | In-app notifications | done |
+| 10 | Email confirmation, password reset | done — mail optional |
+| 11 | Verifiable provenance: timeline, certificate, public verify | done |
+| 12 | Guideline alignment: dissertation phases, review milestones, marks-based rubric with CO/PO map, Annexure-1 fields, thesis code, co-supervisor | in progress |
+| 13 | Logbook (Annexure-4) with guide countersign sealed into the provenance chain | planned |
+| 14 | Outcomes registry, plagiarism fields, deliverable checklist, readiness ledger, 50% viva gate | planned |
+| 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | planned |
+| 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | planned |
 
-`.\mvnw.cmd test` — 125 tests, green. Flyway at V10.
+`.\mvnw.cmd test` — 191 tests, green before phase 12. Flyway at V14.
+
+**Phases 12–16 follow one source document:** `docs/m.tech_m.tech int._dissertation_guidelines_v3.md`,
+the institute's dissertation guidelines for M.Tech / M.Tech Int. from 2025-26. Section 13 below
+maps each guideline mandate to the phase that carries it, and records what stays deliberately
+different from the reference portal the guidelines are usually paired with.
 
 **Phase 7 changed provider, for a reason worth recording.** Section 10 below planned Anthropic
 plus an unnamed embedding model. Anthropic ships no embedding model, and three of the five
@@ -40,12 +53,14 @@ the `SimilarityProvider` interface. At department scale an exact scan beats an i
 exactly right rather than nearly right; past a few thousand rows, that one class is what pgvector
 replaces, plus a migration copying the arrays into a `vector(768)` column.
 
-**Known limitation.** `AllocationStatus.COORDINATOR_ASSIGNED` is terminal, so a coordinator who
-places a student with the wrong guide cannot undo it from the UI, and the partial unique index
-then blocks a second live allocation. The fix is one line — allow `WITHDRAWN` from `ACCEPTED`
-and `COORDINATOR_ASSIGNED`, then add a revoke action — but it reverses a decision that
-`AllocationStatusTest` deliberately pins ("only REQUESTED may be non-terminal"), so it is left
-as a decision to take rather than one made quietly.
+**Known limitation, decision now taken.** `AllocationStatus.COORDINATOR_ASSIGNED` is terminal, so
+a coordinator who places a student with the wrong guide cannot undo it from the UI, and the
+partial unique index then blocks a second live allocation. The fix is one line — allow
+`WITHDRAWN` from `ACCEPTED` and `COORDINATOR_ASSIGNED`, then add a revoke action — but it
+reverses a decision that `AllocationStatusTest` deliberately pins ("only REQUESTED may be
+non-terminal"). Guideline §4.11 requires a formal supervisor-change process, which settles it:
+the invariant is reversed in phase 16 behind a coordinator-only change request, not a free
+withdraw button.
 
 
 ---
@@ -185,21 +200,41 @@ StudentProfile    (user 1:1, rollNo UQ, programme, department, batch, semester)
 SupervisorProfile (user 1:1, designation, department, researchInterests, maxStudents)
 
 AcademicSession (id, label "2025-26", programme, startDate, endDate, active)
-Milestone       (session, name, dueDate, weightage, sequenceNo)
+Milestone       (session, phase, name, dueDate, weightage, sequenceNo)
         -- Programmes differ ONLY here. Same code, different rows.
         -- BTECH_MTECH_INTEGRATED was added with no logic change at all:
         -- one enum value plus V2 widening the column. That is section 6 working.
+        -- phase: PRE | FINAL. Unique (session, phase, sequenceNo). Seeded as the
+        -- three reviews per semester the guidelines prescribe (§4.12, §5.6).
 
-Topic      (student, title, abstractText, keywords, proposedSupervisor, status)
-Allocation (student, supervisor, session, status, allocatedOn, allocatedBy)
+DissertationPhase  PRE (3rd / 9th semester)  |  FINAL (4th / 10th semester)
+        -- Derived from StudentProfile.semester, never stored on the student and
+        -- never a second session. One academic year holds both phases for two
+        -- cohorts, so the session stays one row and the phase picks which
+        -- milestone and rubric rows a student sees.
+
+Topic      (student, title, abstractText, keywords, researchDomain, objectives,
+            sdgAlignment, expectedOutcomes, proposedSupervisor, status, thesisCode)
+        -- researchDomain, objectives, sdgAlignment, expectedOutcomes are Annexure-1/2.
+        -- expectedOutcomes: Set<ExpectedOutcome> stored as one CSV column, not a
+        -- join table -- a lazy collection would reach the template.
+        -- thesisCode: "MT26-001" / "MI26-001", assigned once on APPROVED, unique.
+Allocation (student, supervisor, coSupervisor?, session, status, allocatedOn, allocatedBy)
         -- unique (student, session). Supervisor capacity enforced in service.
+        -- coSupervisor is optional (guidelines §3.3 want one; seats are counted
+        -- against the primary guide only) and must differ from supervisor.
 
 Submission        (allocation, milestone, currentVersionNo, status, lateFlag)
 SubmissionVersion (submission, versionNo, storagePath, sha256, sizeBytes, submittedAt)
         -- immutable, append-only. Never overwrite.
 
 ReviewComment   (submissionVersion, reviewer, pageNo, body, resolved, createdAt)
-RubricCriterion (session, name, maxMarks, weightage)
+RubricCriterion (session, phase, name, maxMarks, weightage, coCode?, poMapping?)
+        -- Since phase 12 a row's weightage IS its marks (Format 6 sums to 100 for
+        -- PRE, Format 15 to 200 for FINAL), so a total reads as marks out of the
+        -- phase maximum. coCode / poMapping carry the outcome mapping the
+        -- guidelines print beside every row; GradeBand (S/A/B/C at 81/61/41) is
+        -- a function of percentage, not a column.
 Evaluation      (submission, examiner, scores JSONB, total, remarks, submittedAt)
 VivaSchedule    (allocation, scheduledAt, venue, status)
 PanelMember     (vivaSchedule, user, role)
@@ -366,7 +401,7 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/dashboard` | GET | redirect by role | — | — |
 | `/student/dashboard` | GET | `student/dashboard` | `board` | — |
 | `/student/topic` | GET | `student/topic/view` | `topic`, `hasTopic`, `canEdit` | — |
-| `/student/topic/new` | GET | `student/topic/form` | `form`, `supervisors`, `mode` | `TopicForm` |
+| `/student/topic/new` | GET | `student/topic/form` | `form`, `supervisors`, `outcomes`, `mode` | `TopicForm` (+ researchDomain, objectives, sdgAlignment, expectedOutcomes) |
 | `/student/topic/submit` | POST | redirect `/student/topic` | — | `TopicForm` |
 | `/student/guide` | GET | `student/guide` | `allocation`, `history`, `seatsTaken` | `AllocationRequestForm` |
 | `/student/guide/request` | POST | redirect | — | `AllocationRequestForm` |
@@ -386,9 +421,9 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/supervisor/evaluate/{id}` | GET | `supervisor/evaluate-form` | `allocation`, `rubric` | `EvaluationForm` |
 | `/coordinator/dashboard` | GET | `coordinator/dashboard` | `board` | — |
 | `/coordinator/allocate` | GET | `coordinator/allocate` | `board`, `programme` | `AllocationAssignForm` |
-| `/coordinator/allocate/assign` | POST | redirect | — | `AllocationAssignForm` |
+| `/coordinator/allocate/assign` | POST | redirect | — | `AllocationAssignForm` (studentId, supervisorId, coSupervisorId?) |
 | `/coordinator/viva` | GET | `coordinator/viva` | `schedules`, `placed` | `VivaScheduleForm` |
-| `/coordinator/marksheet` | GET | `coordinator/marksheet` | `sheet` | — |
+| `/coordinator/marksheet` | GET | `coordinator/marksheet` | `sheet` (rubric rows carry phase, coCode, poMapping; rows carry percent and band) | — |
 | `/admin/dashboard` | GET | `admin/dashboard` | `board`, `recentTopics` | — |
 | `/admin/users` | GET | `admin/users` | `users`, `students`, `supervisors` | — |
 | `/admin/audit` | GET | `admin/audit` | `entries` | — |
@@ -476,3 +511,84 @@ step leaves an `AuditLog` row.
 3. **Ownership authorisation** — why `hasRole('SUPERVISOR')` is not enough, and how `@authz` fixes it.
 4. **Designed for change** — section 6: workflow in rows not enums, additive migrations, event listeners.
 5. **Bounded AI** — a model that advises and is labelled as such, never one that grades.
+
+---
+
+## 13. Guideline alignment (phases 12–16)
+
+The institute's dissertation guidelines (`docs/m.tech_m.tech int._dissertation_guidelines_v3.md`)
+describe the process the system must carry. This section is the map from mandate to phase, and
+the reasoning for the model choices that were not obvious.
+
+### What the guidelines mandate, and where it lands
+
+| Guideline | Section | Phase |
+|---|---|---|
+| Two phases: Pre-Dissertation (3rd / 9th sem) and Final (4th / 10th sem) | §2.1, ch. 5–6 | 12 |
+| Three review presentations per semester with fixed goals | §4.12, §5.6 | 12 |
+| Annexure-1/2 fields: research domain, objectives, SDG, expected outcomes | Annexures 1–2 | 12 |
+| Supervisor plus co-supervisor | §3.3 | 12 |
+| Rubric per phase with S/A/B/C bands and PO mapping (Format 6, Format 15) | ch. 5, §6.7 | 12 |
+| Thesis ID on every record (`Mint_002` in the forms) | Format 4, Annexures 3–5 | 12 |
+| 50% of internal marks to sit the external viva | §7.1 | 12 shows it, 14 enforces it |
+| Progress report card: meeting, work assigned, work done, remarks, sign | Annexure 4, §2.2.3 | 13 |
+| Seven deliverables and the submission checklist | §2.2.3, Annexure 5 | 14 |
+| Paper 1 / Paper 2 / patent; 1 SCI-Scopus journal or 2 Scopus-IEEE conferences | §4.4, §7.2 | 14 |
+| Plagiarism under 10%, AI-generated content 0% | §8.3 | 14 |
+| DCEC review panel that excludes the student's own guide | §2.2.1, §3.2 | 15 |
+| Supervisor recommendation A/B/C/D and viva questions | Annexure 6 | 15 |
+| Supervisor / title change through a formal request | §4.11 | 16 |
+| Title bank: guides propose three titles each | §4.3, §4.6 | 16 |
+| Format 4 / Format 5 lists for the Director Academics | §4.13, §5.6 | 16 |
+| CO–PO attainment | §1.2, Annexure 6(b) | 16 |
+
+### Phase 12 decisions
+
+**The phase is derived, not stored.** A dissertation phase is a property of where a student is in
+the programme — 3rd or 9th semester is PRE, 4th or 10th is FINAL — so `DissertationPhase.forSemester`
+computes it from `StudentProfile.semester` and `Programme`. Storing it would create a second
+source of truth to drift; splitting the academic session in two would double every session-scoped
+query for no gain, since one academic year genuinely holds both phases for two cohorts. Any other
+semester means the student is not in a dissertation phase yet and sees no milestones or rubric.
+
+**Rubric weightage now means marks.** The guidelines print their rubrics as marks out of 100 (PRE)
+and 200 (FINAL). Keeping weightage as a percentage would have forced a conversion in every view.
+Setting `maxMarks == weightage` makes the weighted total the plain sum of marks while leaving the
+weighting code untouched, so an examiner who scores 28 on a 35-mark row sees 28 in the total.
+The pass line moves from the old 40-absolute convention to 50% of the phase maximum, which is the
+guidelines' minimum internal requirement.
+
+**CO and PO codes are stored verbatim from the guidelines**, including Format 15's `CO4` and `CO5`
+that §1.2 never defines. Copying the document exactly and letting the department correct the rows
+beats silently fixing an inconsistency in their own regulation.
+
+**Thesis code on approval, not on allocation.** Annexures 3–5 print the Thesis ID on the proposal
+and progress forms, which exist before a guide is placed. It is assigned when the topic reaches
+APPROVED: programme prefix (`MT` / `MI`), the two-digit year, a three-digit sequence per prefix.
+A unique index is the last line against a collision; the department is far too small to need a
+sequence table.
+
+**Expected outcomes as one CSV column.** Annexure-2's tick list is a small closed set. A join table
+would be a lazy collection on `Topic`, and rule 1 of `CLAUDE.md` says that must never reach a
+template. `Set<ExpectedOutcome>` through an `AttributeConverter` keeps it a plain column.
+
+**Co-supervisor does not take a seat.** Guidelines count workload against the primary guide, and
+the partial unique index and capacity check stay exactly as they were. The only rule added is that
+the two cannot be the same person.
+
+### What stays different from the reference portal
+
+The guidelines are usually paired with a portal whose public pages advertise a ten-step
+lifecycle, a "double-blind" panel, a locked final-submission button and OTP self-registration.
+This system keeps its own footing on purpose:
+
+- **Evidence over gates.** Where that portal disables a button, this one shows a readiness ledger:
+  which fact satisfied which rule, who verified it, when, and its digest. Phase 14.
+- **Provenance carries the new records.** Logbook countersigns and outcome verifications become
+  chain events; tampering with them breaks the certificate. Nothing in the reference portal is
+  tamper-evident.
+- **Outcome-based reporting.** CO/PO codes on rubric rows make CO attainment a query, which is
+  what the guidelines' Annexure 6(b) and the accreditation paperwork actually ask for.
+- **Accounts come from institute records.** No self-registration; that was cut in phase 1 for a
+  reason that has not changed.
+- **The conflict-of-interest rule is a service constraint**, named plainly. It is not branded.
