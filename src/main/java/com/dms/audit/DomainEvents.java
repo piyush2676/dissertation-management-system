@@ -82,4 +82,22 @@ public final class DomainEvents {
         public String entityType() { return "Submission"; }
         public String newValue() { return excerpt; }
     }
+
+    // ---- logbook ------------------------------------------------------------
+
+    public record LogbookEntryRecorded(String actorEmail, Long entityId, int meetingNo)
+            implements DomainEvent {
+        public String action() { return "LOGBOOK_RECORDED"; }
+        public String entityType() { return "LogbookEntry"; }
+        public String newValue() { return "Meeting " + meetingNo; }
+    }
+
+    /** to is SIGNED or RETURNED; a signed entry also carries its digest so the trail pins it. */
+    public record LogbookEntryDecided(String actorEmail, Long entityId, int meetingNo, String to, String digest)
+            implements DomainEvent {
+        public String action() { return "LOGBOOK_" + to; }
+        public String entityType() { return "LogbookEntry"; }
+        public String oldValue() { return "PENDING"; }
+        public String newValue() { return "Meeting " + meetingNo + (digest == null ? "" : " " + digest); }
+    }
 }
