@@ -385,6 +385,49 @@ class AllocationServiceTest {
     }
 
     @Test
+    void assignWithACoSupervisorRecordsThemWithoutTakingASeat() {
+        StudentProfile student = student(1L);
+        SupervisorProfile guide = supervisor(7L, 5);
+        SupervisorProfile coGuide = supervisor(8L, 3);
+        AcademicSession session = session(30L);
+
+        when(userRepository.findByEmail(COORDINATOR_EMAIL))
+                .thenReturn(Optional.of(user(99L, COORDINATOR_EMAIL, "PG Coordinator")));
+        when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(student));
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.MTECH)).thenReturn(Optional.of(session));
+        when(supervisorProfileRepository.findById(7L)).thenReturn(Optional.of(guide));
+        when(supervisorProfileRepository.findById(8L)).thenReturn(Optional.of(coGuide));
+        when(allocationRepository.existsByStudentAndSessionAndStatusIn(
+                student, session, AllocationStatus.LIVE)).thenReturn(false);
+        when(allocationRepository.countBySupervisorAndSessionAndStatusIn(
+                guide, session, AllocationStatus.OCCUPIES_A_SEAT)).thenReturn(1L);
+        when(topicRepository.findFirstByStudentOrderByCreatedAtDesc(student)).thenReturn(Optional.empty());
+        givenSaveEchoesItsArgument();
+
+        Allocation result = service.assign(COORDINATOR_EMAIL, 1L, 7L, 8L);
+
+        assertSame(coGuide, result.getCoSupervisor());
+        // Only the primary guide's load is read: the co-supervisor is never capacity-checked.
+        verify(allocationRepository, never()).countBySupervisorAndSessionAndStatusIn(
+                eq(coGuide), any(), any());
+    }
+
+    @Test
+    void theCoSupervisorCannotBeTheGuide() {
+        StudentProfile student = student(1L);
+        AcademicSession session = session(30L);
+
+        when(userRepository.findByEmail(COORDINATOR_EMAIL))
+                .thenReturn(Optional.of(user(99L, COORDINATOR_EMAIL, "PG Coordinator")));
+        when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(student));
+        when(academicSessionRepository.findByProgrammeAndActiveTrue(Programme.MTECH)).thenReturn(Optional.of(session));
+        when(supervisorProfileRepository.findById(7L)).thenReturn(Optional.of(supervisor(7L, 5)));
+
+        assertThrows(IllegalArgumentException.class, () -> service.assign(COORDINATOR_EMAIL, 1L, 7L, 7L));
+        verify(allocationRepository, never()).save(any());
+    }
+
+    @Test
     void assignOnTopOfALiveAllocationThrows() {
         StudentProfile student = student(1L);
         AcademicSession session = session(30L);

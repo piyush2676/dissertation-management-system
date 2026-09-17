@@ -37,6 +37,12 @@
                     · requested
                     <span th:text="${#temporals.format(allocation.requestedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</span>
                 </p>
+                <p class="lead" style="margin:4px 0 0" th:if="${allocation.coSupervisor != null}">
+                    Co-supervisor:
+                    <span th:text="${allocation.coSupervisor.user.fullName}">Dr B Pandey</span>
+                    <span class="field-hint" style="display:inline"
+                          th:text="'· ' + ${allocation.coSupervisor.designation} + ', ' + ${allocation.coSupervisor.department}">· Assistant Professor, CSE</span>
+                </p>
             </div>
 
             <span th:if="${allocation.decidedAt != null}" class="stamp"

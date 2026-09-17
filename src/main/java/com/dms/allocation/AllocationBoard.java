@@ -12,7 +12,7 @@ public record AllocationBoard(Programme programme, String sessionLabel, List<Una
             return topicStatus == TopicStatus.APPROVED;
         }
     }
-    public record AllocatedRow(Long allocationId, String rollNo, String studentName, String supervisorName, AllocationStatus status, String topicTitle, Instant decidedAt){
+    public record AllocatedRow(Long allocationId, String rollNo, String studentName, String supervisorName, String coSupervisorName, AllocationStatus status, String topicTitle, Instant decidedAt){
 
     }
     public record SupervisorLoad(Long supervisorId,String name,String designation,long taken,int max){

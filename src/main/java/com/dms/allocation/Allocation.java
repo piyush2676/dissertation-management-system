@@ -29,6 +29,14 @@ public class Allocation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supervisor_id",nullable = false)
     SupervisorProfile supervisor;
+    /**
+     * Guidelines section 3.3 want a co-supervisor beside the primary guide. Optional here,
+     * because a department short of Ph.D. faculty cannot always find one, and it
+     * takes no seat: workload is counted against the primary guide alone.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "co_supervisor_id")
+    SupervisorProfile coSupervisor;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id")
     Topic topic;

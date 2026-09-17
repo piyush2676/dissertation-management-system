@@ -71,9 +71,11 @@ public class CoordinatorAllocationController {
         }
 
         try {
-            allocationService.assign(authentication.getName(), form.getStudentId(), form.getSupervisorId());
-            redirectAttributes.addFlashAttribute("success", "Guide assigned.");
-        } catch (CapacityExceededException | IllegalStateException ex) {
+            allocationService.assign(authentication.getName(), form.getStudentId(), form.getSupervisorId(),
+                    form.getCoSupervisorId());
+            redirectAttributes.addFlashAttribute("success",
+                    form.getCoSupervisorId() == null ? "Guide assigned." : "Guide and co-supervisor assigned.");
+        } catch (CapacityExceededException | IllegalStateException | IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         } catch (NotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", "That student or guide no longer exists.");

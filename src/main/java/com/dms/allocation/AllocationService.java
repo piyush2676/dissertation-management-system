@@ -146,6 +146,15 @@ public class AllocationService {
     }
 
     public Allocation assign(String coordinatorEmail, Long studentId, Long supervisorId) {
+        return assign(coordinatorEmail, studentId, supervisorId, null);
+    }
+
+    /**
+     * Coordinator placement, optionally with a co-supervisor. The co-supervisor is
+     * not capacity-checked -- the guidelines count workload against the primary
+     * guide -- but cannot be the primary guide, which the database also refuses.
+     */
+    public Allocation assign(String coordinatorEmail, Long studentId, Long supervisorId, Long coSupervisorId) {
         User coordinator = userRepository.findByEmail(coordinatorEmail)
                 .orElseThrow(() -> new NotFoundException("User " + coordinatorEmail + " not found"));
 
@@ -156,6 +165,15 @@ public class AllocationService {
 
         SupervisorProfile supervisor = supervisorProfileRepository.findById(supervisorId)
                 .orElseThrow(() -> new NotFoundException("Supervisor", supervisorId));
+
+        SupervisorProfile coSupervisor = null;
+        if (coSupervisorId != null) {
+            if (coSupervisorId.equals(supervisorId)) {
+                throw new IllegalArgumentException("The co-supervisor must be a different person from the guide.");
+            }
+            coSupervisor = supervisorProfileRepository.findById(coSupervisorId)
+                    .orElseThrow(() -> new NotFoundException("Supervisor", coSupervisorId));
+        }
 
         if (allocationRepository.existsByStudentAndSessionAndStatusIn(
                 student, session, AllocationStatus.LIVE)) {
@@ -173,6 +191,7 @@ public class AllocationService {
         Allocation allocation = new Allocation();
         allocation.setStudent(student);
         allocation.setSupervisor(supervisor);
+        allocation.setCoSupervisor(coSupervisor);
         allocation.setSession(session);
         allocation.setTopic(topic);
         allocation.setStatus(AllocationStatus.COORDINATOR_ASSIGNED);
@@ -282,6 +301,7 @@ public class AllocationService {
                         student.getRollNo(),
                         student.getUser().getFullName(),
                         allocation.getSupervisor().getUser().getFullName(),
+                        allocation.getCoSupervisor() == null ? null : allocation.getCoSupervisor().getUser().getFullName(),
                         allocation.getStatus(),
                         allocation.getTopic() == null ? null : allocation.getTopic().getTitle(),
                         allocation.getDecidedAt()));

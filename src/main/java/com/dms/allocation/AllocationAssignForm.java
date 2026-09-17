@@ -20,4 +20,7 @@ public class AllocationAssignForm {
 
     @NotNull(message = "Choose a guide")
     private Long supervisorId;
+
+    /** Optional. The service refuses the same person twice. */
+    private Long coSupervisorId;
 }
