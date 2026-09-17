@@ -3,6 +3,7 @@ package com.dms.notification;
 import com.dms.allocation.Allocation;
 import com.dms.allocation.AllocationRepository;
 import com.dms.audit.DomainEvents;
+import com.dms.logbook.LogbookEntryRepository;
 import com.dms.submission.Submission;
 import com.dms.submission.SubmissionRepository;
 import com.dms.topic.Topic;
@@ -34,6 +35,7 @@ public class NotificationListener {
     private final TopicRepository topicRepository;
     private final AllocationRepository allocationRepository;
     private final SubmissionRepository submissionRepository;
+    private final LogbookEntryRepository logbookRepository;
 
     // ---- topic --------------------------------------------------------------
 
@@ -158,6 +160,30 @@ public class NotificationListener {
                         "New comment on your work",
                         event.newValue(),
                         "/student/submissions/" + submission.getId()));
+    }
+
+    // ---- logbook ------------------------------------------------------------
+
+    @EventListener
+    public void on(DomainEvents.LogbookEntryRecorded event) {
+        logbookRepository.findWithGraphById(event.entityId()).ifPresent(entry ->
+                notifications.notify(entry.getAllocation().getSupervisor().getUser(),
+                        NotificationType.LOGBOOK_RECORDED,
+                        "Logbook entry to countersign",
+                        studentName(entry.getAllocation()) + " recorded meeting " + entry.getMeetingNo() + ".",
+                        "/supervisor/logbook"));
+    }
+
+    @EventListener
+    public void on(DomainEvents.LogbookEntryDecided event) {
+        logbookRepository.findWithGraphById(event.entityId()).ifPresent(entry ->
+                notifications.notify(entry.getAllocation().getStudent().getUser(),
+                        NotificationType.LOGBOOK_DECIDED,
+                        "Meeting " + entry.getMeetingNo() + " was " + readable(event.to()),
+                        entry.getSupervisorRemarks() == null
+                                ? "Your guide countersigned the entry."
+                                : entry.getSupervisorRemarks(),
+                        "/student/logbook"));
     }
 
     // ---- helpers ------------------------------------------------------------
