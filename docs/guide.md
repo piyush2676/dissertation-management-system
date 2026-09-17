@@ -239,6 +239,12 @@ Evaluation      (submission, examiner, scores JSONB, total, remarks, submittedAt
 VivaSchedule    (allocation, scheduledAt, venue, status)
 PanelMember     (vivaSchedule, user, role)
 Notification    (recipient, type, payload, readAt, createdAt)
+LogbookEntry    (allocation, meetingNo, meetingAt, workAssigned, workCompleted, challenges?,
+                 status, supervisorRemarks?, signedBy?, signedAt?, entryDigest?)
+        -- Annexure-4, one row per guide meeting. Student writes, guide countersigns.
+        -- unique (allocation, meetingNo). On SIGNED the row is frozen and its digest
+        -- (SHA-256 over the fields above) is stored; the certificate's facts list
+        -- every signed digest, so editing a signed row breaks the certificate.
 AuditLog        (actor, action, entityType, entityId, oldValue, newValue, at)
 ```
 
@@ -264,6 +270,9 @@ Allocation:  REQUESTED -> ACCEPTED     (capacity permitting)
 Submission:  DRAFT -> SUBMITTED -> UNDER_REVIEW -> APPROVED
                                                 -> REVISION_REQUESTED -> SUBMITTED (new version)
                                                 -> REJECTED
+
+Logbook:     PENDING -> SIGNED                  (terminal; the row is now sealed)
+                     -> RETURNED -> PENDING     (student corrects and re-submits)
 ```
 
 ---
@@ -429,6 +438,13 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/admin/audit` | GET | `admin/audit` | `entries` | — |
 | `/files/submissions/versions/{id}` | GET | file download | — | — |
 | `/review/comments` | POST | redirect | — | `ReviewCommentForm` |
+| `/student/logbook` | GET | `student/logbook` | `board`, `form`, `mode` | `LogbookEntryForm` |
+| `/student/logbook` | POST | redirect `/student/logbook` | — | `LogbookEntryForm` |
+| `/student/logbook/{id}/edit` | GET | `student/logbook` | `board`, `form`, `mode=edit` | `LogbookEntryForm` |
+| `/student/logbook/{id}` | POST | redirect | — | `LogbookEntryForm` |
+| `/supervisor/logbook` | GET | `supervisor/logbook` | `queue`, `students`, `form` | `LogbookSignForm` |
+| `/supervisor/logbook/{id}/sign` | POST | redirect `/supervisor/logbook` | — | `LogbookSignForm` |
+| `/supervisor/logbook/student/{allocationId}` | GET | `supervisor/logbook-student` | `board` | — |
 
 Two routes sit outside the role prefixes on purpose. A submission file and a comment
 thread are both legitimately touched by the student, their guide, the coordinator and the
@@ -442,8 +458,8 @@ templates/
 ├── layout/      base, _navbar, _flash, _footer, _pagehero, _versions, _comments
 ├── home.html
 ├── auth/        login
-├── student/     dashboard, topic/form, topic/view, guide, submissions, submission, result
-├── supervisor/  dashboard, topics, requests, submissions, submission, evaluate, evaluate-form
+├── student/     dashboard, topic/form, topic/view, guide, submissions, submission, result, logbook
+├── supervisor/  dashboard, topics, requests, submissions, submission, evaluate, evaluate-form, logbook, logbook-student
 ├── coordinator/ dashboard, allocate, viva, marksheet
 ├── admin/       dashboard, users, audit
 └── error/       403, 404, 409, 500
@@ -575,6 +591,28 @@ template. `Set<ExpectedOutcome>` through an `AttributeConverter` keeps it a plai
 **Co-supervisor does not take a seat.** Guidelines count workload against the primary guide, and
 the partial unique index and capacity check stay exactly as they were. The only rule added is that
 the two cannot be the same person.
+
+### Phase 13 decisions
+
+**One row per meeting, not one per week.** Annexure-4 is a meeting register — meeting number,
+date, work assigned, work done, remarks, signature — and §2.2.2's weekly update is the same
+information on a cadence. The entry is the meeting; the cadence is a number on the dashboard
+(days since the last signed entry), not a second table. A department that wants strict weeks
+tightens a threshold, not the model.
+
+**The student writes, the guide signs.** The guide never edits the student's text; they sign it
+or return it with a remark, and a returned entry goes back to the student to correct. That is
+the paper form's division of labour and it keeps authorship unambiguous when the row is sealed.
+
+**Sealing is a digest on the row, then a line in the certificate.** On SIGNED the entry's fields
+are hashed into `entryDigest` and the row is frozen by the state machine. `ProvenanceService`
+adds a `logbook` fact — `meetingNo:digest` for every signed entry — but **only when there is at
+least one**, so certificates issued before this phase, over dissertations that never had a
+logbook, still verify. A certificate issued before a later entry is signed will read CHANGED,
+which is the correct answer: the record moved after it was sealed.
+
+**Hashing moved to `common.Digests`.** `ProvenanceService.digestOf` delegates to it so the
+logbook can seal rows without the logbook package depending on provenance.
 
 ### What stays different from the reference portal
 
