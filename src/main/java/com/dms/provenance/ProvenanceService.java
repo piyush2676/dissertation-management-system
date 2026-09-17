@@ -4,6 +4,7 @@ import com.dms.allocation.Allocation;
 import com.dms.allocation.AllocationRepository;
 import com.dms.audit.AuditLog;
 import com.dms.audit.AuditLogRepository;
+import com.dms.common.Digests;
 import com.dms.common.NotFoundException;
 import com.dms.evaluation.Evaluation;
 import com.dms.evaluation.EvaluationRepository;
@@ -18,12 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +40,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class ProvenanceService {
-
-    private static final String SEP = "";
 
     private final AllocationRepository allocationRepository;
     private final AuditLogRepository auditLogRepository;
@@ -160,21 +155,8 @@ public class ProvenanceService {
         return digestOf(factsFor(allocation));
     }
 
-    /**
-     * Joined with a unit separator, which cannot occur in any of these values, so
-     * two different fact sets can never produce the same canonical string.
-     */
+    /** Delegates to the shared implementation so the logbook seals rows the same way. */
     public static String digestOf(Map<String, String> facts) {
-        StringBuilder canonical = new StringBuilder();
-        facts.forEach((key, value) -> canonical.append(key).append('=')
-                .append(value == null ? "" : value).append(SEP));
-
-        try {
-            MessageDigest sha = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(
-                    sha.digest(canonical.toString().getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException ex) {
-            throw new IllegalStateException("SHA-256 is required but unavailable", ex);
-        }
+        return Digests.sha256Of(facts);
     }
 }
