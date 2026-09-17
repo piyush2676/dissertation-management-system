@@ -22,7 +22,7 @@ Owner: Piyush Pandey. Repo: `github.com/piyush2676/dissertation-management-syste
 | Java | 21 | |
 | Spring Boot | 4.1.0 | starters renamed vs 3.x — see below |
 | PostgreSQL | 18 | database `dms`, service `postgresql-x64-18` |
-| Flyway | via `spring-boot-starter-flyway` | currently at **V14** |
+| Flyway | via `spring-boot-starter-flyway` | currently at **V15** |
 | Thymeleaf | + `thymeleaf-extras-springsecurity6` | |
 | Spring AI | 2.0.1 | Gemini via Google AI Studio; off unless a key is set |
 | Build | Maven wrapper (`.\mvnw.cmd`) | no global Maven |
@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-17)
 
-Phases 0–12 complete, verified in a browser, 212 tests green, 133 commits. Flyway at V14.
+Phases 0–13 complete, verified in a browser, 237 tests green, 141 commits. Flyway at V15.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -59,8 +59,8 @@ reporting, no self-registration, no borrowed branding.
 | 10 | Email confirmation, password reset | done — mail optional |
 | 11 | Verifiable provenance: timeline, certificate, public verify | done |
 | 12 | Guideline alignment: dissertation phase, review milestones, marks-based rubric with bands + CO/PO, Annexure-1 fields, thesis code, co-supervisor | done |
-| 13 | Logbook (Annexure-4), guide countersign sealed in provenance | next |
-| 14 | Outcomes registry, plagiarism fields, deliverable checklist, readiness ledger, 50% viva gate | planned |
+| 13 | Logbook (Annexure-4): student records meetings, guide countersigns, signed rows digested and listed by the certificate | done |
+| 14 | Outcomes registry, plagiarism fields, deliverable checklist, readiness ledger, 50% viva gate | next |
 | 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | planned |
 | 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | planned |
 
@@ -138,7 +138,7 @@ ships inside the overlap check).
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (212 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (237 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -206,6 +206,7 @@ com.dms
 ├── evaluation/   RubricCriterion, Evaluation, EvaluationService, MarkSheet, controllers
 ├── review/       ReviewComment, ReviewService, ReviewCommentController
 ├── security/     SecurityConfig, CustomUserDetailsService, AuthzService
+├── logbook/      LogbookEntry, LogbookEntryStatus, LogbookService, LogbookBoard, controllers
 ├── session/      AcademicSession, Milestone, DissertationPhase
 ├── storage/      StorageService, LocalDiskStorageService, StoredFile
 ├── submission/   Submission, SubmissionVersion, SubmissionStatus, SubmissionService, controllers
@@ -240,8 +241,9 @@ These are load-bearing. Violating one produces a runtime failure, not a compile 
    then re-run. Only valid when the migration has never left this machine.
 5. **State machines are declarative** — one `Map<State, Set<State>>` per aggregate, validated in
    the service. Never scatter `if` checks. Five exist: `TopicStatus`, `AllocationStatus`,
-   `SubmissionStatus`, `VivaStatus` (+ the topic/allocation pairs above). `DissertationPhase`
-   is an enum but not a state machine — nothing transitions; it is a pure function of semester.
+   `SubmissionStatus`, `VivaStatus`, `LogbookEntryStatus` (+ the topic/allocation pairs above).
+   `DissertationPhase` is an enum but not a state machine — nothing transitions; it is a pure
+   function of semester.
 6. **Compare enums with `==`, not `.equals()`.** Several of these fields are legitimately null
    (a student with no topic yet). `.equals()` on a null receiver NPEs — this shipped once.
 7. **CSRF stays on.** Thymeleaf injects the token into `th:action` forms. Do not switch a form
@@ -266,6 +268,12 @@ These are load-bearing. Violating one produces a runtime failure, not a compile 
 - Evaluation totals are weighted: each criterion contributes its weight scaled by the fraction
   of its own maximum earned. Rescoring updates the examiner's row in place.
 - Guide comments; **student** resolves. Not the other way round.
+- Logbook: **student** writes, **guide** signs or returns. The guide never edits the student's
+  text. A SIGNED row is terminal and digested; `ProvenanceService.factsFor` adds the `logbook`
+  fact **only when at least one row is signed**, so pre-phase-13 certificates still verify and a
+  meeting signed after issue makes the certificate read CHANGED (the coordinator reissues).
+- The canonical hash lives in `common.Digests`; `ProvenanceService.digestOf` delegates. Do not
+  add a second SHA-256 helper.
 
 ---
 
@@ -321,4 +329,4 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
-| `src/main/resources/db/migration/` | V1–V14 |
+| `src/main/resources/db/migration/` | V1–V15 |

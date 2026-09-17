@@ -23,12 +23,12 @@ Built, verified in a browser, and covered by tests:
 | 10 | Email confirmation, password reset | done — mail optional |
 | 11 | Verifiable provenance: timeline, certificate, public verify | done |
 | 12 | Guideline alignment: dissertation phases, review milestones, marks-based rubric with CO/PO map, Annexure-1 fields, thesis code, co-supervisor | done |
-| 13 | Logbook (Annexure-4) with guide countersign sealed into the provenance chain | planned |
+| 13 | Logbook (Annexure-4) with guide countersign sealed into the provenance chain | done |
 | 14 | Outcomes registry, plagiarism fields, deliverable checklist, readiness ledger, 50% viva gate | planned |
 | 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | planned |
 | 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | planned |
 
-`.\mvnw.cmd test` — 212 tests, green. Flyway at V14. `scripts/acceptance.sh` — 20 assertions.
+`.\mvnw.cmd test` — 237 tests, green. Flyway at V15. `scripts/acceptance.sh` — 20 assertions.
 
 **Phases 12–16 follow one source document:** `docs/m.tech_m.tech int._dissertation_guidelines_v3.md`,
 the institute's dissertation guidelines for M.Tech / M.Tech Int. from 2025-26. Section 13 below

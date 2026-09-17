@@ -141,6 +141,21 @@ Now sign in as `guide2@college.edu` / `guide123` and search **`Avika`** again.
 > retrieve a row for another guide's student. Search is a classic way to leak records sideways,
 > so it gets the same ownership rules the pages do."
 
+### 6b · The logbook — 1 min
+
+Student window: **Logbook** → record a meeting (date, what the guide assigned, what got done).
+
+Guide window: **Logbook** → the row is in the queue → **Return** it with a remark. Student window:
+the row is back, marked RETURNED with the remark → **Correct and resubmit**. Guide window:
+**Countersign**.
+
+> "This is Annexure-4 of the guidelines — the progress report card — as data instead of a
+> photocopied register. The student writes, the guide signs; the guide never edits the
+> student's words. The moment it is signed the row is frozen and its SHA-256 is stored. Watch
+> what that does to the certificate in a minute."
+
+Student window: **Print progress report card** — the sealed digest sits in the signature column.
+
 ### 7 · Evaluation, viva and the mark sheet — 2 min
 
 Guide window: **Evaluate** → open the student → score each criterion → submit.
@@ -164,7 +179,8 @@ Coordinator window: **Mark sheet** → **Provenance** on any row.
 
 > "This dissertation's entire life, rebuilt from the audit trail. Proposed, approved by whom
 > and when, guide accepted, every version filed with the digest of its bytes, revision
-> requested, marks, viva. None of it was typed by hand and none of it can be edited."
+> requested, every countersigned meeting with its digest, marks, viva. None of it was typed
+> by hand and none of it can be edited."
 
 - **Issue certificate** → **Download PDF**.
 - Open the PDF. Point at the digest and the QR code.
@@ -181,6 +197,10 @@ UPDATE evaluations SET total = 95.00 WHERE allocation_id = <id>;
 
 Reload the verify page. It now reports **the register has changed since this was issued**.
 Put the mark back and reload again: it passes.
+
+The same happens if a countersigned logbook row is edited in the database, or if a new meeting
+is countersigned after the certificate was issued — the record moved, so the seal says so, and
+the coordinator reissues.
 
 > "Tamper-evident, not tamper-proof. It cannot stop someone editing the database. It makes
 > the edit impossible to hide."
