@@ -52,6 +52,19 @@
             <span class="stat-value" th:text="${board.openComments}">0</span>
             <span class="stat-label">Open feedback items</span>
         </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.meetingsSigned}">0</span>
+            <span class="stat-label">Meetings countersigned</span>
+        </div>
+    </div>
+
+    <div th:if="${board.hasGuide() and board.logbookLapsed}" class="alert alert-info reveal">
+        <strong>Logbook due.</strong>
+        <span th:if="${board.daysSinceLastMeeting == null}">No meeting with your guide has been recorded yet.</span>
+        <span th:if="${board.daysSinceLastMeeting != null}"
+              th:text="|Last recorded meeting was ${board.daysSinceLastMeeting} days ago; the guidelines expect one a week.|">
+            Last recorded meeting was 9 days ago.</span>
+        <a th:href="@{/student/logbook}" class="deadline-action">Record it &rarr;</a>
     </div>
 
     <div th:if="${board.topicTitle != null}" class="hero reveal">

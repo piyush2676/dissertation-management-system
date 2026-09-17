@@ -36,6 +36,10 @@
             <span class="stat-label">Submissions to read</span>
         </div>
         <div class="stat">
+            <span class="stat-value" th:text="${board.pendingLogbookEntries}">0</span>
+            <span class="stat-label">Logbook rows to sign</span>
+        </div>
+        <div class="stat">
             <span class="stat-value"
                   th:text="|${board.studentsSupervised} / ${board.capacity}|">0 / 5</span>
             <span class="stat-label">

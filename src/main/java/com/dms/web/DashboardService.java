@@ -6,6 +6,8 @@ import com.dms.allocation.AllocationRepository;
 import com.dms.allocation.AllocationService;
 import com.dms.allocation.AllocationStatus;
 import com.dms.audit.AuditLogRepository;
+import com.dms.logbook.LogbookBoard;
+import com.dms.logbook.LogbookService;
 import com.dms.review.ReviewService;
 import com.dms.submission.StudentSubmissionBoard;
 import com.dms.submission.SubmissionRepository;
@@ -37,6 +39,7 @@ public class DashboardService {
     private final AllocationService allocationService;
     private final SubmissionService submissionService;
     private final ReviewService reviewService;
+    private final LogbookService logbookService;
 
     private final TopicRepository topicRepository;
     private final AllocationRepository allocationRepository;
@@ -51,6 +54,7 @@ public class DashboardService {
         Optional<Topic> topic = topicService.currentTopicFor(email);
         Optional<Allocation> allocation = allocationService.currentAllocationFor(email);
         StudentSubmissionBoard board = submissionService.boardFor(email);
+        LogbookBoard logbook = logbookService.boardFor(email);
 
         String nextMilestone = null;
         var nextDue = board.rows().stream()
@@ -72,7 +76,11 @@ public class DashboardService {
                 board.rows().stream().filter(StudentSubmissionBoard.MilestoneRow::awaitingGuide).count(),
                 reviewService.openCountForStudent(email),
                 nextMilestone,
-                nextDue.map(StudentSubmissionBoard.MilestoneRow::dueDate).orElse(null));
+                nextDue.map(StudentSubmissionBoard.MilestoneRow::dueDate).orElse(null),
+                logbook.signedCount(),
+                logbook.pendingCount(),
+                logbook.daysSinceLastMeeting(),
+                logbook.hasAllocation() && logbook.cadenceLapsed());
     }
 
     public Dashboards.Supervisor supervisor(String email) {
@@ -85,6 +93,7 @@ public class DashboardService {
                 topicService.pendingFor(email).size(),
                 allocationService.inboxFor(email).size(),
                 submissionService.pendingCountFor(email),
+                logbookService.pendingCountFor(email),
                 supervised,
                 profile == null ? 0 : profile.getMaxStudents());
     }

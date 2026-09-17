@@ -23,7 +23,11 @@ public final class Dashboards {
             long withGuide,
             long openComments,
             String nextMilestone,
-            LocalDate nextDueDate) {
+            LocalDate nextDueDate,
+            long meetingsSigned,
+            long meetingsAwaitingGuide,
+            Long daysSinceLastMeeting,
+            boolean logbookLapsed) {
 
         public boolean hasTopic() {
             return topicStatus != null;
@@ -52,6 +56,7 @@ public final class Dashboards {
             long pendingTopics,
             long pendingGuideRequests,
             long pendingSubmissions,
+            long pendingLogbookEntries,
             long studentsSupervised,
             int capacity) {
 
@@ -64,7 +69,7 @@ public final class Dashboards {
         }
 
         public long totalWaiting() {
-            return pendingTopics + pendingGuideRequests + pendingSubmissions;
+            return pendingTopics + pendingGuideRequests + pendingSubmissions + pendingLogbookEntries;
         }
     }
 

@@ -76,7 +76,7 @@ class SecurityRulesTest {
     @WithMockUser(roles = "SUPERVISOR")
     void aGuideReachesTheSupervisorDashboard() throws Exception {
         when(dashboardService.supervisor(anyString()))
-                .thenReturn(new Dashboards.Supervisor(0, 0, 0, 0, 5));
+                .thenReturn(new Dashboards.Supervisor(0, 0, 0, 0, 0, 5));
         mvc.perform(get("/supervisor/dashboard")).andExpect(status().isOk());
     }
 
@@ -127,7 +127,7 @@ class SecurityRulesTest {
     @WithMockUser(roles = {"SUPERVISOR", "REVIEWER"})
     void aGuideWhoIsAlsoAReviewerStillReachesTheSupervisorArea() throws Exception {
         when(dashboardService.supervisor(anyString()))
-                .thenReturn(new Dashboards.Supervisor(0, 0, 0, 0, 5));
+                .thenReturn(new Dashboards.Supervisor(0, 0, 0, 0, 0, 5));
         mvc.perform(get("/supervisor/dashboard")).andExpect(status().isOk());
     }
 
@@ -161,6 +161,6 @@ class SecurityRulesTest {
     }
 
     private Dashboards.Student studentBoard() {
-        return new Dashboards.Student("2026-27", null, null, null, null, 0, 0, 0, 0, 0, null, null);
+        return new Dashboards.Student("2026-27", null, null, null, null, 0, 0, 0, 0, 0, null, null, 0, 0, null, false);
     }
 }
