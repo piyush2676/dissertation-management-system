@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.Year;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,8 +63,16 @@ public class TopicService {
         SupervisorProfile sup = supervisorProfileRepository.findById(form.getProposedSupervisorId())
                 .orElseThrow(() -> new NotFoundException("Supervisor", form.getProposedSupervisorId()));
         topic.setTitle(form.getTitle().strip());
+        topic.setResearchDomain(form.getResearchDomain().strip());
         topic.setAbstractText(form.getAbstractText().strip());
-        topic.setKeywords(form.getKeywords() == null ? null : form.getKeywords().strip());
+        topic.setObjectives(form.getObjectives().strip());
+        topic.setSdgAlignment(blankToNull(form.getSdgAlignment()));
+        EnumSet<ExpectedOutcome> outcomes = EnumSet.noneOf(ExpectedOutcome.class);
+        if (form.getExpectedOutcomes() != null) {
+            outcomes.addAll(form.getExpectedOutcomes());
+        }
+        topic.setExpectedOutcomes(outcomes);
+        topic.setKeywords(blankToNull(form.getKeywords()));
         topic.setProposedSupervisor(sup);
         return topicRepository.save(topic);
 
@@ -104,10 +114,32 @@ public class TopicService {
         topic.setDecisionReason(target == TopicStatus.APPROVED ? null : form.getReason().strip());
         topic.setDecidedBy(sup.getUser());
         topic.setDecidedAt(Instant.now());
+        if (target == TopicStatus.APPROVED && topic.getThesisCode() == null) {
+            topic.setThesisCode(nextThesisCode(topic.getStudent().getProgramme()));
+        }
         Topic decided = topicRepository.save(topic);
         events.publishEvent(new DomainEvents.TopicDecided(
                 supervisorEmail, decided.getId(), from.name(), target.name()));
         return decided;
+    }
+
+    /**
+     * "MT26-001": programme prefix, two-digit year, then the next number under that
+     * prefix. Format 4 of the guidelines prints a Thesis ID on every list, and
+     * Annexures 3 to 5 on every form, so it is assigned the moment the title is
+     * approved. A count-plus-one is not race-safe in theory; the unique index on
+     * the column is the last line, and the department approves a handful of
+     * titles a year, not a handful a second.
+     */
+    String nextThesisCode(Programme programme) {
+        String prefix = (programme == Programme.BTECH_MTECH_INTEGRATED ? "MI" : "MT")
+                + String.format("%02d", Year.now().getValue() % 100) + "-";
+        long next = topicRepository.countByThesisCodeStartingWith(prefix) + 1;
+        return prefix + String.format("%03d", next);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     private StudentProfile student(String email) {

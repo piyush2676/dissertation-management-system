@@ -28,6 +28,12 @@ public class StudentTopicController {
         return topicService.selectableSupervisors();
     }
 
+    /** Annexure-2's tick list, for the checkboxes on the form. */
+    @ModelAttribute("outcomes")
+    public ExpectedOutcome[] outcomes() {
+        return ExpectedOutcome.values();
+    }
+
     @ModelAttribute("editableStatuses")
     public Set<TopicStatus> editableStatuses() {
         return Set.of(TopicStatus.DRAFT, TopicStatus.CHANGES_REQUESTED);

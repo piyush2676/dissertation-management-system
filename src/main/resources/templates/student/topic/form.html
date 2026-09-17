@@ -32,7 +32,7 @@
 
         <div class="form-sheet-head">
             <h2 lang="hi">शोध विषय आवेदन</h2>
-            <p lang="en">Form DMS/T-1 &middot; Topic proposal</p>
+            <p lang="en">Annexure-1 &middot; Thesis title proposal</p>
         </div>
 
         <form class="form-sheet" th:action="@{/student/topic/save}" th:object="${form}"
@@ -45,6 +45,15 @@
                 <input type="text" id="title" th:field="*{title}" maxlength="255"
                        placeholder="Adaptive load balancing for edge inference clusters">
                 <span class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Title error</span>
+            </div>
+
+            <div class="field">
+                <label for="researchDomain">Research domain</label>
+                <input type="text" id="researchDomain" th:field="*{researchDomain}" maxlength="128"
+                       placeholder="Edge computing / distributed systems">
+                <span class="field-error" th:if="${#fields.hasErrors('researchDomain')}"
+                      th:errors="*{researchDomain}">Domain error</span>
+                <span class="field-hint">The area the department files this under. One line.</span>
             </div>
 
             <div class="field">
@@ -69,6 +78,37 @@
                 <span class="field-error" th:if="${#fields.hasErrors('abstractText')}"
                       th:errors="*{abstractText}">Abstract error</span>
                 <span class="field-hint">Between 120 and 4000 characters.</span>
+            </div>
+
+            <div class="field">
+                <label for="objectives">Research objectives</label>
+                <textarea id="objectives" th:field="*{objectives}" rows="5"
+                          placeholder="Two to four objectives, each one a thing the work will demonstrably deliver."></textarea>
+                <span class="field-error" th:if="${#fields.hasErrors('objectives')}"
+                      th:errors="*{objectives}">Objectives error</span>
+                <span class="field-hint">Between 40 and 2000 characters.</span>
+            </div>
+
+            <fieldset class="field" style="border:0; padding:0; margin:0 0 18px">
+                <legend style="font-weight:600; margin-bottom:6px">Expected outcomes</legend>
+                <div style="display:flex; flex-wrap:wrap; gap:10px 22px">
+                    <label th:each="o : ${outcomes}" style="display:flex; align-items:center; gap:6px; font-weight:400">
+                        <input type="checkbox" th:field="*{expectedOutcomes}" th:value="${o}">
+                        <span th:text="${o.label}">Research paper publication</span>
+                    </label>
+                </div>
+                <span class="field-error" th:if="${#fields.hasErrors('expectedOutcomes')}"
+                      th:errors="*{expectedOutcomes}">Outcome error</span>
+                <span class="field-hint">Tick all that apply. At least one.</span>
+            </fieldset>
+
+            <div class="field">
+                <label for="sdgAlignment">Sustainable development goal</label>
+                <input type="text" id="sdgAlignment" th:field="*{sdgAlignment}" maxlength="255"
+                       placeholder="SDG 9 - Industry, innovation and infrastructure">
+                <span class="field-error" th:if="${#fields.hasErrors('sdgAlignment')}"
+                      th:errors="*{sdgAlignment}">SDG error</span>
+                <span class="field-hint">Optional. Which goal the work speaks to, if any.</span>
             </div>
 
             <div class="field">

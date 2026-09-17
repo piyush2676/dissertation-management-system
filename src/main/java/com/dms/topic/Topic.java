@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.EnumSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "topics")
@@ -28,6 +30,19 @@ public class Topic {
     String abstractText;
     @Column(length = 512)
     String keywords;
+    // ---- Annexure-1 / Annexure-2 -------------------------------------------
+    @Column(name = "research_domain", length = 128)
+    String researchDomain;
+    @Column(columnDefinition = "TEXT")
+    String objectives;
+    @Column(name = "sdg_alignment", length = 255)
+    String sdgAlignment;
+    @Convert(converter = ExpectedOutcomesConverter.class)
+    @Column(name = "expected_outcomes", length = 255)
+    Set<ExpectedOutcome> expectedOutcomes = EnumSet.noneOf(ExpectedOutcome.class);
+    /** "MT26-001": assigned once, on approval, and printed on every later form. */
+    @Column(name = "thesis_code", length = 16)
+    String thesisCode;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proposed_supervisor_id")
     SupervisorProfile proposedSupervisor;

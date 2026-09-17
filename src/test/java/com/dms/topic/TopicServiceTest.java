@@ -16,13 +16,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.Year;
+import java.util.EnumSet;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -135,6 +140,83 @@ class TopicServiceTest {
         assertNull(result.getDecisionReason(), "an approval carries no reason");
         assertEquals(guide.getUser(), result.getDecidedBy());
         assertNotNull(result.getDecidedAt());
+    }
+
+    @Test
+    void approvalAssignsAThesisCodeUnderTheProgrammePrefix() {
+        SupervisorProfile guide = supervisor(7L, GUIDE_EMAIL);
+        Topic topic = topic(10L, student(1L, STUDENT_EMAIL), TopicStatus.PROPOSED, 1);
+        topic.setProposedSupervisor(guide);
+
+        when(topicRepository.findById(10L)).thenReturn(Optional.of(topic));
+        when(supervisorProfileRepository.findByUserEmail(GUIDE_EMAIL)).thenReturn(Optional.of(guide));
+        when(topicRepository.countByThesisCodeStartingWith(startsWith("MT"))).thenReturn(4L);
+        givenSaveEchoesItsArgument();
+
+        Topic result = service.decide(GUIDE_EMAIL, 10L, decisionForm(TopicStatus.APPROVED, null));
+
+        String yy = String.format("%02d", Year.now().getValue() % 100);
+        assertEquals("MT" + yy + "-005", result.getThesisCode(), "fifth approved M.Tech title this year");
+    }
+
+    @Test
+    void theIntegratedProgrammeGetsItsOwnPrefix() {
+        StudentProfile student = student(1L, STUDENT_EMAIL);
+        student.setProgramme(Programme.BTECH_MTECH_INTEGRATED);
+        when(topicRepository.countByThesisCodeStartingWith(startsWith("MI"))).thenReturn(0L);
+
+        assertTrue(service.nextThesisCode(student.getProgramme()).startsWith("MI"));
+        assertTrue(service.nextThesisCode(student.getProgramme()).endsWith("-001"));
+    }
+
+    @Test
+    void aChangeRequestOrRejectionAssignsNoThesisCode() {
+        SupervisorProfile guide = supervisor(7L, GUIDE_EMAIL);
+        Topic topic = topic(10L, student(1L, STUDENT_EMAIL), TopicStatus.PROPOSED, 1);
+        topic.setProposedSupervisor(guide);
+
+        when(topicRepository.findById(10L)).thenReturn(Optional.of(topic));
+        when(supervisorProfileRepository.findByUserEmail(GUIDE_EMAIL)).thenReturn(Optional.of(guide));
+        givenSaveEchoesItsArgument();
+
+        Topic result = service.decide(GUIDE_EMAIL, 10L, decisionForm(TopicStatus.REJECTED, "out of scope"));
+
+        assertNull(result.getThesisCode());
+        verify(topicRepository, never()).countByThesisCodeStartingWith(anyString());
+    }
+
+    @Test
+    void anApprovalAfterResubmissionKeepsTheCodeAlreadyIssued() {
+        SupervisorProfile guide = supervisor(7L, GUIDE_EMAIL);
+        Topic topic = topic(10L, student(1L, STUDENT_EMAIL), TopicStatus.PROPOSED, 2);
+        topic.setProposedSupervisor(guide);
+        topic.setThesisCode("MT26-002");
+
+        when(topicRepository.findById(10L)).thenReturn(Optional.of(topic));
+        when(supervisorProfileRepository.findByUserEmail(GUIDE_EMAIL)).thenReturn(Optional.of(guide));
+        givenSaveEchoesItsArgument();
+
+        Topic result = service.decide(GUIDE_EMAIL, 10L, decisionForm(TopicStatus.APPROVED, null));
+
+        assertEquals("MT26-002", result.getThesisCode(), "the ID on the printed forms must not change");
+        verify(topicRepository, never()).countByThesisCodeStartingWith(anyString());
+    }
+
+    @Test
+    void saveDraftKeepsTheAnnexureFieldsAndDropsBlankOptionalOnes() {
+        when(studentProfileRepository.findByUserEmail(STUDENT_EMAIL))
+                .thenReturn(Optional.of(student(1L, STUDENT_EMAIL)));
+        when(supervisorProfileRepository.findById(7L))
+                .thenReturn(Optional.of(supervisor(7L, GUIDE_EMAIL)));
+        givenSaveEchoesItsArgument();
+        TopicForm form = topicForm(null, "Edge inference", 7L);
+        form.setSdgAlignment("   ");
+
+        Topic result = service.saveDraft(STUDENT_EMAIL, form);
+
+        assertEquals("Edge computing", result.getResearchDomain());
+        assertEquals(EnumSet.of(ExpectedOutcome.RESEARCH_PAPER, ExpectedOutcome.PRODUCT), result.getExpectedOutcomes());
+        assertNull(result.getSdgAlignment(), "a blank optional field is stored as null, not as spaces");
     }
 
     @Test
@@ -342,6 +424,9 @@ class TopicServiceTest {
         form.setId(id);
         form.setTitle(title);
         form.setAbstractText("A".repeat(200));
+        form.setResearchDomain("Edge computing");
+        form.setObjectives("O".repeat(60));
+        form.setExpectedOutcomes(EnumSet.of(ExpectedOutcome.RESEARCH_PAPER, ExpectedOutcome.PRODUCT));
         form.setKeywords("edge computing, scheduling");
         form.setProposedSupervisorId(supervisorId);
         return form;

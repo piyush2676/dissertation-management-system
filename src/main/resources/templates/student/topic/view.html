@@ -37,6 +37,9 @@
             <div>
                 <h2 th:text="${topic.title}">Topic title</h2>
                 <p class="lead" style="margin:0">
+                    <span th:if="${topic.thesisCode != null}">
+                        Thesis <code th:text="${topic.thesisCode}">MT26-001</code> ·
+                    </span>
                     Round <span th:text="${topic.version}">1</span>
                     · created
                     <span th:text="${#temporals.format(topic.createdAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</span>
@@ -74,11 +77,36 @@
             <p style="margin:0" th:if="${topic.proposedSupervisor == null}" class="field-hint">Not chosen</p>
         </div>
 
+        <div class="field" th:if="${topic.researchDomain != null}">
+            <label>Research domain</label>
+            <p style="margin:0" th:text="${topic.researchDomain}">Edge computing</p>
+        </div>
+
         <div class="field">
             <label>Abstract</label>
             <div class="paper">
                 <p class="paper-note" th:text="${topic.abstractText}">Abstract text</p>
             </div>
+        </div>
+
+        <div class="field" th:if="${topic.objectives != null}">
+            <label>Research objectives</label>
+            <div class="paper">
+                <p class="paper-note" th:text="${topic.objectives}">Objectives</p>
+            </div>
+        </div>
+
+        <div class="field" th:if="${!#lists.isEmpty(topic.expectedOutcomes)}">
+            <label>Expected outcomes</label>
+            <p style="margin:0">
+                <span th:each="o, it : ${topic.expectedOutcomes}" class="badge badge-draft"
+                      style="margin-right:6px" th:text="${o.label}">Research paper publication</span>
+            </p>
+        </div>
+
+        <div class="field" th:if="${topic.sdgAlignment != null}">
+            <label>Sustainable development goal</label>
+            <p style="margin:0" th:text="${topic.sdgAlignment}">SDG 9</p>
         </div>
 
         <div class="field" th:if="${topic.keywords != null and !topic.keywords.isEmpty()}">
@@ -108,16 +136,18 @@
         <div class="record-print" th:if="${topic.decidedAt != null}">
             <div class="record-head">
                 <h2 lang="hi">शोध प्रबंध कार्यालय</h2>
-                <p>Dissertation Management System &middot; Topic decision record</p>
+                <p>Dissertation Management System &middot; Annexure-2 &middot; Thesis title approval record</p>
             </div>
 
             <div class="record-meta">
-                <span th:text="'Ref: TOP/' + ${topic.id} + '/R' + ${topic.version}">Ref: TOP/10/R1</span>
+                <span th:text="${topic.thesisCode != null} ? 'Ref: ' + ${topic.thesisCode} + '/R' + ${topic.version} : 'Ref: TOP/' + ${topic.id} + '/R' + ${topic.version}">Ref: MT26-001/R1</span>
                 <span th:text="'Decided: ' + ${#temporals.format(topic.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">
                     Decided: 01 Jan 2026</span>
             </div>
 
             <p><strong>Title:</strong> <span th:text="${topic.title}">Title</span></p>
+            <p th:if="${topic.thesisCode != null}"><strong>Thesis ID:</strong> <span th:text="${topic.thesisCode}">MT26-001</span></p>
+            <p th:if="${topic.researchDomain != null}"><strong>Domain:</strong> <span th:text="${topic.researchDomain}">Edge computing</span></p>
             <p><strong>Status:</strong> <span th:text="${#strings.replace(topic.status, '_', ' ')}">APPROVED</span></p>
             <p th:if="${topic.decisionReason != null}">
                 <strong>Reason recorded:</strong> <span th:text="${topic.decisionReason}">—</span>

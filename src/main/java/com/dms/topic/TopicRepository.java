@@ -22,6 +22,7 @@ public interface TopicRepository extends JpaRepository<Topic,Long> {
     long countByProposedSupervisorAndStatus(SupervisorProfile supervisor, TopicStatus status);
 
     boolean existsByIdAndStudentUserEmail(Long topicId, String email);
+    long countByThesisCodeStartingWith(String prefix);
 
     boolean existsByIdAndProposedSupervisorUserEmail(Long topicId, String email);
 

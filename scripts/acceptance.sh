@@ -99,6 +99,9 @@ T=$(tok "$WORK_WIN/s.jar" /student/topic/new)
 curl -s -b "$WORK_WIN/s.jar" -o /dev/null -X POST "$B/student/topic/submit" \
   --data-urlencode "title=Acceptance run: energy-aware scheduling for edge inference" \
   --data-urlencode "abstractText=$(printf 'A%.0s' {1..250})" \
+  --data-urlencode "researchDomain=Edge computing" \
+  --data-urlencode "objectives=$(printf 'O%.0s' {1..80})" \
+  --data-urlencode "expectedOutcomes=RESEARCH_PAPER" --data-urlencode "expectedOutcomes=PRODUCT" \
   --data-urlencode "proposedSupervisorId=$SUP" --data-urlencode "_csrf=$T"
 TID=$(q "select id from topics where student_id=$SID")
 check "1. topic proposed" "PROPOSED" "$(q "select status from topics where id=$TID")"
@@ -107,6 +110,7 @@ T=$(tok "$WORK_WIN/g.jar" /supervisor/topics)
 curl -s -b "$WORK_WIN/g.jar" -o /dev/null -X POST "$B/supervisor/topics/$TID/decide" \
   --data-urlencode "decision=APPROVED" --data-urlencode "_csrf=$T"
 check "2. guide approved the topic" "APPROVED" "$(q "select status from topics where id=$TID")"
+check "2b. approval issued a thesis code" "MT" "$(q "select left(thesis_code, 2) from topics where id=$TID")"
 
 # --- 2. allocation ----------------------------------------------------------
 T=$(tok "$WORK_WIN/s.jar" /student/guide)

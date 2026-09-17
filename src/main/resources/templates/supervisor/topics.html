@@ -43,9 +43,27 @@
             <span class="badge badge-pending">PROPOSED</span>
         </div>
 
+        <p th:if="${t.researchDomain != null}" class="field-hint" style="margin:0 0 8px"
+           th:text="'Domain: ' + ${t.researchDomain}">Domain: Edge computing</p>
+
         <div class="paper">
             <p class="paper-note" th:text="${t.abstractText}">Abstract</p>
         </div>
+
+        <div class="field" th:if="${t.objectives != null}" style="margin-top:12px">
+            <label>Research objectives</label>
+            <div class="paper">
+                <p class="paper-note" th:text="${t.objectives}">Objectives</p>
+            </div>
+        </div>
+
+        <p th:if="${!#lists.isEmpty(t.expectedOutcomes)}" style="margin:8px 0 0">
+            <span th:each="o : ${t.expectedOutcomes}" class="badge badge-draft"
+                  style="margin-right:6px" th:text="${o.label}">Research paper publication</span>
+        </p>
+
+        <p th:if="${t.sdgAlignment != null}" class="field-hint"
+           th:text="'SDG: ' + ${t.sdgAlignment}">SDG: …</p>
 
         <p th:if="${t.keywords != null and !t.keywords.isEmpty()}" class="field-hint"
            th:text="'Keywords: ' + ${t.keywords}">Keywords: …</p>
@@ -102,6 +120,7 @@
             <thead>
             <tr>
                 <th>Student</th>
+                <th>Thesis ID</th>
                 <th>Title</th>
                 <th>Round</th>
                 <th>Decision</th>
@@ -115,6 +134,7 @@
                     <span th:text="${t.student.user.fullName}">Piyush Pandey</span><br>
                     <span class="field-hint" th:text="${t.student.rollNo}">21INT015</span>
                 </td>
+                <td><code th:text="${t.thesisCode} ?: '—'">MT26-001</code></td>
                 <td th:text="${t.title}">Topic title</td>
                 <td th:text="${t.version}">1</td>
                 <td>
