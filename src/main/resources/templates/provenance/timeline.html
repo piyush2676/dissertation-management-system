@@ -77,6 +77,32 @@
         </table>
     </div>
 
+    <h2 style="margin-top:44px">Countersigned meetings</h2>
+    <p th:if="${#lists.isEmpty(timeline.meetings)}" class="status-note">No logbook row has been countersigned yet.</p>
+
+    <div th:unless="${#lists.isEmpty(timeline.meetings)}" class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>Meeting</th>
+                <th>Held</th>
+                <th>Countersigned by</th>
+                <th>Signed</th>
+                <th>Digest</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="m : ${timeline.meetings}">
+                <td th:text="${m.meetingNo}">1</td>
+                <td th:text="${#temporals.format(m.meetingAt.atZone(zone), 'dd MMM yyyy')}">01 Jan 2026</td>
+                <td th:text="${m.signedBy}">Dr A Sharma</td>
+                <td th:text="${#temporals.format(m.signedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">02 Jan 2026</td>
+                <td><code th:text="${m.shortDigest()}">a1b2c3</code></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
     <h2 style="margin-top:44px">Everything that happened</h2>
     <p th:if="${#lists.isEmpty(timeline.entries)}" class="status-note">
         No recorded acts. The audit trail began after this record was created.

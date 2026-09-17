@@ -19,6 +19,7 @@ public record ProvenanceTimeline(
         String topicTitle,
         List<Entry> entries,
         List<VersionFact> versions,
+        List<LogbookFact> meetings,
         String digest,
         String certificateCode) {
 
@@ -36,6 +37,14 @@ public record ProvenanceTimeline(
                               long sizeBytes, Instant submittedAt) {
         public String shortSha() {
             return sha256 == null ? "" : sha256.substring(0, 12);
+        }
+    }
+
+    /** A countersigned meeting, with the digest that pins what was signed. */
+    public record LogbookFact(int meetingNo, Instant meetingAt, String signedBy,
+                              Instant signedAt, String digest) {
+        public String shortDigest() {
+            return digest == null ? "" : digest.substring(0, 12);
         }
     }
 

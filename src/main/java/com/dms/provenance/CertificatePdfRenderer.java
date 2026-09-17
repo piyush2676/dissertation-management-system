@@ -98,6 +98,19 @@ public class CertificatePdfRenderer {
                     }
                 }
 
+                // Countersigned meetings, when the logbook was kept. Absent from older
+                // certificates, and left out here rather than printed as "none".
+                String logbook = facts.getOrDefault("logbook", "");
+                if (!logbook.isBlank()) {
+                    y -= 14f;
+                    out.setNonStrokingColor(RED_R, RED_G, RED_B);
+                    y = text(out, bold(), 12f, MARGIN, y, "Countersigned meetings");
+                    out.setNonStrokingColor(0f, 0f, 0f);
+                    for (String entry : logbook.split("\\|")) {
+                        y = text(out, mono(), 8.5f, MARGIN, y - 1f, "meeting " + entry.strip().replace(":", "  "));
+                    }
+                }
+
                 // The seal, and how to check it.
                 y -= 24f;
                 out.setNonStrokingColor(RED_R, RED_G, RED_B);

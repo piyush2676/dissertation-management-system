@@ -6,6 +6,8 @@ import com.dms.audit.AuditLog;
 import com.dms.audit.AuditLogRepository;
 import com.dms.common.Digests;
 import com.dms.common.NotFoundException;
+import com.dms.logbook.LogbookBoard;
+import com.dms.logbook.LogbookService;
 import com.dms.evaluation.Evaluation;
 import com.dms.evaluation.EvaluationRepository;
 import com.dms.submission.Submission;
@@ -48,6 +50,7 @@ public class ProvenanceService {
     private final EvaluationRepository evaluationRepository;
     private final VivaScheduleRepository vivaRepository;
     private final CertificateRepository certificateRepository;
+    private final LogbookService logbookService;
 
     @Transactional(readOnly = true)
     public ProvenanceTimeline timelineFor(Long allocationId) {
@@ -79,6 +82,17 @@ public class ProvenanceService {
                             v.getSubmittedAt())));
         }
 
+        List<LogbookBoard.Row> signed = logbookService.signedRowsFor(allocation);
+        for (LogbookBoard.Row row : signed) {
+            collect(entries, "LogbookEntry", row.id());
+        }
+        entries.sort(Comparator.comparing(ProvenanceTimeline.Entry::at));
+
+        List<ProvenanceTimeline.LogbookFact> meetings = signed.stream()
+                .map(r -> new ProvenanceTimeline.LogbookFact(
+                        r.meetingNo(), r.meetingAt(), r.signedByName(), r.signedAt(), r.entryDigest()))
+                .toList();
+
         Optional<Certificate> certificate = certificateRepository.findByAllocation(allocation);
 
         return new ProvenanceTimeline(
@@ -91,6 +105,7 @@ public class ProvenanceService {
                 allocation.getTopic() == null ? null : allocation.getTopic().getTitle(),
                 entries,
                 versions,
+                meetings,
                 digestFor(allocation),
                 certificate.map(Certificate::getCode).orElse(null));
     }
@@ -147,6 +162,15 @@ public class ProvenanceService {
         VivaSchedule viva = vivaRepository.findByAllocation(allocation).orElse(null);
         facts.put("viva", viva == null ? "" : viva.getStatus().name() + " " + viva.getScheduledAt());
 
+        // Every countersigned logbook row, pinned by its own digest. Added only when
+        // there is one: a certificate issued before the logbook existed, over a
+        // dissertation that never kept one, must still verify. A certificate issued
+        // before a later meeting is signed will read CHANGED, which is correct --
+        // the record moved after it was sealed.
+        List<String> meetings = logbookService.sealedFactsFor(allocation);
+        if (!meetings.isEmpty()) {
+            facts.put("logbook", String.join(" | ", meetings));
+        }
         return facts;
     }
 
