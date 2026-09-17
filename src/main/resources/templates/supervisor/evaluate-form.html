@@ -10,7 +10,7 @@
     <div th:replace="~{layout/_pagehero :: hero(
             'अंकन',
             'Score a dissertation',
-            'Every criterion carries its own weight in the total.',
+            'The scheme for the student's phase, marks per row as the guidelines print them.',
             'SUPERVISOR')}"></div>
 
     <div class="hero">
@@ -27,8 +27,13 @@
         </div>
 
         <p th:if="${#lists.isEmpty(rubric)}" class="alert alert-error">
-            No rubric has been set for this session, so nothing can be scored yet.
+            No rubric applies to this student yet: either none is set for the session, or
+            their semester is outside the two dissertation semesters.
         </p>
+
+        <p th:unless="${#lists.isEmpty(rubric)}" class="status-note" style="margin-top:0"
+           th:text="|${rubric[0].phase.label} · ${#aggregates.sum(rubric.![weightage])} marks in total|">
+            Final Dissertation · 200 marks in total</p>
 
         <form th:unless="${#lists.isEmpty(rubric)}" method="post" th:object="${form}"
               th:action="@{/supervisor/evaluate/{id}(id=${allocation.id})}">
@@ -36,8 +41,10 @@
             <div class="field" th:each="c : ${rubric}">
                 <label th:for="|score-${c.id}|">
                     <span th:text="${c.name}">Methodology</span>
-                    &middot; <span th:text="|out of ${c.maxMarks}|">out of 10</span>
-                    &middot; <span th:text="|weight ${c.weightage}%|">weight 25%</span>
+                    &middot; <span th:text="|out of ${c.maxMarks}|">out of 35</span>
+                    <span th:if="${c.weightage != c.maxMarks}" th:text="|· weight ${c.weightage}|">· weight 25</span>
+                    <span th:if="${c.coCode != null}" class="field-hint" style="display:inline"
+                          th:text="|· ${c.coCode}|">· CO2</span>
                 </label>
                 <p class="status-note" style="margin:0 0 6px" th:text="${c.description}">
                     Soundness of the approach and design
@@ -61,9 +68,10 @@
     </div>
 
     <p class="status-note">
-        The total is weighted: each criterion contributes its weight scaled by how much of
-        its own maximum was earned. Submitting again replaces your earlier marks rather
-        than adding a second set.
+        The total is the sum of the marks when a row's weight equals its maximum, which is
+        how the guideline schemes are seeded; a row weighted differently contributes its
+        weight scaled by the share of its maximum earned. Submitting again replaces your
+        earlier marks rather than adding a second set.
     </p>
 
 </section>

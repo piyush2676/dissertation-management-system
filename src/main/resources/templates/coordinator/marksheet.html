@@ -38,8 +38,8 @@
                 <span class="stat-label">Scored</span>
             </div>
             <div class="stat">
-                <span class="stat-value" th:text="${#lists.size(sheet.rubric)}">5</span>
-                <span class="stat-label">Rubric criteria</span>
+                <span class="stat-value" th:text="${sheet.criterionCount()}">12</span>
+                <span class="stat-label">Rubric rows, both phases</span>
             </div>
         </div>
 
@@ -51,8 +51,10 @@
                     <th scope="col">Roll no</th>
                     <th scope="col">Student</th>
                     <th scope="col">Guide</th>
+                    <th scope="col">Phase</th>
                     <th scope="col">Examiners</th>
-                    <th scope="col">Average</th>
+                    <th scope="col">Marks</th>
+                    <th scope="col">Band</th>
                     <th scope="col">Viva</th>
                     <th scope="col">Outcome</th>
                     <th scope="col" class="no-print">Record</th>
@@ -63,8 +65,20 @@
                     <td th:text="${r.rollNo}">24MCS001</td>
                     <td th:text="${r.studentName}">Avika Singh</td>
                     <td th:text="${r.supervisorName}">Dr A Sharma</td>
+                    <td th:text="${r.phase != null} ? ${r.phase.label} : '—'">Final Dissertation</td>
                     <td th:text="${r.examinerCount}">1</td>
-                    <td th:text="${r.scored()} ? ${r.average} : '—'">78.50</td>
+                    <td>
+                        <span th:if="${r.scored()}"
+                              th:text="|${r.average} / ${r.maxTotal}|">156.00 / 200</span>
+                        <span th:if="${r.scored()}" class="field-hint"
+                              th:text="|(${r.percent()}%)|">(78.0%)</span>
+                        <span th:unless="${r.scored()}">—</span>
+                    </td>
+                    <td>
+                        <span th:if="${r.band() != null}" class="badge badge-draft"
+                              th:text="|${r.band()} · ${r.band().label}|">A · Good</span>
+                        <span th:if="${r.band() == null}">—</span>
+                    </td>
                     <td>
                         <span th:if="${r.vivaScheduled()}"
                               th:text="${#temporals.format(r.vivaAt.atZone(zone), 'dd MMM, HH:mm')}">01 Jan</span>
@@ -87,32 +101,40 @@
             </table>
         </div>
 
-        <h2 style="margin-top:44px">Rubric in force</h2>
-        <div class="table-wrap reveal">
-            <table>
-                <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Criterion</th>
-                    <th scope="col">Out of</th>
-                    <th scope="col">Weight</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="c : ${sheet.rubric}">
-                    <td th:text="${c.sequenceNo}">1</td>
-                    <td th:text="${c.name}">Methodology</td>
-                    <td th:text="${c.maxMarks}">10</td>
-                    <td th:text="|${c.weightage}%|">25%</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+        <th:block th:each="phase : ${T(com.dms.session.DissertationPhase).values()}"
+                  th:with="rubric=${sheet.rubricFor(phase)}">
+            <h2 style="margin-top:44px" th:text="|Rubric in force · ${phase.label}|">Rubric in force · Pre-Dissertation</h2>
+            <p th:if="${#lists.isEmpty(rubric)}" class="status-note">No scheme seeded for this phase.</p>
+            <div th:unless="${#lists.isEmpty(rubric)}" class="table-wrap reveal">
+                <table>
+                    <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Criterion</th>
+                        <th scope="col">Marks</th>
+                        <th scope="col">CO</th>
+                        <th scope="col">PO mapping</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${rubric}">
+                        <td th:text="${c.sequenceNo}">1</td>
+                        <td th:text="${c.name}">Methodology</td>
+                        <td th:text="${c.weightage}">35</td>
+                        <td th:text="${c.coCode} ?: '—'">CO2</td>
+                        <td th:text="${c.poMapping} ?: '—'">PO1, PO2</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </th:block>
     </div>
 
     <p class="status-note">
-        Averages are the mean of every examiner total. A pass is 40, and a student nobody
-        has marked yet reads as pending rather than failing.
+        Marks are the mean of every examiner total, out of the phase maximum (100 for
+        Pre-Dissertation, 200 for Final). Bands follow the guidelines: S from 81%, A from 61%,
+        B from 41%, C below. A pass is 50%, the minimum internal marks for the external viva,
+        and a student nobody has marked yet reads as pending rather than failing.
     </p>
 
 </section>

@@ -27,12 +27,20 @@
 
         <div class="stat-grid reveal">
             <div class="stat">
-                <span class="stat-value" th:text="${result.scored()} ? ${result.average} : '—'">78.50</span>
-                <span class="stat-label">Weighted average</span>
+                <span class="stat-value"
+                      th:text="${result.scored()} ? |${result.average} / ${result.maxTotal}| : '—'">156.00 / 200</span>
+                <span class="stat-label"
+                      th:text="${result.phase != null} ? |Internal marks · ${result.phase.label}| : 'Internal marks'">
+                    Internal marks · Final Dissertation</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value"
+                      th:text="${result.band() != null} ? |${result.band()} · ${result.percent()}%| : '—'">A · 78.0%</span>
+                <span class="stat-label">Band</span>
             </div>
             <div class="stat">
                 <span class="stat-value" th:text="${result.outcome()}">Pending</span>
-                <span class="stat-label">Outcome</span>
+                <span class="stat-label">Outcome · 50% to sit the viva</span>
             </div>
             <div class="stat">
                 <span class="stat-value" th:text="${result.examinerCount}">0</span>
