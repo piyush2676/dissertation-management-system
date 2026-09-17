@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Student logbook</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'प्रगति पंजी',
+            'Student logbook',
+            'The whole register for one student you supervise, exactly as they see it.',
+            'SUPERVISOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2 th:text="${board.studentName}">Avika Singh</h2>
+            <p class="lead" style="margin:0">
+                <span th:text="${board.rollNo}">24MCS001</span>
+                <span th:if="${board.thesisCode != null}"> · <code th:text="${board.thesisCode}">MT26-001</code></span>
+                <span th:if="${board.topicTitle != null}"> · <span th:text="${board.topicTitle}">Title</span></span>
+            </p>
+        </div>
+        <a th:href="@{/supervisor/logbook}" class="btn btn-ghost btn-sm">Back to the queue</a>
+    </div>
+
+    <div class="stat-grid reveal">
+        <div class="stat">
+            <span class="stat-value" th:text="${board.signedCount()}">0</span>
+            <span class="stat-label">Countersigned</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" th:text="${board.pendingCount()}">0</span>
+            <span class="stat-label">Awaiting you</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value"
+                  th:text="${board.daysSinceLastMeeting() == null} ? '—' : ${board.daysSinceLastMeeting()}">3</span>
+            <span class="stat-label">Days since last meeting</span>
+        </div>
+    </div>
+
+    <div th:if="${board.cadenceLapsed()}" class="alert alert-info">
+        <strong>Weekly cadence lapsed.</strong>
+        No meeting recorded in the last <span th:text="${T(com.dms.logbook.LogbookBoard).CADENCE_DAYS}">7</span> days.
+    </div>
+
+    <div th:replace="~{layout/_logbook :: register(${board}, false)}"></div>
+
+</section>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  The Annexure-4 register for one student: the rows on screen, and the printable
+  progress report card. Shared by the student page and the guide's view of that
+  student so both read exactly the same record. canEdit shows the student's edit
+  links; the guide never edits a row, they sign it or return it.
+-->
+<div th:fragment="register(board, canEdit)"
+     th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <!-- The register -->
+    <h2 style="margin-top:44px">Register</h2>
+
+    <p th:if="${#lists.isEmpty(board.rows)}" class="status-note">
+        No meetings recorded yet. The first row goes in after your first meeting with
+        <span th:text="${board.supervisorName}">your guide</span>.
+    </p>
+
+    <div th:each="r : ${board.rows}" class="hero" style="padding:22px; margin-top:16px">
+        <div class="page-head" style="margin-bottom:10px">
+            <div>
+                <h3 style="font-size:20px; margin:0" th:text="|Meeting ${r.meetingNo}|">Meeting 1</h3>
+                <p class="lead" style="margin:0"
+                   th:text="${#temporals.format(r.meetingAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</p>
+            </div>
+            <span class="badge"
+                  th:classappend="${r.signed()} ? 'badge-approved'
+                                : (${r.status.name() == 'RETURNED'} ? 'badge-rejected' : 'badge-pending')"
+                  th:text="${r.status}">PENDING</span>
+        </div>
+
+        <div class="field">
+            <label>Work assigned</label>
+            <p style="margin:0; white-space:pre-line" th:text="${r.workAssigned}">…</p>
+        </div>
+        <div class="field">
+            <label>Work completed</label>
+            <p style="margin:0; white-space:pre-line" th:text="${r.workCompleted}">…</p>
+        </div>
+        <div class="field" th:if="${r.challenges != null}">
+            <label>Challenges</label>
+            <p style="margin:0; white-space:pre-line" th:text="${r.challenges}">…</p>
+        </div>
+
+        <div th:if="${r.supervisorRemarks != null}" class="alert"
+             th:classappend="${r.signed()} ? 'alert-success' : 'alert-info'">
+            <strong th:text="${r.signed()} ? 'Guide remarks:' : 'Returned:'">Guide remarks:</strong>
+            <span th:text="${r.supervisorRemarks}">Good progress.</span>
+        </div>
+
+        <p th:if="${r.signed()}" class="field-hint" style="margin:8px 0 0">
+            Countersigned by <span th:text="${r.signedByName}">Dr A Sharma</span>
+            on <span th:text="${#temporals.format(r.signedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">02 Jan 2026</span>
+            · sealed <code th:text="${r.shortDigest()}">a1b2c3d4e5f6</code>
+        </p>
+
+        <div class="btn-row no-print" th:if="${canEdit and r.editable()}" style="justify-content:flex-start; margin-top:12px">
+            <a th:href="@{/student/logbook/{id}/edit(id=${r.id})}" class="btn btn-ghost btn-sm"
+               th:text="${r.status.name() == 'RETURNED'} ? 'Correct and resubmit' : 'Edit'">Edit</a>
+        </div>
+    </div>
+
+    <div class="btn-row no-print" style="justify-content:flex-start; margin-top:24px"
+         th:unless="${#lists.isEmpty(board.rows)}">
+        <button type="button" class="btn btn-ghost" data-print>Print progress report card</button>
+    </div>
+
+    <!-- Annexure-4, print only -->
+    <div class="record-print" th:unless="${#lists.isEmpty(board.rows)}">
+        <div class="record-head">
+            <h2 lang="hi">शोध प्रबंध प्रगति पत्रक</h2>
+            <p>Dissertation Management System &middot; Annexure-4 &middot; Dissertation progress report card</p>
+        </div>
+
+        <div class="record-meta">
+            <span th:text="'Session: ' + ${board.sessionLabel}">Session: 2026-27</span>
+            <span th:text="${board.thesisCode != null} ? 'Thesis ID: ' + ${board.thesisCode} : 'Thesis ID: —'">Thesis ID: MT26-001</span>
+        </div>
+
+        <p><strong>Scholar:</strong> <span th:text="${board.studentName}">Name</span>
+            (<span th:text="${board.rollNo}">Roll</span>)</p>
+        <p th:if="${board.topicTitle != null}"><strong>Thesis title:</strong> <span th:text="${board.topicTitle}">Title</span></p>
+        <p><strong>Supervisor:</strong> <span th:text="${board.supervisorName}">Guide</span>
+            <span th:if="${board.coSupervisorName != null}">
+                &middot; <strong>Co-supervisor:</strong> <span th:text="${board.coSupervisorName}">Co</span>
+            </span></p>
+
+        <table>
+            <thead>
+            <tr>
+                <th>No.</th>
+                <th>Date</th>
+                <th>Work assigned by supervisor</th>
+                <th>Work completed by scholar</th>
+                <th>Supervisor remarks</th>
+                <th>Signature</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${board.rows}">
+                <td th:text="${r.meetingNo}">1</td>
+                <td th:text="${#temporals.format(r.meetingAt.atZone(zone), 'dd MMM yyyy')}">01 Jan</td>
+                <td th:text="${r.workAssigned}">…</td>
+                <td th:text="${r.workCompleted}">…</td>
+                <td th:text="${r.supervisorRemarks} ?: ''">…</td>
+                <td>
+                    <span th:if="${r.signed()}">
+                        <span th:text="${r.signedByName}">Dr A Sharma</span><br>
+                        <code th:text="${r.shortDigest()}">a1b2c3</code>
+                    </span>
+                    <span th:unless="${r.signed()}" th:text="${r.status}">PENDING</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="sign-row">
+            <div class="sign-slot">
+                <div class="sign-line"></div>
+                <span class="sign-label">Research scholar</span>
+            </div>
+            <div class="sign-slot">
+                <div class="sign-line"></div>
+                <span class="sign-label">Dissertation coordinator</span>
+            </div>
+            <div class="seal">
+                <span>Dissertation</span>
+                <span>Cell</span>
+                <span th:text="${board.sessionLabel}">2026-27</span>
+            </div>
+        </div>
+        <p class="status-note">
+            Each signature column carries the first twelve characters of the SHA-256 digest
+            sealed when the guide countersigned. The full digests are listed on the
+            dissertation certificate; a row edited after signing no longer matches.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>

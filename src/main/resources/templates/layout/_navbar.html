@@ -67,6 +67,7 @@
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/topic}">My topic</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/guide}">My guide</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/submissions}">Submissions</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/logbook}">Logbook</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/result}">Result</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/ai/novelty}">Overlap check</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/ai/match}">Suggested guides</a></li>
@@ -75,6 +76,7 @@
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/topics}">Topic approvals</a></li>
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/requests}">Guide requests</a></li>
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/submissions}">Submissions</a></li>
+            <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/logbook}">Logbook</a></li>
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/evaluate}">Evaluate</a></li>
 
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/dashboard}">Dashboard</a></li>

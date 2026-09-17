@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Logbook</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'प्रगति पंजी',
+            'Logbook',
+            'One row per meeting with your guide. You write it; your guide countersigns it; a signed row is sealed.',
+            'STUDENT')}"></div>
+
+    <!-- No guide yet -->
+    <div th:unless="${board.hasAllocation}" class="hero">
+        <span class="eyebrow">Nothing to record yet</span>
+        <h2>The logbook opens once you have a guide</h2>
+        <p class="lead">
+            Meetings are recorded against your allocation. Propose a topic, request a guide, and
+            come back here after the first meeting.
+        </p>
+        <a th:href="@{/student/guide}" class="btn btn-ghost">Go to my guide</a>
+    </div>
+
+    <div th:if="${board.hasAllocation}">
+
+        <div class="stat-grid reveal">
+            <div class="stat">
+                <span class="stat-value" th:text="${board.signedCount()}">0</span>
+                <span class="stat-label">Meetings countersigned</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${board.pendingCount()}">0</span>
+                <span class="stat-label">Awaiting your guide</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${board.returnedCount()}">0</span>
+                <span class="stat-label">Returned to you</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value"
+                      th:text="${board.daysSinceLastMeeting() == null} ? '—' : ${board.daysSinceLastMeeting()}">3</span>
+                <span class="stat-label">Days since last meeting</span>
+            </div>
+        </div>
+
+        <div th:if="${board.cadenceLapsed()}" class="alert alert-info">
+            <strong>Weekly cadence.</strong>
+            The guidelines expect a meeting and a logbook row every week. Nothing has been recorded
+            in the last <span th:text="${T(com.dms.logbook.LogbookBoard).CADENCE_DAYS}">7</span> days.
+        </div>
+
+        <!-- Record or correct a meeting -->
+        <div class="hero" th:with="editing=${mode == 'edit'}">
+
+            <div class="form-sheet-head">
+                <h2 lang="hi">बैठक अभिलेख</h2>
+                <p lang="en" th:text="${editing} ? |Annexure-4 · Correct meeting ${editingMeetingNo}| : |Annexure-4 · Record meeting ${board.nextMeetingNo}|">
+                    Annexure-4 · Record meeting 1</p>
+            </div>
+
+            <div th:if="${editing and editingRemarks != null}" class="alert alert-info">
+                <strong>Returned by your guide:</strong>
+                <span th:text="${editingRemarks}">Add the dataset you agreed on.</span>
+            </div>
+
+            <form class="form-sheet" method="post" th:object="${form}" novalidate
+                  th:action="${editing} ? @{/student/logbook/{id}(id=${form.id})} : @{/student/logbook}">
+
+                <input type="hidden" th:field="*{id}">
+
+                <div class="field">
+                    <label for="meetingAt">Meeting date and time</label>
+                    <input type="datetime-local" id="meetingAt" th:field="*{meetingAt}">
+                    <span class="field-error" th:if="${#fields.hasErrors('meetingAt')}" th:errors="*{meetingAt}">When?</span>
+                    <span class="field-hint">When you actually met. It cannot be in the future.</span>
+                </div>
+
+                <div class="field">
+                    <label for="workAssigned">Work assigned by your guide</label>
+                    <textarea id="workAssigned" th:field="*{workAssigned}" rows="4"
+                              placeholder="What your guide asked you to do before the next meeting."></textarea>
+                    <span class="field-error" th:if="${#fields.hasErrors('workAssigned')}" th:errors="*{workAssigned}">Error</span>
+                </div>
+
+                <div class="field">
+                    <label for="workCompleted">Work completed since the last meeting</label>
+                    <textarea id="workCompleted" th:field="*{workCompleted}" rows="4"
+                              placeholder="What you brought to this meeting."></textarea>
+                    <span class="field-error" th:if="${#fields.hasErrors('workCompleted')}" th:errors="*{workCompleted}">Error</span>
+                </div>
+
+                <div class="field">
+                    <label for="challenges">Challenges and support needed</label>
+                    <textarea id="challenges" th:field="*{challenges}" rows="3"
+                              placeholder="Optional. Blockers, resources you need, decisions you are waiting on."></textarea>
+                    <span class="field-error" th:if="${#fields.hasErrors('challenges')}" th:errors="*{challenges}">Error</span>
+                </div>
+
+                <div class="btn-row" style="justify-content:flex-start; margin-top:20px">
+                    <button type="submit" class="btn btn-gradient"
+                            th:text="${editing} ? 'Save correction' : 'Record meeting'">Record meeting</button>
+                    <a th:if="${editing}" th:href="@{/student/logbook}" class="btn btn-ghost">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div th:replace="~{layout/_logbook :: register(${board}, true)}"></div>
+    </div>
+
+</section>
+</body>
+</html>

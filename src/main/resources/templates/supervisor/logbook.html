@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Logbook countersigning</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'प्रगति पंजी',
+            'Logbook countersigning',
+            'Entries your students recorded after meeting you. Sign what is accurate; return what is not, with a reason.',
+            'SUPERVISOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>Waiting for your signature</h2>
+            <p class="lead">Oldest meeting first. A signed row is sealed and listed on the certificate.</p>
+        </div>
+        <span class="badge badge-pending" th:text="${#lists.size(queue)} + ' waiting'">0 waiting</span>
+    </div>
+
+    <div th:if="${#lists.isEmpty(queue)}" class="card" style="margin-bottom:36px">
+        <h3>Nothing to sign</h3>
+        <p>No student has an unsigned meeting with you right now.</p>
+    </div>
+
+    <div th:each="item : ${queue}" th:with="r=${item.row}" class="hero" style="padding:26px; margin-bottom:18px">
+
+        <div class="page-head" style="margin-bottom:12px">
+            <div>
+                <h3 style="font-size:22px" th:text="|Meeting ${r.meetingNo} · ${item.studentName}|">Meeting 3 · Avika Singh</h3>
+                <p class="lead" style="margin:0">
+                    <span th:text="${item.rollNo}">24MCS001</span>
+                    · met <span th:text="${#temporals.format(r.meetingAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</span>
+                    · <a th:href="@{/supervisor/logbook/student/{id}(id=${item.allocationId})}">whole logbook</a>
+                </p>
+            </div>
+            <span class="badge badge-pending">PENDING</span>
+        </div>
+
+        <div class="field">
+            <label>Work assigned (as the student recorded it)</label>
+            <p style="margin:0; white-space:pre-line" th:text="${r.workAssigned}">…</p>
+        </div>
+        <div class="field">
+            <label>Work completed</label>
+            <p style="margin:0; white-space:pre-line" th:text="${r.workCompleted}">…</p>
+        </div>
+        <div class="field" th:if="${r.challenges != null}">
+            <label>Challenges</label>
+            <p style="margin:0; white-space:pre-line" th:text="${r.challenges}">…</p>
+        </div>
+
+        <details th:attr="open=${openEntryId != null and openEntryId == r.id} ? 'open' : null"
+                 style="margin-top:12px">
+            <summary style="cursor:pointer; font-weight:600">Sign or return</summary>
+
+            <form th:action="@{/supervisor/logbook/{id}/sign(id=${r.id})}" th:object="${form}"
+                  method="post" novalidate style="margin-top:14px">
+
+                <div class="field">
+                    <label th:for="'decision-' + ${r.id}">Decision</label>
+                    <select name="decision" th:id="'decision-' + ${r.id}">
+                        <option value="">— choose —</option>
+                        <option value="SIGNED"
+                                th:selected="${openEntryId != null and openEntryId == r.id and form.decision != null and form.decision.name() == 'SIGNED'}">
+                            Countersign — accurate, seal it</option>
+                        <option value="RETURNED"
+                                th:selected="${openEntryId != null and openEntryId == r.id and form.decision != null and form.decision.name() == 'RETURNED'}">
+                            Return — needs correcting</option>
+                    </select>
+                    <span class="field-error"
+                          th:if="${openEntryId != null and openEntryId == r.id and #fields.hasErrors('decision')}"
+                          th:errors="*{decision}">Decision error</span>
+                </div>
+
+                <div class="field">
+                    <label th:for="'remarks-' + ${r.id}">Remarks</label>
+                    <textarea name="remarks" th:id="'remarks-' + ${r.id}" rows="3" maxlength="1000"
+                              th:text="${openEntryId != null and openEntryId == r.id} ? ${form.remarks} : ''"
+                              placeholder="Optional when signing; required when returning. The student sees this verbatim."></textarea>
+                    <span class="field-error"
+                          th:if="${openEntryId != null and openEntryId == r.id and #fields.hasErrors('remarks')}"
+                          th:errors="*{remarks}">Remark error</span>
+                    <span class="field-error"
+                          th:if="${openEntryId != null and openEntryId == r.id and #fields.hasErrors('remarkPresentWhenReturning')}"
+                          th:errors="*{remarkPresentWhenReturning}">A reason is required.</span>
+                </div>
+
+                <button type="submit" class="btn btn-gradient btn-sm">Record</button>
+            </form>
+        </details>
+    </div>
+
+    <h2 style="margin-top:44px">Logbooks you keep</h2>
+
+    <p th:if="${#lists.isEmpty(students)}" class="status-note">You are not supervising anyone this session.</p>
+
+    <div th:unless="${#lists.isEmpty(students)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th>Roll no</th>
+                <th>Student</th>
+                <th class="no-print">Open</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${students}">
+                <td th:text="${s.rollNo}">24MCS001</td>
+                <td th:text="${s.studentName}">Avika Singh</td>
+                <td class="no-print">
+                    <a class="btn btn-ghost btn-sm"
+                       th:href="@{/supervisor/logbook/student/{id}(id=${s.allocationId})}">Logbook</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="status-note">
+        You never edit a student's words. If a row is wrong, return it with what to fix; the
+        corrected row comes back to this queue. Signing computes a SHA-256 over the row and
+        stores it — that digest is what the certificate lists.
+    </p>
+
+</section>
+</body>
+</html>
