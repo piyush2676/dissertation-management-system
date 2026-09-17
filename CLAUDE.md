@@ -22,7 +22,7 @@ Owner: Piyush Pandey. Repo: `github.com/piyush2676/dissertation-management-syste
 | Java | 21 | |
 | Spring Boot | 4.1.0 | starters renamed vs 3.x — see below |
 | PostgreSQL | 18 | database `dms`, service `postgresql-x64-18` |
-| Flyway | via `spring-boot-starter-flyway` | currently at **V13** |
+| Flyway | via `spring-boot-starter-flyway` | currently at **V14** |
 | Thymeleaf | + `thymeleaf-extras-springsecurity6` | |
 | Spring AI | 2.0.1 | Gemini via Google AI Studio; off unless a key is set |
 | Build | Maven wrapper (`.\mvnw.cmd`) | no global Maven |
@@ -33,10 +33,16 @@ tutorials blindly.
 
 ---
 
-## Current state (2026-09-10)
+## Current state (2026-09-17)
 
-Phases 0–11 complete, verified in a browser, 191 tests green, 125 commits. Flyway at V13.
-The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 19 assertions, all green.
+Phases 0–12 complete, verified in a browser, 212 tests green, 133 commits. Flyway at V14.
+The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
+
+**Phases 12–16 follow the institute guidelines** in
+`docs/m.tech_m.tech int._dissertation_guidelines_v3.md`. `docs/guide.md` §13 maps each mandate to
+a phase and records what stays deliberately different from the reference portal
+(`niet-dms.vercel.app`): evidence ledgers over locked buttons, provenance-sealed records, CO/PO
+reporting, no self-registration, no borrowed branding.
 
 | Phase | Covers | State |
 |---|---|---|
@@ -48,10 +54,35 @@ The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 19 asser
 | 5 | Review comments pinned to a version | done |
 | 6 | Rubric, weighted evaluation, viva, mark sheet | done |
 | 7 | Topic overlap check + guide matching (Gemini) | done — key optional |
-| 8 | End-to-end acceptance | done — scripted, 19/19 |
+| 8 | End-to-end acceptance | done — scripted, 20/20 |
 | 9 | In-app notifications | done |
 | 10 | Email confirmation, password reset | done — mail optional |
 | 11 | Verifiable provenance: timeline, certificate, public verify | done |
+| 12 | Guideline alignment: dissertation phase, review milestones, marks-based rubric with bands + CO/PO, Annexure-1 fields, thesis code, co-supervisor | done |
+| 13 | Logbook (Annexure-4), guide countersign sealed in provenance | next |
+| 14 | Outcomes registry, plagiarism fields, deliverable checklist, readiness ledger, 50% viva gate | planned |
+| 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | planned |
+| 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | planned |
+
+### Phase 12 — what changed underneath
+
+- **`DissertationPhase` is derived, never stored.** `forSemester(programme, semester)`: M.Tech
+  3→PRE, 4→FINAL; integrated 9→PRE, 10→FINAL; anything else → empty, and that student sees no
+  milestones and no rubric. Milestones and rubric rows carry `phase`; the session does not.
+- **Rubric `weightage` now equals `maxMarks`** (Format 6 sums to 100, Format 15 to 200). The
+  weighted-total code is unchanged; the arithmetic just collapses to a sum. Pass is **50% of the
+  phase maximum** (`MarkSheet.PASS_PERCENT`), not the old absolute 40. `GradeBand` S/A/B/C at
+  81/61/41.
+- **Thesis code** `MT26-001` / `MI26-001` on `topics.thesis_code`, assigned once at APPROVED,
+  partial unique index. `TopicForm` now requires `researchDomain`, `objectives`, at least one
+  `expectedOutcomes`; the acceptance script posts them.
+- **Co-supervisor** on `allocations.co_supervisor_id`: optional, no seat, CHECK ≠ supervisor.
+  Entity graphs that feed templates were widened with `coSupervisor`, `coSupervisor.user`.
+- **V14 backfilled pre-existing milestone and rubric rows as FINAL**, and the seeder is guarded
+  per session+phase, so an old DB gains the guideline PRE track on next start but keeps its
+  legacy FINAL rows (5 generic criteria out of 10). A fresh DB gets Format 6 + Format 15. The
+  local DB's two MTECH students at semester 8 (impossible; stale seed) were set to 4 by hand on
+  2026-09-17.
 
 ### Phase 7 — Google AI Studio, not Anthropic
 
@@ -84,13 +115,14 @@ or grades. The novelty prompt forbids it explicitly, output renders inside the A
 and similarity is described as overlap with the department archive — it is not plagiarism
 detection and there is no web-wide corpus behind it.
 
-### Open decision, deliberately not taken
+### Open decision — taken on 2026-09-17, lands in phase 16
 
 `AllocationStatus.COORDINATOR_ASSIGNED` is terminal, so a coordinator who places a student with
 the wrong guide **cannot undo it** from the UI, and the partial unique index then blocks a second
-live allocation. Fix is one line — allow `WITHDRAWN` from `ACCEPTED` and `COORDINATOR_ASSIGNED`,
-plus a revoke action — but it reverses an invariant `AllocationStatusTest` pins on purpose
-("only REQUESTED may be non-terminal"). Ask before changing it.
+live allocation. Guideline §4.11 requires a formal supervisor-change process, so the owner agreed
+to reverse the `AllocationStatusTest` invariant ("only REQUESTED may be non-terminal") — but only
+behind a coordinator-reviewed change request with a recorded reason, not a free withdraw button.
+Until phase 16 ships, the limitation stands.
 
 ### Cut from scope
 
@@ -106,7 +138,7 @@ ships inside the overlap check).
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (191 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (212 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -144,6 +176,13 @@ These cost real time in past sessions. Read before running anything.
   included — to Windows form (`C:/Users/...`).
 - **Heredocs eat backticks and apostrophes** in this shell. Write file content with the Write
   tool, or write the script to a file first and run it; do not inline it in `python -c "..."`.
+  A quoted `<<'EOF'` heredoc into `python -` still **collapses `\\` to `\`**, so a Python
+  string ending in `\\` + newline becomes a line continuation; build backslashes with `chr(92)`.
+- **Python's default write encoding here is cp1252.** A `§` or `—` written through
+  `open(p,'w')` lands as a single non-UTF-8 byte and `javac` fails with "unmappable character".
+  Pass `encoding='utf-8'` for any file that may hold one, or keep Java sources ASCII.
+- **Thymeleaf fragment arguments are single-quoted.** An apostrophe inside a `hero('...')`
+  literal ("student's") throws at render time, not compile time. Rephrase; do not escape.
 - **Line endings are mixed.** `src/main` is CRLF, `src/test` is LF. Any script that rewrites a
   file must detect: `NL = '\r\n' if '\r\n' in s else '\n'`.
 - **Local DB predates the M.Tech migration** — some roll numbers read `21CSE001` where the
@@ -167,7 +206,7 @@ com.dms
 ├── evaluation/   RubricCriterion, Evaluation, EvaluationService, MarkSheet, controllers
 ├── review/       ReviewComment, ReviewService, ReviewCommentController
 ├── security/     SecurityConfig, CustomUserDetailsService, AuthzService
-├── session/      AcademicSession, Milestone
+├── session/      AcademicSession, Milestone, DissertationPhase
 ├── storage/      StorageService, LocalDiskStorageService, StoredFile
 ├── submission/   Submission, SubmissionVersion, SubmissionStatus, SubmissionService, controllers
 ├── ai/           Embedding, SimilarityProvider, CosineSimilarityProvider, EmbeddingService,
@@ -201,7 +240,8 @@ These are load-bearing. Violating one produces a runtime failure, not a compile 
    then re-run. Only valid when the migration has never left this machine.
 5. **State machines are declarative** — one `Map<State, Set<State>>` per aggregate, validated in
    the service. Never scatter `if` checks. Five exist: `TopicStatus`, `AllocationStatus`,
-   `SubmissionStatus`, `VivaStatus` (+ the topic/allocation pairs above).
+   `SubmissionStatus`, `VivaStatus` (+ the topic/allocation pairs above). `DissertationPhase`
+   is an enum but not a state machine — nothing transitions; it is a pure function of semester.
 6. **Compare enums with `==`, not `.equals()`.** Several of these fields are legitimately null
    (a student with no topic yet). `.equals()` on a null receiver NPEs — this shipped once.
 7. **CSRF stays on.** Thymeleaf injects the token into `th:action` forms. Do not switch a form
@@ -275,9 +315,10 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 |---|---|
 | `README.md` | Repo front door: what it is, how to run it, known limitations |
 | `docs/guide.md` | Living design doc — status, architecture, view contract, rationale |
+| `docs/m.tech_m.tech int._dissertation_guidelines_v3.md` | Institute guidelines (OCR'd, 3166 lines) — source for phases 12–16; §-references in code point here |
 | `docs/demo.md` | Click-by-click presentation walkthrough (~10 min) |
 | `scripts/demo-reset.sh` | Resets one student so the walkthrough is repeatable |
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
-| `src/main/resources/db/migration/` | V1–V13 |
+| `src/main/resources/db/migration/` | V1–V14 |

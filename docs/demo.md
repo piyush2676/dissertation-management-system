@@ -206,7 +206,7 @@ Sign in as `admin@college.edu` / `admin123` → **Audit trail**.
 | "What about AI?" | **Overlap check** under the student menu. Without a key it says so plainly; with one it embeds the abstract, retrieves the nearest approved topics and writes an advisory note — inside a panel labelled *AI-generated*, which never approves or rejects anything. |
 | "Can one person hold two roles?" | `guide1` is SUPERVISOR **and** REVIEWER — one account, two link groups, driven by `sec:authorize`. |
 | "Accessibility?" | The **A+ / A / A−** controls on the right edge scale the whole interface and remember the choice. |
-| "How do you know it works?" | `bash scripts/acceptance.sh 8081` — 19 assertions across the whole chain, live. |
+| "How do you know it works?" | `bash scripts/acceptance.sh 8081` — 20 assertions across the whole chain, live. |
 
 ---
 
