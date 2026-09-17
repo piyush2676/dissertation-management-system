@@ -241,6 +241,19 @@ PanelMember     (vivaSchedule, user, role)
 Notification    (recipient, type, payload, readAt, createdAt)
 LogbookEntry    (allocation, meetingNo, meetingAt, workAssigned, workCompleted, challenges?,
                  status, supervisorRemarks?, signedBy?, signedAt?, entryDigest?)
+Outcome         (allocation, kind, title, venue?, indexing, status, reference?, outcomeDate?,
+                 notes?, verifiedBy?, verifiedAt?, verificationNote?)
+        -- §4.4 / §7.2 / Annexure-6(d,e): papers, patents, products. The student
+        -- reports; the coordinator verifies against the evidence (DOI, letter,
+        -- filing number). Any edit after verification clears it. status is a
+        -- reported state, not a workflow -- there is no transition map.
+PlagiarismCheck (submissionVersion 1:1, similarityPercent, aiPercent, tool?, note?,
+                 checkedBy, checkedAt)
+        -- §8.3: similarity under 10%, AI-generated 0%. Its own row so the
+        -- version stays append-only. The guide records it against one version.
+Milestone.deliverable?  SYNOPSIS | LITERATURE_SURVEY | SYSTEM_DESIGN | TECHNICAL_REPORT | FINAL_THESIS
+        -- which of §2.2.3's documents a review slot collects. Papers 1 and 2
+        -- come from Outcome, not from an upload.
         -- Annexure-4, one row per guide meeting. Student writes, guide countersigns.
         -- unique (allocation, meetingNo). On SIGNED the row is frozen and its digest
         -- (SHA-256 over the fields above) is stored; the certificate's facts list
@@ -445,6 +458,16 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/supervisor/logbook` | GET | `supervisor/logbook` | `queue`, `students`, `form` | `LogbookSignForm` |
 | `/supervisor/logbook/{id}/sign` | POST | redirect `/supervisor/logbook` | — | `LogbookSignForm` |
 | `/supervisor/logbook/student/{allocationId}` | GET | `supervisor/logbook-student` | `board` | — |
+| `/student/outcomes` | GET | `student/outcomes` | `board`, `form`, `mode`, `kinds`, `indexings`, `statuses` | `OutcomeForm` |
+| `/student/outcomes` | POST | redirect | — | `OutcomeForm` |
+| `/student/outcomes/{id}/edit` | GET | `student/outcomes` | as above, `mode=edit` | `OutcomeForm` |
+| `/student/outcomes/{id}` | POST | redirect | — | `OutcomeForm` |
+| `/coordinator/outcomes` | GET | `coordinator/outcomes` | `queue`, `form` | `OutcomeVerifyForm` |
+| `/coordinator/outcomes/{id}/verify` | POST | redirect | — | `OutcomeVerifyForm` |
+| `/supervisor/submissions/{id}/versions/{versionId}/plagiarism` | POST | redirect to the submission | — | `PlagiarismCheckForm` |
+| `/student/readiness` | GET | `student/readiness` | `ledger` | — |
+| `/coordinator/readiness` | GET | `coordinator/readiness` | `rows`, `programme` | — |
+| `/coordinator/readiness/{allocationId}` | GET | `coordinator/readiness-detail` | `ledger` | — |
 
 Two routes sit outside the role prefixes on purpose. A submission file and a comment
 thread are both legitimately touched by the student, their guide, the coordinator and the
@@ -458,9 +481,9 @@ templates/
 ├── layout/      base, _navbar, _flash, _footer, _pagehero, _versions, _comments
 ├── home.html
 ├── auth/        login
-├── student/     dashboard, topic/form, topic/view, guide, submissions, submission, result, logbook
+├── student/     dashboard, topic/form, topic/view, guide, submissions, submission, result, logbook, outcomes, readiness
 ├── supervisor/  dashboard, topics, requests, submissions, submission, evaluate, evaluate-form, logbook, logbook-student
-├── coordinator/ dashboard, allocate, viva, marksheet
+├── coordinator/ dashboard, allocate, viva, marksheet, outcomes, readiness, readiness-detail
 ├── admin/       dashboard, users, audit
 └── error/       403, 404, 409, 500
 ```
@@ -613,6 +636,36 @@ which is the correct answer: the record moved after it was sealed.
 
 **Hashing moved to `common.Digests`.** `ProvenanceService.digestOf` delegates to it so the
 logbook can seal rows without the logbook package depending on provenance.
+
+### Phase 14 decisions
+
+**One hard gate, everything else is evidence.** The guidelines state exactly one prerequisite as
+a rule: 50% of internal marks to sit the external viva (§7.1). That one is enforced —
+`VivaService.schedule` refuses below it. The rest of what the readiness ledger checks — seven
+deliverables, the publication requirement, the plagiarism thresholds, a countersigned logbook —
+is shown with the fact that satisfies it, who verified it and when, and left for the coordinator
+to weigh. A locked button hides *why*; a ledger shows it. That is the deliberate difference from
+the reference portal, and it is also what the department actually does with a paper form.
+
+**Deliverables are a property of the review slot.** §2.2.3 lists seven documents; three of the
+five uploadable ones fall in the Pre-Dissertation reviews and two in the Final. `Milestone` gains
+a nullable `deliverable`, the seeder sets it, and V16 backfills existing rows by name. A checklist
+item is satisfied when its slot's submission is APPROVED — evidence: the version number and
+SHA-256 that was approved. Research Paper 1 and 2 are not uploads; they are verified `Outcome`
+rows, so the checklist reads them from there.
+
+**The plagiarism check is its own row.** `SubmissionVersion` is append-only and the design
+depends on that; a similarity percentage written onto it later would break the rule. A
+`PlagiarismCheck` is one row per version, recorded by the guide, and the ledger reads the check
+on the *latest* version of the final thesis. Under 10% similarity and 0% AI, as §8.3 requires;
+the numbers are the department's to change in one place.
+
+**The coordinator verifies outcomes, not the guide.** The guide is close to the work; the
+coordinator's office is what Format 4 and the Director Academics list actually run through, and a
+verification by a party who does not also mark the student is the stronger fact for a ledger. An
+edit by the student after verification clears it, so a verified row always describes what was
+seen. Verified outcomes join the certificate as a conditional `outcomes` fact, exactly as the
+logbook does.
 
 ### What stays different from the reference portal
 
