@@ -19,6 +19,41 @@
 
     </div>
 
+    <!-- Section 8.3: the guide reads the similarity report and records what it said. -->
+    <div th:if="${detail.hasVersions()}" class="hero no-print" th:with="latest=${detail.latest()}">
+        <h3 style="margin-top:0" th:text="|Similarity report for v${latest.versionNo}|">Similarity report for v2</h3>
+        <p class="lead">
+            Guideline thresholds: similarity under 10%, AI-generated content 0%. Recording again
+            replaces the earlier reading for this version; the version itself is never changed.
+        </p>
+        <form th:action="@{/supervisor/submissions/{id}/versions/{vid}/plagiarism(id=${detail.submissionId}, vid=${latest.versionId})}"
+              method="post" th:object="${plagiarismForm}" novalidate>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:14px">
+                <div class="field">
+                    <label for="similarityPercent">Similarity %</label>
+                    <input type="number" id="similarityPercent" th:field="*{similarityPercent}" min="0" max="100" step="0.01">
+                    <p class="field-error" th:if="${#fields.hasErrors('similarityPercent')}" th:errors="*{similarityPercent}">Error</p>
+                </div>
+                <div class="field">
+                    <label for="aiPercent">AI-generated %</label>
+                    <input type="number" id="aiPercent" th:field="*{aiPercent}" min="0" max="100" step="0.01">
+                    <p class="field-error" th:if="${#fields.hasErrors('aiPercent')}" th:errors="*{aiPercent}">Error</p>
+                </div>
+                <div class="field">
+                    <label for="tool">Tool</label>
+                    <input type="text" id="tool" th:field="*{tool}" maxlength="64" placeholder="Turnitin">
+                    <p class="field-error" th:if="${#fields.hasErrors('tool')}" th:errors="*{tool}">Error</p>
+                </div>
+            </div>
+            <div class="field">
+                <label for="plagNote">Note</label>
+                <input type="text" id="plagNote" th:field="*{note}" maxlength="255" placeholder="Optional. Report id, date, exclusions applied.">
+                <p class="field-error" th:if="${#fields.hasErrors('note')}" th:errors="*{note}">Error</p>
+            </div>
+            <button type="submit" class="btn btn-ghost">Record similarity report</button>
+        </form>
+    </div>
+
     <!-- Picking the work up is its own step, so the student can see it was read. -->
     <div th:if="${detail.status.name() == 'SUBMITTED'}" class="hero no-print">
         <h3 style="margin-top:0">Start the review</h3>

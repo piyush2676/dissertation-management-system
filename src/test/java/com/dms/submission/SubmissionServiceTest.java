@@ -49,6 +49,7 @@ class SubmissionServiceTest {
 
     @Mock private SubmissionRepository submissionRepository;
     @Mock private SubmissionVersionRepository versionRepository;
+    @Mock private PlagiarismCheckRepository plagiarismRepository;
     @Mock private MilestoneRepository milestoneRepository;
     @Mock private AllocationService allocationService;
     @Mock private StorageService storageService;

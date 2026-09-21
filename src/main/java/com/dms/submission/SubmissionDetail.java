@@ -1,5 +1,6 @@
 package com.dms.submission;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -33,7 +34,12 @@ public record SubmissionDetail(
             String sha256,
             long sizeBytes,
             String note,
-            Instant submittedAt) {
+            Instant submittedAt,
+            Integrity integrity) {
+
+        public boolean checked() {
+            return integrity != null;
+        }
 
         /** Short digest for display -- the full 64 characters are noise on screen. */
         public String shortSha() {
@@ -49,6 +55,11 @@ public record SubmissionDetail(
             }
             return String.format("%.1f MB", sizeBytes / (1024.0 * 1024.0));
         }
+    }
+
+    /** The plagiarism check recorded against a version, when there is one. */
+    public record Integrity(BigDecimal similarityPercent, BigDecimal aiPercent, String tool,
+                            String note, String checkedByName, Instant checkedAt, boolean passes) {
     }
 
     public boolean hasVersions() {

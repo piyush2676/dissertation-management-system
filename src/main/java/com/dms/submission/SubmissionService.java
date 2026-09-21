@@ -37,6 +37,7 @@ public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
     private final SubmissionVersionRepository versionRepository;
+    private final PlagiarismCheckRepository plagiarismRepository;
     private final MilestoneRepository milestoneRepository;
     private final AllocationService allocationService;
     private final StorageService storageService;
@@ -259,8 +260,12 @@ public class SubmissionService {
             throw new NotFoundException("Submission", submissionId);
         }
 
-        List<SubmissionDetail.VersionRow> versions = versionRepository
-                .findBySubmissionOrderByVersionNoDesc(submission).stream()
+        List<SubmissionVersion> history = versionRepository.findBySubmissionOrderByVersionNoDesc(submission);
+        Map<Long, PlagiarismCheck> checks = new HashMap<>();
+        for (PlagiarismCheck check : plagiarismRepository.findByVersionIn(history)) {
+            checks.put(check.getVersion().getId(), check);
+        }
+        List<SubmissionDetail.VersionRow> versions = history.stream()
                 .map(v -> new SubmissionDetail.VersionRow(
                         v.getId(),
                         v.getVersionNo(),
@@ -269,7 +274,8 @@ public class SubmissionService {
                         v.getSha256(),
                         v.getSizeBytes(),
                         v.getNote(),
-                        v.getSubmittedAt()))
+                        v.getSubmittedAt(),
+                        integrityOf(checks.get(v.getId()))))
                 .toList();
 
         Allocation allocation = submission.getAllocation();
@@ -289,6 +295,59 @@ public class SubmissionService {
                 submission.getDecidedBy() == null ? null : submission.getDecidedBy().getFullName(),
                 submission.getDecidedAt(),
                 versions);
+    }
+
+    static SubmissionDetail.Integrity integrityOf(PlagiarismCheck check) {
+        if (check == null) {
+            return null;
+        }
+        return new SubmissionDetail.Integrity(
+                check.getSimilarityPercent(),
+                check.getAiPercent(),
+                check.getTool(),
+                check.getNote(),
+                check.getCheckedBy().getFullName(),
+                check.getCheckedAt(),
+                check.passes());
+    }
+
+    /**
+     * The guide records what the similarity report said about one version. One
+     * check per version; recording again replaces it, since the report is the
+     * same report re-read. The version itself is never touched.
+     */
+    public PlagiarismCheck recordPlagiarismCheck(String supervisorEmail, Long submissionId, Long versionId,
+                                                 PlagiarismCheckForm form) {
+        if (!isSupervisorOf(submissionId, supervisorEmail)) {
+            throw new NotFoundException("Submission", submissionId);
+        }
+        SubmissionVersion version = versionRepository.findWithGraphById(versionId)
+                .orElseThrow(() -> new NotFoundException("Submission version", versionId));
+        if (!version.getSubmission().getId().equals(submissionId)) {
+            throw new NotFoundException("Submission version", versionId);
+        }
+        User guide = userRepository.findByEmail(supervisorEmail)
+                .orElseThrow(() -> new NotFoundException("User " + supervisorEmail + " not found"));
+
+        PlagiarismCheck check = plagiarismRepository.findByVersion(version).orElseGet(PlagiarismCheck::new);
+        check.setVersion(version);
+        check.setSimilarityPercent(form.getSimilarityPercent());
+        check.setAiPercent(form.getAiPercent());
+        check.setTool(form.getTool() == null || form.getTool().isBlank() ? null : form.getTool().strip());
+        check.setNote(form.getNote() == null || form.getNote().isBlank() ? null : form.getNote().strip());
+        check.setCheckedBy(guide);
+        check.setCheckedAt(Instant.now());
+        PlagiarismCheck saved = plagiarismRepository.save(check);
+        events.publishEvent(new DomainEvents.PlagiarismChecked(supervisorEmail, submissionId, version.getVersionNo(),
+                form.getSimilarityPercent().toPlainString(), form.getAiPercent().toPlainString()));
+        return saved;
+    }
+
+    /** The check on the latest version of one slot, for the readiness ledger. */
+    @Transactional(readOnly = true)
+    public Optional<PlagiarismCheck> latestCheckFor(Submission submission) {
+        return versionRepository.findFirstBySubmissionOrderByVersionNoDesc(submission)
+                .flatMap(plagiarismRepository::findByVersion);
     }
 
     /**

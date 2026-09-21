@@ -57,6 +57,7 @@
                 <th scope="col">Size</th>
                 <th scope="col">SHA-256</th>
                 <th scope="col">Filed</th>
+                <th scope="col">Similarity</th>
                 <th scope="col">Note</th>
                 <th scope="col" class="no-print">&nbsp;</th>
             </tr>
@@ -71,6 +72,14 @@
                 <td th:text="${v.sizeReadable}">1.4 MB</td>
                 <td><code th:text="${v.shortSha}">a1b2c3d4e5f6</code></td>
                 <td th:text="${#temporals.format(v.submittedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</td>
+                <td>
+                    <span th:if="${v.checked()}" class="badge"
+                          th:classappend="${v.integrity.passes} ? 'badge-approved' : 'badge-rejected'"
+                          th:text="|${v.integrity.similarityPercent}% · AI ${v.integrity.aiPercent}%|">4.20% · AI 0%</span>
+                    <span th:if="${v.checked()}" class="field-hint" style="display:block"
+                          th:text="|${v.integrity.checkedByName}${v.integrity.tool != null ? ', ' + v.integrity.tool : ''}|">Dr A Sharma, Turnitin</span>
+                    <span th:unless="${v.checked()}">—</span>
+                </td>
                 <td th:text="${v.note} ?: '—'">Reworked chapter 4</td>
                 <td class="no-print">
                     <a class="btn btn-ghost btn-sm"

@@ -60,7 +60,32 @@ public class SupervisorSubmissionController {
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new SubmissionDecisionForm());
         }
+        if (!model.containsAttribute("plagiarismForm")) {
+            model.addAttribute("plagiarismForm", new PlagiarismCheckForm());
+        }
         return "supervisor/submission";
+    }
+
+    /** The guide records the similarity report's numbers against one version. */
+    @PostMapping("/{submissionId}/versions/{versionId}/plagiarism")
+    public String plagiarism(@PathVariable Long submissionId,
+                             @PathVariable Long versionId,
+                             @Valid @ModelAttribute("plagiarismForm") PlagiarismCheckForm form,
+                             BindingResult bindingResult,
+                             Authentication authentication,
+                             RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("plagiarismForm", form);
+            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + "plagiarismForm", bindingResult);
+            return "redirect:/supervisor/submissions/" + submissionId;
+        }
+        PlagiarismCheck check = submissionService.recordPlagiarismCheck(
+                authentication.getName(), submissionId, versionId, form);
+        redirectAttributes.addFlashAttribute(check.passes() ? "success" : "error",
+                check.passes()
+                        ? "Similarity report recorded: within the guideline thresholds."
+                        : "Similarity report recorded: outside the guideline thresholds (under 10% similarity, 0% AI).");
+        return "redirect:/supervisor/submissions/" + submissionId;
     }
 
     /** Picking the work up. Separate from deciding so the student can see it was read. */
