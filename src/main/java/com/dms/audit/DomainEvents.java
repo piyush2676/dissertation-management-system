@@ -100,4 +100,30 @@ public final class DomainEvents {
         public String oldValue() { return "PENDING"; }
         public String newValue() { return "Meeting " + meetingNo + (digest == null ? "" : " " + digest); }
     }
+
+    // ---- outcomes -----------------------------------------------------------
+
+    public record OutcomeReported(String actorEmail, Long entityId, String kind, String title)
+            implements DomainEvent {
+        public String action() { return "OUTCOME_REPORTED"; }
+        public String entityType() { return "Outcome"; }
+        public String newValue() { return kind + ": " + title; }
+    }
+
+    public record OutcomeVerified(String actorEmail, Long entityId, boolean verified, String summary)
+            implements DomainEvent {
+        public String action() { return verified ? "OUTCOME_VERIFIED" : "OUTCOME_RETURNED"; }
+        public String entityType() { return "Outcome"; }
+        public String newValue() { return summary; }
+    }
+
+    // ---- plagiarism ---------------------------------------------------------
+
+    /** entityId is the submission, like review comments: that is what a reader opens. */
+    public record PlagiarismChecked(String actorEmail, Long entityId, int versionNo,
+                                    String similarity, String ai) implements DomainEvent {
+        public String action() { return "PLAGIARISM_CHECKED"; }
+        public String entityType() { return "Submission"; }
+        public String newValue() { return "v" + versionNo + " similarity " + similarity + "% ai " + ai + "%"; }
+    }
 }
