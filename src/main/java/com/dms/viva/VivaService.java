@@ -5,6 +5,7 @@ import com.dms.allocation.AllocationRepository;
 import com.dms.allocation.AllocationService;
 import com.dms.common.InvalidStateTransitionException;
 import com.dms.common.NotFoundException;
+import com.dms.readiness.ReadinessService;
 import com.dms.user.Programme;
 import com.dms.user.User;
 import com.dms.user.UserRepository;
@@ -26,6 +27,7 @@ public class VivaService {
     private final AllocationRepository allocationRepository;
     private final AllocationService allocationService;
     private final UserRepository userRepository;
+    private final ReadinessService readinessService;
 
     /**
      * Books, or moves, a defence. Scheduling the same student twice updates the
@@ -47,6 +49,12 @@ public class VivaService {
 
         if (!allocation.getStatus().occupiesASeat()) {
             throw new IllegalStateException("That student does not have a live allocation.");
+        }
+        // Guidelines section 7.1: half the internal marks before the external viva. The one
+        // readiness rule that is a gate rather than a line on the ledger.
+        if (!readinessService.internalMarksMet(allocation)) {
+            throw new IllegalStateException(
+                    "That student has not secured 50% of the internal marks, so the external viva cannot be booked yet.");
         }
 
         User coordinator = userRepository.findByEmail(coordinatorEmail)
