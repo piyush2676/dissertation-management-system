@@ -68,6 +68,8 @@
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/guide}">My guide</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/submissions}">Submissions</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/logbook}">Logbook</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/outcomes}">Outcomes</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/readiness}">Readiness</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/result}">Result</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/ai/novelty}">Overlap check</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/ai/match}">Suggested guides</a></li>
@@ -83,6 +85,8 @@
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/allocate}">Allocate guides</a></li>
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/viva}">Viva</a></li>
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/marksheet}">Mark sheet</a></li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/outcomes}">Outcomes</a></li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/readiness}">Readiness</a></li>
 
             <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Dashboard</a></li>
             <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/users}">Users</a></li>

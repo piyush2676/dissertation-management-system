@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Readiness</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'तैयारी',
+            'Readiness',
+            'Who is clear for the external viva, and who is short of what. Open a row for the evidence.',
+            'COORDINATOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>Placed students</h2>
+            <p class="lead">The viva gate is half the internal marks; the rest of the checklist is advisory.</p>
+        </div>
+        <div class="btn-row no-print">
+            <a th:each="p : ${programmes}" th:href="@{/coordinator/readiness(programme=${p})}"
+               class="btn btn-sm" th:classappend="${p == programme} ? 'btn-primary' : 'btn-ghost'"
+               th:text="${#strings.replace(p, '_', ' ')}">MTECH</a>
+        </div>
+    </div>
+
+    <p th:if="${#lists.isEmpty(rows)}" class="status-note">No placed students in this programme this session.</p>
+
+    <div th:unless="${#lists.isEmpty(rows)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th>Roll no</th>
+                <th>Student</th>
+                <th>Phase</th>
+                <th>Met</th>
+                <th>Viva eligible</th>
+                <th>Checklist</th>
+                <th class="no-print">&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="l : ${rows}">
+                <td th:text="${l.rollNo}">24MCS001</td>
+                <td th:text="${l.studentName}">Avika Singh</td>
+                <td th:text="${l.phase != null} ? ${l.phase.label} : '—'">Final</td>
+                <td th:text="|${l.metCount()} / ${l.applicableCount()}|">3 / 10</td>
+                <td>
+                    <span class="badge" th:classappend="${l.vivaEligible()} ? 'badge-approved' : 'badge-rejected'"
+                          th:text="${l.vivaEligible()} ? 'YES' : 'NOT YET'">YES</span>
+                </td>
+                <td>
+                    <span class="badge" th:classappend="${l.complete()} ? 'badge-approved' : 'badge-pending'"
+                          th:text="${l.complete()} ? 'COMPLETE' : 'OPEN'">OPEN</span>
+                </td>
+                <td class="no-print">
+                    <a class="btn btn-ghost btn-sm" th:href="@{/coordinator/readiness/{id}(id=${l.allocationId})}">Ledger</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</section>
+</body>
+</html>

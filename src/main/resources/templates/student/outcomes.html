@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Outcomes</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'शोध परिणाम',
+            'Outcomes',
+            'Papers, patents and products the work produced. You report them; the coordinator verifies them against the evidence.',
+            'STUDENT')}"></div>
+
+    <div th:unless="${board.hasAllocation}" class="hero">
+        <span class="eyebrow">Nothing to report yet</span>
+        <h2>Outcomes are recorded against your allocation</h2>
+        <p class="lead">Once you have a guide, report each paper, patent or product here as it happens.</p>
+        <a th:href="@{/student/guide}" class="btn btn-ghost">Go to my guide</a>
+    </div>
+
+    <div th:if="${board.hasAllocation}">
+
+        <div class="stat-grid reveal">
+            <div class="stat">
+                <span class="stat-value" th:text="${#lists.size(board.rows)}">0</span>
+                <span class="stat-label">Reported</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${board.verifiedCount()}">0</span>
+                <span class="stat-label">Verified by the coordinator</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" th:text="${board.awaitingCount()}">0</span>
+                <span class="stat-label">Awaiting verification</span>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>The publication requirement (guidelines §4.4):</strong> one SCI or Scopus journal paper,
+            or two Scopus or IEEE conference papers, accepted or published and verified. Only verified
+            rows count — see your <a th:href="@{/student/readiness}">readiness ledger</a>.
+        </div>
+
+        <div class="hero" th:with="editing=${mode == 'edit'}">
+            <div class="form-sheet-head">
+                <h2 lang="hi">परिणाम विवरण</h2>
+                <p lang="en" th:text="${editing} ? 'Annexure-6 (d, e) · Correct an outcome' : 'Annexure-6 (d, e) · Report an outcome'">
+                    Annexure-6 (d, e) · Report an outcome</p>
+            </div>
+
+            <div th:if="${editing and editingNote != null and !editingVerified}" class="alert alert-info">
+                <strong>Returned by the coordinator:</strong> <span th:text="${editingNote}">Add the DOI.</span>
+            </div>
+            <div th:if="${editing and editingVerified}" class="alert alert-info">
+                This outcome is verified. Saving a change clears the verification until the coordinator looks again.
+            </div>
+
+            <form class="form-sheet" method="post" th:object="${form}" novalidate
+                  th:action="${editing} ? @{/student/outcomes/{id}(id=${form.id})} : @{/student/outcomes}">
+                <input type="hidden" th:field="*{id}">
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:0 18px">
+                    <div class="field">
+                        <label for="kind">Kind</label>
+                        <select id="kind" th:field="*{kind}">
+                            <option value="">— choose —</option>
+                            <option th:each="k : ${kinds}" th:value="${k}" th:text="${k.label}">Journal paper</option>
+                        </select>
+                        <span class="field-error" th:if="${#fields.hasErrors('kind')}" th:errors="*{kind}">Error</span>
+                    </div>
+                    <div class="field">
+                        <label for="status">Status</label>
+                        <select id="status" th:field="*{status}">
+                            <option value="">— choose —</option>
+                            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}">Published</option>
+                        </select>
+                        <span class="field-error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">Error</span>
+                        <span class="field-hint">Accepted, published, filed or granted count; drafting and communicated do not.</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" th:field="*{title}" maxlength="255"
+                           placeholder="Energy-aware scheduling for edge inference clusters">
+                    <span class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Error</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:0 18px">
+                    <div class="field">
+                        <label for="venue">Venue</label>
+                        <input type="text" id="venue" th:field="*{venue}" maxlength="255"
+                               placeholder="Journal, conference, patent office or repository">
+                        <span class="field-error" th:if="${#fields.hasErrors('venue')}" th:errors="*{venue}">Error</span>
+                    </div>
+                    <div class="field">
+                        <label for="indexing">Indexing</label>
+                        <select id="indexing" th:field="*{indexing}">
+                            <option th:each="i : ${indexings}" th:value="${i}" th:text="${i.label}">Scopus</option>
+                        </select>
+                        <span class="field-error" th:if="${#fields.hasErrors('indexing')}" th:errors="*{indexing}">Error</span>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:0 18px">
+                    <div class="field">
+                        <label for="reference">Reference</label>
+                        <input type="text" id="reference" th:field="*{reference}" maxlength="255"
+                               placeholder="DOI, application number or URL">
+                        <span class="field-error" th:if="${#fields.hasErrors('reference')}" th:errors="*{reference}">Error</span>
+                        <span class="field-hint">What the coordinator will follow to verify it.</span>
+                    </div>
+                    <div class="field">
+                        <label for="outcomeDate">Date</label>
+                        <input type="date" id="outcomeDate" th:field="*{outcomeDate}">
+                        <span class="field-error" th:if="${#fields.hasErrors('outcomeDate')}" th:errors="*{outcomeDate}">Error</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" th:field="*{notes}" rows="3" placeholder="Optional. Co-authors, acceptance letter, anything the coordinator should know."></textarea>
+                    <span class="field-error" th:if="${#fields.hasErrors('notes')}" th:errors="*{notes}">Error</span>
+                </div>
+
+                <div class="btn-row" style="justify-content:flex-start; margin-top:20px">
+                    <button type="submit" class="btn btn-gradient" th:text="${editing} ? 'Save' : 'Report outcome'">Report outcome</button>
+                    <a th:if="${editing}" th:href="@{/student/outcomes}" class="btn btn-ghost">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <h2 style="margin-top:44px">On record</h2>
+
+        <p th:if="${#lists.isEmpty(board.rows)}" class="status-note">Nothing reported yet.</p>
+
+        <div th:unless="${#lists.isEmpty(board.rows)}" class="table-wrap reveal">
+            <table>
+                <thead>
+                <tr>
+                    <th>Kind</th>
+                    <th>Title</th>
+                    <th>Venue · indexing</th>
+                    <th>Status</th>
+                    <th>Verification</th>
+                    <th class="no-print">&nbsp;</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${board.rows}">
+                    <td th:text="${r.kind.label}">Journal paper</td>
+                    <td>
+                        <span th:text="${r.title}">Title</span>
+                        <span th:if="${r.reference != null}" class="field-hint" style="display:block" th:text="${r.reference}">doi</span>
+                    </td>
+                    <td>
+                        <span th:text="${r.venue} ?: '—'">Venue</span>
+                        <span class="field-hint" style="display:block" th:text="${r.indexing.label}">Scopus</span>
+                    </td>
+                    <td>
+                        <span class="badge" th:classappend="${r.status.achieved()} ? 'badge-approved' : 'badge-draft'"
+                              th:text="${r.status.label}">Published</span>
+                    </td>
+                    <td>
+                        <span th:if="${r.verified}" class="badge badge-approved">VERIFIED</span>
+                        <span th:if="${r.verified}" class="field-hint" style="display:block"
+                              th:text="|${r.verifiedByName}, ${#temporals.format(r.verifiedAt.atZone(zone), 'dd MMM yyyy')}|">Coordinator</span>
+                        <span th:if="${r.returned()}" class="badge badge-rejected">RETURNED</span>
+                        <span th:if="${r.returned()}" class="field-hint" style="display:block" th:text="${r.verificationNote}">note</span>
+                        <span th:if="${!r.verified and !r.returned()}" class="badge badge-pending">AWAITING</span>
+                    </td>
+                    <td class="no-print">
+                        <a class="btn btn-ghost btn-sm" th:href="@{/student/outcomes/{id}/edit(id=${r.id})}">Edit</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

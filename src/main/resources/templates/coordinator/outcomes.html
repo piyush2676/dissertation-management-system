@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Outcome verification</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'परिणाम सत्यापन',
+            'Outcome verification',
+            'Papers, patents and products students have reported. Follow the reference, then confirm or return.',
+            'COORDINATOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>Awaiting verification</h2>
+            <p class="lead">Only a verified, achieved outcome counts toward the publication requirement.</p>
+        </div>
+        <span class="badge badge-pending" th:text="${#lists.size(queue)} + ' waiting'">0 waiting</span>
+    </div>
+
+    <div th:if="${#lists.isEmpty(queue)}" class="card" style="margin-bottom:36px">
+        <h3>Nothing waiting</h3>
+        <p>Every reported outcome has been looked at.</p>
+    </div>
+
+    <div th:each="item : ${queue}" th:with="r=${item.row}" class="hero" style="padding:26px; margin-bottom:18px">
+        <div class="page-head" style="margin-bottom:12px">
+            <div>
+                <h3 style="font-size:22px" th:text="${r.title}">Title</h3>
+                <p class="lead" style="margin:0">
+                    <span th:text="${item.studentName}">Avika Singh</span>
+                    · <span th:text="${item.rollNo}">24MCS001</span>
+                    · <span th:text="${r.kind.label}">Journal paper</span>
+                    · <span th:text="${r.indexing.label}">Scopus</span>
+                    · <span th:text="${r.status.label}">Published</span>
+                    · <a th:href="@{/coordinator/readiness/{id}(id=${item.allocationId})}">readiness</a>
+                </p>
+            </div>
+            <span class="badge" th:classappend="${r.status.achieved()} ? 'badge-approved' : 'badge-draft'"
+                  th:text="${r.status.achieved()} ? 'COUNTS IF VERIFIED' : 'NOT YET ACHIEVED'">COUNTS IF VERIFIED</span>
+        </div>
+
+        <div class="field" th:if="${r.venue != null}">
+            <label>Venue</label>
+            <p style="margin:0" th:text="${r.venue}">Venue</p>
+        </div>
+        <div class="field">
+            <label>Reference</label>
+            <p style="margin:0">
+                <a th:if="${r.reference != null and #strings.startsWith(r.reference, 'http')}" th:href="${r.reference}"
+                   target="_blank" rel="noopener" th:text="${r.reference}">https://doi.org/…</a>
+                <span th:if="${r.reference != null and !#strings.startsWith(r.reference, 'http')}" th:text="${r.reference}">10.1000/xyz</span>
+                <span th:if="${r.reference == null}" class="field-hint">None given — a reason to return it.</span>
+            </p>
+        </div>
+        <div class="field" th:if="${r.outcomeDate != null}">
+            <label>Date</label>
+            <p style="margin:0" th:text="${#temporals.format(r.outcomeDate, 'dd MMM yyyy')}">01 Jan 2026</p>
+        </div>
+        <div class="field" th:if="${r.notes != null}">
+            <label>Notes from the student</label>
+            <p style="margin:0; white-space:pre-line" th:text="${r.notes}">…</p>
+        </div>
+        <p th:if="${r.verificationNote != null}" class="field-hint" th:text="'Previously returned: ' + ${r.verificationNote}">Previously returned</p>
+
+        <details th:attr="open=${openOutcomeId != null and openOutcomeId == r.id} ? 'open' : null" style="margin-top:12px">
+            <summary style="cursor:pointer; font-weight:600">Verify or return</summary>
+            <form th:action="@{/coordinator/outcomes/{id}/verify(id=${r.id})}" th:object="${form}"
+                  method="post" novalidate style="margin-top:14px">
+                <div class="field">
+                    <label th:for="'verified-' + ${r.id}">Decision</label>
+                    <select name="verified" th:id="'verified-' + ${r.id}">
+                        <option value="">— choose —</option>
+                        <option value="true"
+                                th:selected="${openOutcomeId != null and openOutcomeId == r.id and form.verified != null and form.verified}">
+                            Verified — I followed the reference and it is as reported</option>
+                        <option value="false"
+                                th:selected="${openOutcomeId != null and openOutcomeId == r.id and form.verified != null and !form.verified}">
+                            Return — something is missing or wrong</option>
+                    </select>
+                    <span class="field-error"
+                          th:if="${openOutcomeId != null and openOutcomeId == r.id and #fields.hasErrors('verified')}"
+                          th:errors="*{verified}">Decision error</span>
+                </div>
+                <div class="field">
+                    <label th:for="'note-' + ${r.id}">Note</label>
+                    <textarea name="note" th:id="'note-' + ${r.id}" rows="3" maxlength="1000"
+                              th:text="${openOutcomeId != null and openOutcomeId == r.id} ? ${form.note} : ''"
+                              placeholder="Optional when verifying; required when returning. The student sees this verbatim."></textarea>
+                    <span class="field-error"
+                          th:if="${openOutcomeId != null and openOutcomeId == r.id and #fields.hasErrors('note')}"
+                          th:errors="*{note}">Note error</span>
+                    <span class="field-error"
+                          th:if="${openOutcomeId != null and openOutcomeId == r.id and #fields.hasErrors('notePresentWhenReturning')}"
+                          th:errors="*{notePresentWhenReturning}">A note is required.</span>
+                </div>
+                <button type="submit" class="btn btn-gradient btn-sm">Record</button>
+            </form>
+        </details>
+    </div>
+
+    <p class="status-note">
+        Verification is the coordinator's, not the guide's, on purpose: the person who confirms a
+        paper exists should not also be the person marking the student. A student edit after
+        verification clears it, so a verified row always describes what you actually saw. Verified
+        outcomes are listed on the dissertation certificate.
+    </p>
+
+</section>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Readiness</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'तैयारी पंजी',
+            'Readiness ledger',
+            'Every requirement between you and the external viva, with the fact that meets it and who verified that fact.',
+            'STUDENT')}"></div>
+
+    <div th:if="${ledger == null}" class="hero">
+        <span class="eyebrow">Nothing to check yet</span>
+        <h2>The ledger opens once you have a guide</h2>
+        <p class="lead">Requirements are read against your allocation: marks, filed documents, verified outcomes, the logbook.</p>
+        <a th:href="@{/student/guide}" class="btn btn-ghost">Go to my guide</a>
+    </div>
+
+    <div th:if="${ledger != null}">
+        <div class="page-head">
+            <div>
+                <h2 th:text="${ledger.topicTitle} ?: 'Your dissertation'">Topic</h2>
+                <p class="lead" style="margin:0">
+                    <span th:if="${ledger.thesisCode != null}"><code th:text="${ledger.thesisCode}">MT26-001</code> · </span>
+                    guide <span th:text="${ledger.supervisorName}">Dr A Sharma</span>
+                </p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm no-print" data-print>Print</button>
+        </div>
+
+        <div th:replace="~{layout/_ledger :: ledger(${ledger})}"></div>
+    </div>
+
+</section>
+</body>
+</html>
