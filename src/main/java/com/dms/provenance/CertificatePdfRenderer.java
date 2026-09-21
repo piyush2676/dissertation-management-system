@@ -111,6 +111,18 @@ public class CertificatePdfRenderer {
                     }
                 }
 
+                // Verified outcomes, same rule as the logbook.
+                String outcomes = facts.getOrDefault("outcomes", "");
+                if (!outcomes.isBlank()) {
+                    y -= 14f;
+                    out.setNonStrokingColor(RED_R, RED_G, RED_B);
+                    y = text(out, bold(), 12f, MARGIN, y, "Verified outcomes");
+                    out.setNonStrokingColor(0f, 0f, 0f);
+                    for (String entry : outcomes.split("\\|")) {
+                        y = text(out, mono(), 8.5f, MARGIN, y - 1f, entry.strip().replace("/", "  "));
+                    }
+                }
+
                 // The seal, and how to check it.
                 y -= 24f;
                 out.setNonStrokingColor(RED_R, RED_G, RED_B);

@@ -5,6 +5,7 @@ import com.dms.allocation.AllocationRepository;
 import com.dms.audit.AuditLogRepository;
 import com.dms.evaluation.EvaluationRepository;
 import com.dms.logbook.LogbookService;
+import com.dms.outcome.OutcomeService;
 import com.dms.session.AcademicSession;
 import com.dms.submission.SubmissionRepository;
 import com.dms.submission.SubmissionVersionRepository;
@@ -47,6 +48,7 @@ class ProvenanceLogbookFactTest {
     @Mock private VivaScheduleRepository vivaRepository;
     @Mock private CertificateRepository certificateRepository;
     @Mock private LogbookService logbookService;
+    @Mock private OutcomeService outcomeService;
 
     @InjectMocks private ProvenanceService service;
 

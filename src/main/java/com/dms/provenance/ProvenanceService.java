@@ -8,6 +8,8 @@ import com.dms.common.Digests;
 import com.dms.common.NotFoundException;
 import com.dms.logbook.LogbookBoard;
 import com.dms.logbook.LogbookService;
+import com.dms.outcome.OutcomeBoard;
+import com.dms.outcome.OutcomeService;
 import com.dms.evaluation.Evaluation;
 import com.dms.evaluation.EvaluationRepository;
 import com.dms.submission.Submission;
@@ -51,6 +53,7 @@ public class ProvenanceService {
     private final VivaScheduleRepository vivaRepository;
     private final CertificateRepository certificateRepository;
     private final LogbookService logbookService;
+    private final OutcomeService outcomeService;
 
     @Transactional(readOnly = true)
     public ProvenanceTimeline timelineFor(Long allocationId) {
@@ -85,6 +88,9 @@ public class ProvenanceService {
         List<LogbookBoard.Row> signed = logbookService.signedRowsFor(allocation);
         for (LogbookBoard.Row row : signed) {
             collect(entries, "LogbookEntry", row.id());
+        }
+        for (OutcomeBoard.Row row : outcomeService.boardFor(allocation).rows()) {
+            collect(entries, "Outcome", row.id());
         }
         entries.sort(Comparator.comparing(ProvenanceTimeline.Entry::at));
 
@@ -170,6 +176,11 @@ public class ProvenanceService {
         List<String> meetings = logbookService.sealedFactsFor(allocation);
         if (!meetings.isEmpty()) {
             facts.put("logbook", String.join(" | ", meetings));
+        }
+        // Verified outcomes, same rule: only once there is one.
+        List<String> outcomes = outcomeService.sealedFactsFor(allocation);
+        if (!outcomes.isEmpty()) {
+            facts.put("outcomes", String.join(" | ", outcomes));
         }
         return facts;
     }
