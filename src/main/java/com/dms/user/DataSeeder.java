@@ -4,6 +4,7 @@ import com.dms.evaluation.RubricCriterion;
 import com.dms.evaluation.RubricCriterionRepository;
 import com.dms.session.AcademicSession;
 import com.dms.session.AcademicSessionRepository;
+import com.dms.session.DeliverableType;
 import com.dms.session.DissertationPhase;
 import com.dms.session.Milestone;
 import com.dms.session.MilestoneRepository;
@@ -111,23 +112,23 @@ public class DataSeeder implements CommandLineRunner {
      */
     private void seedReviews(AcademicSession session, DissertationPhase phase, LocalDate today) {
         if (phase == DissertationPhase.PRE) {
-            createMilestone(session, phase, "Review 1 - Problem statement",
+            createMilestone(session, phase, DeliverableType.SYNOPSIS, "Review 1 - Problem statement",
                     "Title finalisation, problem statement, literature survey and objectives. File the synopsis.",
                     today.plusDays(30), 10, 1);
-            createMilestone(session, phase, "Review 2 - Synopsis and methodology",
+            createMilestone(session, phase, DeliverableType.LITERATURE_SURVEY, "Review 2 - Synopsis and methodology",
                     "Synopsis with the proposed methodology and the first draft of the thesis.",
                     today.plusDays(75), 20, 2);
-            createMilestone(session, phase, "Review 3 - Implementation and paper 1",
+            createMilestone(session, phase, DeliverableType.SYSTEM_DESIGN, "Review 3 - Implementation and paper 1",
                     "Initial implementation, the first research paper and the second draft of the thesis.",
                     today.plusDays(120), 35, 3);
         } else {
-            createMilestone(session, phase, "Review 1 - Implementation",
+            createMilestone(session, phase, null, "Review 1 - Implementation",
                     "Methodology in use and implementation status, with the third draft of the thesis.",
                     today.plusDays(30), 15, 1);
-            createMilestone(session, phase, "Review 2 - Results and paper 2",
+            createMilestone(session, phase, DeliverableType.TECHNICAL_REPORT, "Review 2 - Results and paper 2",
                     "Final implementation, result analysis, the second research paper and the pre-final draft.",
                     today.plusDays(75), 20, 2);
-            createMilestone(session, phase, "Review 3 - Final thesis",
+            createMilestone(session, phase, DeliverableType.FINAL_THESIS, "Review 3 - Final thesis",
                     "Final thesis and documentation for evaluation.",
                     today.plusDays(120), 15, 3);
         }
@@ -176,11 +177,13 @@ public class DataSeeder implements CommandLineRunner {
         session.setCreatedAt(Instant.now());
         return academicSessionRepository.save(session);
     }
-    private void createMilestone(AcademicSession session, DissertationPhase phase, String name, String description,
+    private void createMilestone(AcademicSession session, DissertationPhase phase, DeliverableType deliverable,
+                                 String name, String description,
                                  LocalDate dueDate, int weightage, int sequenceNo) {
         Milestone milestone = new Milestone();
         milestone.setSession(session);
         milestone.setPhase(phase);
+        milestone.setDeliverable(deliverable);
         milestone.setName(name);
         milestone.setDescription(description);
         milestone.setDueDate(dueDate);

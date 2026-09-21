@@ -25,6 +25,10 @@ public class Milestone {
     DissertationPhase phase;
     @Column(nullable = false,length = 128)
     String name;
+    /** Which of the required documents this slot collects, if any. Papers are outcomes, not uploads. */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 32)
+    DeliverableType deliverable;
     @Column(columnDefinition = "TEXT")
     String description;
     @Column(name = "due_date",nullable = false)
