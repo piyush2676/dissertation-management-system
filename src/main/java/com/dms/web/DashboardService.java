@@ -8,6 +8,7 @@ import com.dms.allocation.AllocationStatus;
 import com.dms.audit.AuditLogRepository;
 import com.dms.logbook.LogbookBoard;
 import com.dms.logbook.LogbookService;
+import com.dms.outcome.OutcomeService;
 import com.dms.review.ReviewService;
 import com.dms.submission.StudentSubmissionBoard;
 import com.dms.submission.SubmissionRepository;
@@ -40,6 +41,7 @@ public class DashboardService {
     private final SubmissionService submissionService;
     private final ReviewService reviewService;
     private final LogbookService logbookService;
+    private final OutcomeService outcomeService;
 
     private final TopicRepository topicRepository;
     private final AllocationRepository allocationRepository;
@@ -130,7 +132,8 @@ public class DashboardService {
                 students - placed,
                 supervisorProfileRepository.count(),
                 guidesFull,
-                submissionRepository.count());
+                submissionRepository.count(),
+                outcomeService.unverifiedCount());
     }
 
     public Dashboards.Admin admin() {

@@ -3,6 +3,8 @@ package com.dms.notification;
 import com.dms.allocation.Allocation;
 import com.dms.allocation.AllocationRepository;
 import com.dms.audit.DomainEvents;
+import com.dms.logbook.LogbookEntryRepository;
+import com.dms.outcome.OutcomeRepository;
 import com.dms.session.Milestone;
 import com.dms.submission.Submission;
 import com.dms.submission.SubmissionRepository;
@@ -46,6 +48,8 @@ class NotificationListenerTest {
     @Mock private TopicRepository topicRepository;
     @Mock private AllocationRepository allocationRepository;
     @Mock private SubmissionRepository submissionRepository;
+    @Mock private LogbookEntryRepository logbookRepository;
+    @Mock private OutcomeRepository outcomeRepository;
 
     @InjectMocks private NotificationListener listener;
 

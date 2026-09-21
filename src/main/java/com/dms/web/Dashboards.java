@@ -80,7 +80,8 @@ public final class Dashboards {
             long unallocated,
             long guides,
             long guidesFull,
-            long submissionsFiled) {
+            long submissionsFiled,
+            long outcomesToVerify) {
 
         public long placedPercent() {
             return students == 0 ? 0 : Math.round(placed * 100.0 / students);

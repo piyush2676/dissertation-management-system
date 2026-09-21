@@ -4,6 +4,7 @@ import com.dms.allocation.Allocation;
 import com.dms.allocation.AllocationRepository;
 import com.dms.audit.DomainEvents;
 import com.dms.logbook.LogbookEntryRepository;
+import com.dms.outcome.OutcomeRepository;
 import com.dms.submission.Submission;
 import com.dms.submission.SubmissionRepository;
 import com.dms.topic.Topic;
@@ -36,6 +37,7 @@ public class NotificationListener {
     private final AllocationRepository allocationRepository;
     private final SubmissionRepository submissionRepository;
     private final LogbookEntryRepository logbookRepository;
+    private final OutcomeRepository outcomeRepository;
 
     // ---- topic --------------------------------------------------------------
 
@@ -184,6 +186,32 @@ public class NotificationListener {
                                 ? "Your guide countersigned the entry."
                                 : entry.getSupervisorRemarks(),
                         "/student/logbook"));
+    }
+
+    // ---- outcomes -----------------------------------------------------------
+
+    /** Reported outcomes reach the coordinator through the queue page; only the decision is pushed. */
+    @EventListener
+    public void on(DomainEvents.OutcomeVerified event) {
+        outcomeRepository.findWithGraphById(event.entityId()).ifPresent(outcome ->
+                notifications.notify(outcome.getAllocation().getStudent().getUser(),
+                        NotificationType.OUTCOME_VERIFIED,
+                        event.verified() ? "An outcome was verified" : "An outcome was returned",
+                        outcome.getTitle() + (outcome.getVerificationNote() == null
+                                ? "" : " — " + outcome.getVerificationNote()),
+                        "/student/outcomes"));
+    }
+
+    // ---- plagiarism ---------------------------------------------------------
+
+    @EventListener
+    public void on(DomainEvents.PlagiarismChecked event) {
+        submissionRepository.findWithGraphById(event.entityId()).ifPresent(submission ->
+                notifications.notify(submission.getAllocation().getStudent().getUser(),
+                        NotificationType.PLAGIARISM_CHECKED,
+                        "Similarity report recorded on " + submission.getMilestone().getName(),
+                        event.newValue(),
+                        "/student/submissions/" + submission.getId()));
     }
 
     // ---- helpers ------------------------------------------------------------
