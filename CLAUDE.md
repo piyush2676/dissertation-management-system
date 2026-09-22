@@ -22,7 +22,7 @@ Owner: Piyush Pandey. Repo: `github.com/piyush2676/dissertation-management-syste
 | Java | 21 | |
 | Spring Boot | 4.1.0 | starters renamed vs 3.x — see below |
 | PostgreSQL | 18 | database `dms`, service `postgresql-x64-18` |
-| Flyway | via `spring-boot-starter-flyway` | currently at **V17** |
+| Flyway | via `spring-boot-starter-flyway` | currently at **V18** |
 | Thymeleaf | + `thymeleaf-extras-springsecurity6` | |
 | Spring AI | 2.0.1 | Gemini via Google AI Studio; off unless a key is set |
 | Build | Maven wrapper (`.\mvnw.cmd`) | no global Maven |
@@ -33,9 +33,9 @@ tutorials blindly.
 
 ---
 
-## Current state (2026-09-22, phase 15)
+## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–15 complete, 282 tests green, 158 commits. Flyway at V17.
+Phases 0–16 complete, 310 tests green, 167 commits. Flyway at V18.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -62,7 +62,7 @@ reporting, no self-registration, no borrowed branding.
 | 13 | Logbook (Annexure-4): student records meetings, guide countersigns, signed rows digested and listed by the certificate | done |
 | 14 | Outcomes registry, similarity checks, deliverable checklist, readiness ledger, 50% viva gate enforced | done |
 | 15 | Review panels (guide off their own), panel scoring, Annexure-6 recommendation | done |
-| 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | next |
+| 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | done |
 
 ### Phase 12 — what changed underneath
 
@@ -115,14 +115,20 @@ or grades. The novelty prompt forbids it explicitly, output renders inside the A
 and similarity is described as overlap with the department archive — it is not plagiarism
 detection and there is no web-wide corpus behind it.
 
-### Open decision — taken on 2026-09-17, lands in phase 16
+### Open decision — taken 2026-09-17, shipped in phase 16
 
-`AllocationStatus.COORDINATOR_ASSIGNED` is terminal, so a coordinator who places a student with
-the wrong guide **cannot undo it** from the UI, and the partial unique index then blocks a second
-live allocation. Guideline §4.11 requires a formal supervisor-change process, so the owner agreed
-to reverse the `AllocationStatusTest` invariant ("only REQUESTED may be non-terminal") — but only
-behind a coordinator-reviewed change request with a recorded reason, not a free withdraw button.
-Until phase 16 ships, the limitation stands.
+`AllocationStatus.COORDINATOR_ASSIGNED` and `ACCEPTED` are no longer terminal, and
+`Topic.APPROVED -> CHANGES_REQUESTED` is now legal. **Both moves have exactly one caller:
+`ChangeRequestService.approve`**, after the coordinator answers a written §4.11 request.
+
+Two things keep that honest, and both must stay:
+- `AllocationService.withdraw` has an **explicit `status != REQUESTED` guard**. Without it,
+  widening the transition map silently let a student withdraw their own live placement —
+  `AllocationServiceTest.withdrawAfterTheGuideAcceptedThrows` caught exactly that.
+- `TopicService.decide` starts from `PROPOSED`, so it cannot reach the new topic transition.
+
+If you widen a transition map again, go looking for the services that were relying on the old
+invariant instead of checking explicitly.
 
 ### Cut from scope
 
@@ -138,7 +144,7 @@ ships inside the overlap check).
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (282 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (310 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -208,7 +214,11 @@ com.dms
 ├── security/     SecurityConfig, CustomUserDetailsService, AuthzService
 ├── logbook/      LogbookEntry, LogbookEntryStatus, LogbookService, LogbookBoard, controllers
 ├── outcome/      Outcome, OutcomeKind/Indexing/Status, OutcomeService, OutcomeBoard, controllers
+├── attainment/   AttainmentReport, AttainmentService, CoordinatorAttainmentController
+├── change/       ChangeRequest, ChangeKind, ChangeRequestStatus, ChangeRequestService, controllers
+├── export/       ExportService (Format 4/5 CSV), CoordinatorExportController
 ├── panel/        PanelMember, PanelService, PanelBoard, CoordinatorPanelController, PanelReviewController
+├── titlebank/    BankedTitle, Complexity, TitleBankService, controllers
 ├── recommendation/ Recommendation, Verdict, RecommendationService, controllers
 ├── readiness/    ReadinessLedger, ReadinessService, controllers
 ├── session/      AcademicSession, Milestone, DissertationPhase, DeliverableType
@@ -287,6 +297,14 @@ These are load-bearing. Violating one produces a runtime failure, not a compile 
   gate without saying so in `docs/guide.md` §13 first.
 - `PlagiarismCheck` is its own table, one row per version. Never add a similarity column to
   `SubmissionVersion` — it is append-only and provenance depends on that.
+- **A change request is data, not a status on the allocation.** §4.11 says the scholar keeps
+  working while the committee considers it, so nothing moves until a decision lands. One pending
+  request per allocation, held by a partial unique index.
+- **A banked title is a prefill, never an approval.** Adopting one fills the Annexure-1 form and
+  stops; the normal proposal and approval still run, and withdrawing a title never touches a
+  topic already proposed from it.
+- **Attainment is never stored.** `AttainmentService` reads rubric CO codes and examiners' marks
+  each time. A stored attainment number goes stale the moment somebody rescores.
 - **The guide still scores; they just cannot sit on their own student's panel.** §7.1 puts the
   supervisor's assessment inside the internal marks. The conflict rule exists because the mark
   sheet is a *mean* — one opinion must not count twice. `PanelService.add` refuses the supervisor
@@ -352,4 +370,4 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
-| `src/main/resources/db/migration/` | V1–V17 |
+| `src/main/resources/db/migration/` | V1–V18 |

@@ -26,9 +26,10 @@ Built, verified in a browser, and covered by tests:
 | 13 | Logbook (Annexure-4) with guide countersign sealed into the provenance chain | done |
 | 14 | Outcomes registry, plagiarism fields, deliverable checklist, readiness ledger, 50% viva gate | done |
 | 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | done |
-| 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | planned |
+| 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | done |
 
-`.\mvnw.cmd test` — 282 tests, green. Flyway at V17. `scripts/acceptance.sh` — 20 assertions.
+`.\mvnw.cmd test` — 310 tests, green. Flyway at V18. `scripts/acceptance.sh` — 20 assertions.
+Phases 12 to 16 are complete: every mandate in section 13's table is carried.
 
 **Phases 12–16 follow one source document:** `docs/m.tech_m.tech int._dissertation_guidelines_v3.md`,
 the institute's dissertation guidelines for M.Tech / M.Tech Int. from 2025-26. Section 13 below
@@ -53,14 +54,14 @@ the `SimilarityProvider` interface. At department scale an exact scan beats an i
 exactly right rather than nearly right; past a few thousand rows, that one class is what pgvector
 replaces, plus a migration copying the arrays into a `vector(768)` column.
 
-**Known limitation, decision now taken.** `AllocationStatus.COORDINATOR_ASSIGNED` is terminal, so
-a coordinator who places a student with the wrong guide cannot undo it from the UI, and the
-partial unique index then blocks a second live allocation. The fix is one line — allow
-`WITHDRAWN` from `ACCEPTED` and `COORDINATOR_ASSIGNED`, then add a revoke action — but it
-reverses a decision that `AllocationStatusTest` deliberately pins ("only REQUESTED may be
-non-terminal"). Guideline §4.11 requires a formal supervisor-change process, which settles it:
-the invariant is reversed in phase 16 behind a coordinator-only change request, not a free
-withdraw button.
+**The long-standing limitation is closed.** `AllocationStatus.COORDINATOR_ASSIGNED` used to be
+terminal, so a coordinator who placed a student with the wrong guide could not undo it and the
+partial unique index then blocked a second live allocation. Phase 16 reversed that invariant, and
+the one alongside it on `Topic.APPROVED`, behind guideline §4.11's written change request: the
+state machines allow the moves, `ChangeRequestService.approve` is the only caller that may make
+them, and `AllocationService.withdraw` gained an explicit guard so a student still cannot pull a
+placement they have. The two state tests were rewritten to state the new rule; the old ones were
+right about why it mattered.
 
 
 ---

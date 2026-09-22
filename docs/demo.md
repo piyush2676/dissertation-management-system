@@ -143,6 +143,9 @@ Now sign in as `guide2@college.edu` / `guide123` and search **`Avika`** again.
 
 ### 6b · The logbook — 1 min
 
+Student window: **Title bank** → the titles the faculty are offering → **Use this as my starting
+point** → the proposal form opens prefilled, and every field is still editable.
+
 Student window: **Logbook** → record a meeting (date, what the guide assigned, what got done).
 
 Guide window: **Logbook** → the row is in the queue → **Return** it with a remark. Student window:
@@ -201,6 +204,28 @@ cleared, and nothing else.
 > "That sheet is confidential. The coordinator reads the verdict, the wording and the viva
 > questions; the student's own ledger will not print them, and there is no student route to the
 > page at all."
+
+### 6e · The change nobody could make before — 2 min
+
+Student window: **Change request** → ask to change supervisor, give a real reason, submit. Point
+out that the guide, the topic and every submission are untouched.
+
+Coordinator window: **Change requests** → approve it. Then **Allocate guides** — the scholar is
+back on the board and can be placed with somebody else.
+
+> "Until this phase that was a dead end. A coordinator who placed a student with the wrong guide
+> could not undo it, because the allocation states were terminal and a partial unique index
+> blocked a second placement. The guidelines require a formal change process, so the invariant
+> was reversed — but only one method in the whole system may make that move, and a student still
+> cannot withdraw a placement they have. The test suite caught me the moment I widened the state
+> machine without adding that guard."
+
+Coordinator window: **Exports** → download Format 4 and open it. Then **CO attainment**.
+
+> "Those are the two lists the department sends the Director Academics, generated from the
+> register rather than retyped. And that is course outcome attainment — not stored anywhere,
+> computed from the CO codes on the rubric and the marks the examiners entered, so it cannot
+> disagree with the mark sheet."
 
 ### 7 · Evaluation, viva and the mark sheet — 2 min
 
