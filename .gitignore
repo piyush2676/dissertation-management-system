@@ -43,3 +43,9 @@ application-local.properties
 
 # Word lock files created while a .docx in docs/ is open
 ~$*
+
+### Real cohort data — never committed
+# Institutional records: names and roll numbers of actual scholars. The
+# importer that reads these is committed; the files themselves are not.
+/data/
+*.xlsx
