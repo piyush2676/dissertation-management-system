@@ -176,6 +176,32 @@ Coordinator window: **Outcomes** → the paper is in the queue → follow the re
 Coordinator window: **Viva** → try to book a student who is short on marks; the refusal names
 the reason.
 
+### 6d · Panels and the supervisor's sheet — 2 min
+
+Coordinator window: **Panels** → try to appoint the student's own guide; the row is greyed out and
+a direct post is refused with the reason. Appoint the *other* guide instead.
+
+Sign in as that other guide in a third window: **Panel** → the student is there → **Score**.
+
+Coordinator window: **Mark sheet** → the student now shows **2 examiners** and the average has
+moved.
+
+> "The guidelines keep the supervisor's own assessment inside the internal marks, so the guide
+> still scores. What the system refuses is a guide on their own student's panel — the mark sheet
+> is a mean, and one opinion must not count twice. The panel member holds REVIEWER, which is why
+> this page lives under /review rather than /supervisor: it authorises by who you are to this
+> student, not by a URL prefix."
+
+Guide window: **Summary sheets** → file Annexure-6, pick [C], leave the queries box empty; it
+refuses. Fill it in, pick [B], file.
+
+Student window: **Readiness** → the recommendation line says it is filed and the thesis is
+cleared, and nothing else.
+
+> "That sheet is confidential. The coordinator reads the verdict, the wording and the viva
+> questions; the student's own ledger will not print them, and there is no student route to the
+> page at all."
+
 ### 7 · Evaluation, viva and the mark sheet — 2 min
 
 Guide window: **Evaluate** → open the student → score each criterion → submit.

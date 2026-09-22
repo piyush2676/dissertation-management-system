@@ -22,7 +22,7 @@ Owner: Piyush Pandey. Repo: `github.com/piyush2676/dissertation-management-syste
 | Java | 21 | |
 | Spring Boot | 4.1.0 | starters renamed vs 3.x — see below |
 | PostgreSQL | 18 | database `dms`, service `postgresql-x64-18` |
-| Flyway | via `spring-boot-starter-flyway` | currently at **V16** |
+| Flyway | via `spring-boot-starter-flyway` | currently at **V17** |
 | Thymeleaf | + `thymeleaf-extras-springsecurity6` | |
 | Spring AI | 2.0.1 | Gemini via Google AI Studio; off unless a key is set |
 | Build | Maven wrapper (`.\mvnw.cmd`) | no global Maven |
@@ -33,9 +33,9 @@ tutorials blindly.
 
 ---
 
-## Current state (2026-09-22)
+## Current state (2026-09-22, phase 15)
 
-Phases 0–14 complete, 266 tests green, 149 commits. Flyway at V16.
+Phases 0–15 complete, 282 tests green, 158 commits. Flyway at V17.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -61,8 +61,8 @@ reporting, no self-registration, no borrowed branding.
 | 12 | Guideline alignment: dissertation phase, review milestones, marks-based rubric with bands + CO/PO, Annexure-1 fields, thesis code, co-supervisor | done |
 | 13 | Logbook (Annexure-4): student records meetings, guide countersigns, signed rows digested and listed by the certificate | done |
 | 14 | Outcomes registry, similarity checks, deliverable checklist, readiness ledger, 50% viva gate enforced | done |
-| 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | next |
-| 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | planned |
+| 15 | Review panels (guide off their own), panel scoring, Annexure-6 recommendation | done |
+| 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | next |
 
 ### Phase 12 — what changed underneath
 
@@ -138,7 +138,7 @@ ships inside the overlap check).
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (266 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (282 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -208,6 +208,8 @@ com.dms
 ├── security/     SecurityConfig, CustomUserDetailsService, AuthzService
 ├── logbook/      LogbookEntry, LogbookEntryStatus, LogbookService, LogbookBoard, controllers
 ├── outcome/      Outcome, OutcomeKind/Indexing/Status, OutcomeService, OutcomeBoard, controllers
+├── panel/        PanelMember, PanelService, PanelBoard, CoordinatorPanelController, PanelReviewController
+├── recommendation/ Recommendation, Verdict, RecommendationService, controllers
 ├── readiness/    ReadinessLedger, ReadinessService, controllers
 ├── session/      AcademicSession, Milestone, DissertationPhase, DeliverableType
 ├── storage/      StorageService, LocalDiskStorageService, StoredFile
@@ -285,6 +287,16 @@ These are load-bearing. Violating one produces a runtime failure, not a compile 
   gate without saying so in `docs/guide.md` §13 first.
 - `PlagiarismCheck` is its own table, one row per version. Never add a similarity column to
   `SubmissionVersion` — it is append-only and provenance depends on that.
+- **The guide still scores; they just cannot sit on their own student's panel.** §7.1 puts the
+  supervisor's assessment inside the internal marks. The conflict rule exists because the mark
+  sheet is a *mean* — one opinion must not count twice. `PanelService.add` refuses the supervisor
+  and co-supervisor; removing a member never deletes their marks.
+- **Panel scoring is under `/review/**`, not `/supervisor/**`** — a panel member may hold only
+  REVIEWER. Same reason `/files/**` and `/review/**` already sit outside the role prefixes.
+- **Annexure-6 is confidential and the model enforces it.** `RecommendationService` has no student
+  route; `ReadinessService.Audience` decides what the ledger prints — the office sees the verdict,
+  the student sees only that it is filed and whether the thesis is cleared. A ledger rule that
+  reads a confidential source must take the audience.
 
 ---
 
@@ -340,4 +352,4 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
-| `src/main/resources/db/migration/` | V1–V16 |
+| `src/main/resources/db/migration/` | V1–V17 |
