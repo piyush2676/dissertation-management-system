@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Title bank</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'विषय कोष',
+            'Title bank',
+            'Titles the faculty are offering this session. Take one as a starting point, or propose your own.',
+            'STUDENT')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>On offer</h2>
+            <p class="lead">Adopting a title prefills your proposal form. It approves nothing and binds you to nobody.</p>
+        </div>
+        <a th:href="@{/student/topic/new}" class="btn btn-ghost btn-sm">Propose my own</a>
+    </div>
+
+    <form method="get" th:action="@{/student/titles}" class="inline-form no-print" style="margin-bottom:18px">
+        <input type="search" name="q" th:value="${q}" maxlength="120"
+               placeholder="Search a title, a domain or an abstract" aria-label="Search titles">
+        <button type="submit" class="btn btn-ghost btn-sm">Search</button>
+        <a th:if="${q != null and !q.isEmpty()}" th:href="@{/student/titles}" class="btn btn-ghost btn-sm">Clear</a>
+    </form>
+
+    <div th:if="${#lists.isEmpty(titles)}" class="card">
+        <h3 th:text="${q != null and !q.isEmpty()} ? 'Nothing matches that' : 'No titles yet'">No titles yet</h3>
+        <p>The faculty add their titles before the session opens. You can always propose your own.</p>
+    </div>
+
+    <div th:each="t : ${titles}" class="hero" style="padding:24px; margin-bottom:16px">
+        <div class="page-head" style="margin-bottom:10px">
+            <div>
+                <h3 style="font-size:20px; margin:0" th:text="${t.title}">Audio deepfake detection</h3>
+                <p class="lead" style="margin:4px 0 0">
+                    <span th:text="${t.supervisorName}">Dr A Sharma</span>
+                    <span th:if="${t.supervisorDesignation != null}"> · <span th:text="${t.supervisorDesignation}">Associate Professor</span></span>
+                    · <span th:text="${t.domain}">AI/ML</span>
+                </p>
+            </div>
+            <span class="badge badge-draft" th:text="${t.complexity.label}">Intermediate</span>
+        </div>
+
+        <div class="paper">
+            <p class="paper-note" th:text="${t.abstractText}">Abstract</p>
+        </div>
+
+        <p style="margin:10px 0 0">
+            <span class="badge badge-approved" th:text="${t.expectedOutcome.label}">Research paper publication</span>
+        </p>
+        <p th:if="${t.researchInterests != null}" class="field-hint"
+           th:text="'Guide works on: ' + ${t.researchInterests}">Guide works on: …</p>
+
+        <div class="btn-row no-print" style="justify-content:flex-start; margin-top:14px">
+            <a class="btn btn-primary btn-sm"
+               th:href="@{/student/topic/new(fromTitle=${t.id})}">Use this as my starting point</a>
+        </div>
+    </div>
+
+    <p class="status-note">
+        Section 4.6 of the guidelines lets you take a faculty title or bring an idea of your own.
+        Either way you fill in the same Annexure-1 form and the same approval runs, so a banked
+        title is a head start, not a shortcut.
+    </p>
+
+</section>
+</body>
+</html>

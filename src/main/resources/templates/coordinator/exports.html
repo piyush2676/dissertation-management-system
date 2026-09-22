@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Exports</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'सूची निर्यात',
+            'Exports',
+            'The lists the department sends to the Office of Director Academics, as CSV the office can open.',
+            'COORDINATOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>Formats 4 and 5</h2>
+            <p class="lead">Guidelines 4.13 and 5.6: the final allocation list, by programme.</p>
+        </div>
+        <div class="btn-row no-print">
+            <a th:each="p : ${programmes}" th:href="@{/coordinator/exports(programme=${p})}"
+               class="btn btn-sm" th:classappend="${p == programme} ? 'btn-primary' : 'btn-ghost'"
+               th:text="${#strings.replace(p, '_', ' ')}">MTECH</a>
+        </div>
+    </div>
+
+    <div class="card-grid reveal">
+        <article class="card">
+            <h3>Format 4 — final list submission</h3>
+            <p>
+                Thesis ID, title, scholar, supervisors, outcome and status: one row per placed
+                scholar. The outcome column lists only outcomes the coordinator has verified,
+                because an export is what the department stands behind.
+            </p>
+            <a class="btn btn-primary btn-sm"
+               th:href="@{/coordinator/exports/format4.csv(programme=${programme})}">Download Format 4</a>
+        </article>
+
+        <article class="card">
+            <h3>Format 5 — allocation details</h3>
+            <p>
+                The fuller sheet: roll number, ERP-style identifiers, phase, research domain,
+                both supervisors, expected outcomes and SDG alignment, with the session label.
+            </p>
+            <a class="btn btn-primary btn-sm"
+               th:href="@{/coordinator/exports/format5.csv(programme=${programme})}">Download Format 5</a>
+        </article>
+    </div>
+
+    <p class="status-note">
+        Every field is quoted, so a thesis title with a comma stays one column, and the file
+        carries a byte-order mark so a name with a diacritic opens correctly in Excel. The rows
+        are generated from the register at the moment you click: nothing is cached, and nothing
+        the office receives was typed twice.
+    </p>
+
+</section>
+</body>
+</html>

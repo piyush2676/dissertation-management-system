@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Change requests</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'परिवर्तन अनुरोध',
+            'Change requests',
+            'Scholars asking to change supervisor or title. Approving one is the only thing that can undo a placement.',
+            'COORDINATOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>With the committee</h2>
+            <p class="lead">Guidelines 4.11: interact with the guide and the scholar, then answer.</p>
+        </div>
+        <span class="badge badge-pending" th:text="${#lists.size(queue)} + ' waiting'">0 waiting</span>
+    </div>
+
+    <div th:if="${#lists.isEmpty(queue)}" class="card" style="margin-bottom:36px">
+        <h3>Nothing waiting</h3>
+        <p>No scholar has asked for a change.</p>
+    </div>
+
+    <div th:each="item : ${queue}" th:with="r=${item.row}" class="hero" style="padding:26px; margin-bottom:18px">
+        <div class="page-head" style="margin-bottom:12px">
+            <div>
+                <h3 style="font-size:22px" th:text="${r.kind.label}">Change of supervisor</h3>
+                <p class="lead" style="margin:0">
+                    <span th:text="${item.studentName}">Avika Singh</span>
+                    · <span th:text="${item.rollNo}">24MCS001</span>
+                    · currently with <span th:text="${item.currentSupervisor}">Dr A Sharma</span>
+                    · <a th:href="@{/coordinator/readiness/{id}(id=${item.allocationId})}">readiness</a>
+                </p>
+            </div>
+            <span class="badge badge-pending"
+                  th:text="${#temporals.format(r.requestedAt.atZone(zone), 'dd MMM yyyy')}">01 Jan</span>
+        </div>
+
+        <div class="field">
+            <label>Justification</label>
+            <p style="margin:0; white-space:pre-line" th:text="${r.reason}">…</p>
+        </div>
+        <div class="field" th:if="${item.topicTitle != null}">
+            <label>Current title</label>
+            <p style="margin:0" th:text="${item.topicTitle}">Topic</p>
+        </div>
+        <div class="field" th:if="${r.preferredSupervisorName != null}">
+            <label>Preferred guide</label>
+            <p style="margin:0" th:text="${r.preferredSupervisorName}">Dr B Pandey</p>
+        </div>
+        <div class="field" th:if="${r.proposedTitle != null}">
+            <label>Intended title</label>
+            <p style="margin:0" th:text="${r.proposedTitle}">…</p>
+        </div>
+
+        <p class="status-note" th:if="${r.kind.name() == 'SUPERVISOR'}">
+            Approving withdraws the placement: the seat frees up and the scholar reappears on the
+            allocation board for you to place. Their topic, submissions and logbook are untouched.
+        </p>
+        <p class="status-note" th:if="${r.kind.name() == 'TITLE'}">
+            Approving returns the approved title to the scholar to propose again. The thesis ID
+            survives and the round number goes up, so the record still reads as one dissertation.
+        </p>
+
+        <details th:attr="open=${openRequestId != null and openRequestId == r.id} ? 'open' : null"
+                 style="margin-top:12px">
+            <summary style="cursor:pointer; font-weight:600">Answer the request</summary>
+
+            <form th:action="@{/coordinator/change-requests/{id}/decide(id=${r.id})}" th:object="${form}"
+                  method="post" novalidate style="margin-top:14px">
+                <div class="field">
+                    <label th:for="'decision-' + ${r.id}">Decision</label>
+                    <select name="decision" th:id="'decision-' + ${r.id}">
+                        <option value="">— choose —</option>
+                        <option value="APPROVED"
+                                th:selected="${openRequestId != null and openRequestId == r.id and form.decision != null and form.decision.name() == 'APPROVED'}">
+                            Approve</option>
+                        <option value="REJECTED"
+                                th:selected="${openRequestId != null and openRequestId == r.id and form.decision != null and form.decision.name() == 'REJECTED'}">
+                            Reject</option>
+                    </select>
+                    <span class="field-error"
+                          th:if="${openRequestId != null and openRequestId == r.id and #fields.hasErrors('decision')}"
+                          th:errors="*{decision}">Decision error</span>
+                </div>
+                <div class="field">
+                    <label th:for="'note-' + ${r.id}">Note to the scholar</label>
+                    <textarea name="note" th:id="'note-' + ${r.id}" rows="3" maxlength="1000"
+                              th:text="${openRequestId != null and openRequestId == r.id} ? ${form.note} : ''"
+                              placeholder="Optional when approving; required when refusing."></textarea>
+                    <span class="field-error"
+                          th:if="${openRequestId != null and openRequestId == r.id and #fields.hasErrors('note')}"
+                          th:errors="*{note}">Note error</span>
+                    <span class="field-error"
+                          th:if="${openRequestId != null and openRequestId == r.id and #fields.hasErrors('notePresentWhenRejecting')}"
+                          th:errors="*{notePresentWhenRejecting}">A reason is required.</span>
+                </div>
+                <button type="submit" class="btn btn-gradient btn-sm">Record the decision</button>
+            </form>
+        </details>
+    </div>
+
+</section>
+</body>
+</html>

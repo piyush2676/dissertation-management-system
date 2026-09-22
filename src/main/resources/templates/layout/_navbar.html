@@ -65,17 +65,20 @@
 
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/dashboard}">Dashboard</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/topic}">My topic</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/titles}">Title bank</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/guide}">My guide</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/submissions}">Submissions</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/logbook}">Logbook</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/outcomes}">Outcomes</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/readiness}">Readiness</a></li>
+            <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/change-request}">Change request</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/result}">Result</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/ai/novelty}">Overlap check</a></li>
             <li sec:authorize="hasRole('STUDENT')"><a th:href="@{/student/ai/match}">Suggested guides</a></li>
 
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/dashboard}">Dashboard</a></li>
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/topics}">Topic approvals</a></li>
+            <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/titles}">Title bank</a></li>
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/requests}">Guide requests</a></li>
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/submissions}">Submissions</a></li>
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/logbook}">Logbook</a></li>
@@ -90,6 +93,9 @@
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/marksheet}">Mark sheet</a></li>
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/outcomes}">Outcomes</a></li>
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/readiness}">Readiness</a></li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/change-requests}">Change requests</a></li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/attainment}">CO attainment</a></li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/exports}">Exports</a></li>
 
             <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Dashboard</a></li>
             <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/users}">Users</a></li>

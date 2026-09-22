@@ -84,7 +84,7 @@ class SecurityRulesTest {
     @WithMockUser(roles = "COORDINATOR")
     void aCoordinatorReachesTheCoordinatorDashboard() throws Exception {
         when(dashboardService.coordinator())
-                .thenReturn(new Dashboards.Coordinator("2026-27", 0, 0, 0, 0, 0, 0, 0));
+                .thenReturn(new Dashboards.Coordinator("2026-27", 0, 0, 0, 0, 0, 0, 0, 0));
         mvc.perform(get("/coordinator/dashboard")).andExpect(status().isOk());
     }
 

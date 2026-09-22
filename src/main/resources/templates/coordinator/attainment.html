@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>CO attainment</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'सीओ उपलब्धि',
+            'CO attainment',
+            'Course outcome attainment for the cohort, computed from the marks already on record.',
+            'COORDINATOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>This cohort</h2>
+            <p class="lead" th:text="${report.sessionLabel != null}
+                    ? |${report.sessionLabel} · ${report.scoredCount} of ${report.cohortSize} scholars marked|
+                    : 'No active session for this programme.'">
+                2026-27 · 3 of 4 scholars marked</p>
+        </div>
+        <div class="btn-row no-print">
+            <a th:each="p : ${programmes}" th:href="@{/coordinator/attainment(programme=${p}, phase=${phase})}"
+               class="btn btn-sm" th:classappend="${p == programme} ? 'btn-primary' : 'btn-ghost'"
+               th:text="${#strings.replace(p, '_', ' ')}">MTECH</a>
+            <a th:each="ph : ${phases}" th:href="@{/coordinator/attainment(programme=${programme}, phase=${ph})}"
+               class="btn btn-sm" th:classappend="${ph == phase} ? 'btn-primary' : 'btn-ghost'"
+               th:text="${ph.label}">Final Dissertation</a>
+        </div>
+    </div>
+
+    <p th:if="${report.isEmpty()}" class="status-note">
+        Nothing to compute yet: no scholar in this phase has been marked.
+    </p>
+
+    <div th:unless="${report.isEmpty()}">
+        <div class="table-wrap reveal">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">CO</th>
+                    <th scope="col">Assessed by</th>
+                    <th scope="col">Marks</th>
+                    <th scope="col">PO mapping</th>
+                    <th scope="col">Average</th>
+                    <th scope="col">Attained</th>
+                    <th scope="col">Level</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${report.rows}">
+                    <td><strong th:text="${r.coCode}">CO1</strong></td>
+                    <td>
+                        <span th:each="c, it : ${r.criteria}"
+                              th:text="${c} + (${it.last} ? '' : ', ')">Problem statement</span>
+                    </td>
+                    <td th:text="${r.maxMarks}">30</td>
+                    <td th:text="${r.poMapping} ?: '—'">PO1, PO2</td>
+                    <td th:text="${r.measured()} ? ${r.averagePercent} + '%' : '—'">72.4%</td>
+                    <td th:text="${r.measured()} ? |${r.studentsAttained} / ${r.studentsScored} (${r.attainmentPercent}%)| : '—'">
+                        2 / 3 (66.7%)</td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${r.level() >= 2} ? 'badge-approved'
+                                            : (${r.level() == 1} ? 'badge-pending' : 'badge-rejected')"
+                              th:text="${r.level()}">2</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="btn-row no-print" style="justify-content:flex-start; margin-top:18px">
+            <button type="button" class="btn btn-ghost btn-sm" data-print>Print</button>
+        </div>
+    </div>
+
+    <p class="status-note">
+        A scholar attains a course outcome at
+        <span th:text="${T(com.dms.attainment.AttainmentReport).ATTAINMENT_THRESHOLD_PERCENT}">60</span>%
+        or more of the marks on the rubric rows carrying it, averaged across examiners. The CO's
+        attainment is the share of marked scholars who cleared that, and the level is 3, 2 or 1 at
+        70, 60 and 50% of the cohort. Nothing here is stored: it is read from the rubric's CO codes
+        and the examiners' marks each time you open the page, so it cannot go stale when somebody
+        rescores.
+    </p>
+
+</section>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Change request</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'परिवर्तन अनुरोध',
+            'Change request',
+            'Ask the committee to change your supervisor or your thesis title. Your work carries on while they consider it.',
+            'STUDENT')}"></div>
+
+    <div th:unless="${board.hasAllocation}" class="hero">
+        <span class="eyebrow">Nothing to change yet</span>
+        <h2>A request is raised against a live allocation</h2>
+        <p class="lead">Once you have a guide, this is where you ask for a change and give your reasons.</p>
+        <a th:href="@{/student/guide}" class="btn btn-ghost">Go to my guide</a>
+    </div>
+
+    <div th:if="${board.hasAllocation}">
+
+        <div class="page-head">
+            <div>
+                <h2>Where you stand</h2>
+                <p class="lead" style="margin:0">
+                    guide <span th:text="${board.supervisorName}">Dr A Sharma</span>
+                    <span th:if="${board.thesisCode != null}"> · <code th:text="${board.thesisCode}">MT26-001</code></span>
+                    <span th:if="${board.topicTitle != null}"> · <span th:text="${board.topicTitle}">Topic</span></span>
+                </p>
+            </div>
+            <span th:if="${board.pending}" class="badge badge-pending">WITH THE COMMITTEE</span>
+        </div>
+
+        <div th:if="${board.pending}" class="alert alert-info">
+            You have a request with the committee. Nothing about your supervision or your title changes
+            until they answer, and you cannot raise a second one meanwhile.
+        </div>
+
+        <div class="hero" th:unless="${board.pending}">
+            <div class="form-sheet-head">
+                <h2 lang="hi">परिवर्तन हेतु आवेदन</h2>
+                <p lang="en">Guidelines 4.11 &middot; Request to change supervisor or thesis title</p>
+            </div>
+
+            <form class="form-sheet" method="post" th:object="${form}" novalidate
+                  th:action="@{/student/change-request}">
+
+                <div class="field">
+                    <label for="kind">What do you want to change?</label>
+                    <select id="kind" th:field="*{kind}">
+                        <option value="">— choose —</option>
+                        <option th:each="k : ${kinds}" th:value="${k}" th:text="${k.label}">Change of supervisor</option>
+                    </select>
+                    <span class="field-error" th:if="${#fields.hasErrors('kind')}" th:errors="*{kind}">Error</span>
+                </div>
+
+                <div class="field">
+                    <label for="reason">Justification</label>
+                    <textarea id="reason" th:field="*{reason}" rows="5"
+                              placeholder="The committee reads this and interacts with your guide before deciding. Be specific."></textarea>
+                    <span class="field-error" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}">Error</span>
+                    <span class="field-hint">Between 40 and 2000 characters.</span>
+                </div>
+
+                <div class="field">
+                    <label for="preferredSupervisorId">Preferred guide (supervisor change only)</label>
+                    <select id="preferredSupervisorId" th:field="*{preferredSupervisorId}">
+                        <option value="">— no preference —</option>
+                        <option th:each="s : ${supervisors}" th:value="${s.id}"
+                                th:text="${s.user.fullName} + ' — ' + ${s.designation} + ', ' + ${s.department}">
+                            Dr B Pandey — Assistant Professor, CSE</option>
+                    </select>
+                    <span class="field-hint">Optional. The coordinator places you; a preference is a preference.</span>
+                </div>
+
+                <div class="field">
+                    <label for="proposedTitle">Title you intend to propose (title change only)</label>
+                    <input type="text" id="proposedTitle" th:field="*{proposedTitle}" maxlength="255"
+                           placeholder="The direction you want to move to.">
+                    <span class="field-error" th:if="${#fields.hasErrors('proposedTitle')}" th:errors="*{proposedTitle}">Error</span>
+                    <span class="field-error" th:if="${#fields.hasErrors('titlePresentForATitleChange')}"
+                          th:errors="*{titlePresentForATitleChange}">Say what title instead.</span>
+                    <span class="field-hint">Indicative. If the committee agrees, you propose it properly afterwards.</span>
+                </div>
+
+                <div class="btn-row" style="justify-content:flex-start; margin-top:20px">
+                    <button type="submit" class="btn btn-gradient">Submit to the committee</button>
+                </div>
+            </form>
+        </div>
+
+        <h2 style="margin-top:44px">Your requests</h2>
+
+        <p th:if="${#lists.isEmpty(board.rows)}" class="status-note">You have not raised one.</p>
+
+        <div th:each="r : ${board.rows}" class="hero" style="padding:22px; margin-top:14px">
+            <div class="page-head" style="margin-bottom:10px">
+                <div>
+                    <h3 style="font-size:19px; margin:0" th:text="${r.kind.label}">Change of supervisor</h3>
+                    <p class="lead" style="margin:4px 0 0"
+                       th:text="${#temporals.format(r.requestedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan 2026</p>
+                </div>
+                <span class="badge"
+                      th:classappend="${r.approved()} ? 'badge-approved'
+                                    : (${r.status.name() == 'REJECTED'} ? 'badge-rejected' : 'badge-pending')"
+                      th:text="${r.status}">PENDING</span>
+            </div>
+
+            <div class="field">
+                <label>Your reason</label>
+                <p style="margin:0; white-space:pre-line" th:text="${r.reason}">…</p>
+            </div>
+            <p th:if="${r.preferredSupervisorName != null}" class="field-hint"
+               th:text="'Preferred guide: ' + ${r.preferredSupervisorName}">Preferred guide</p>
+            <p th:if="${r.proposedTitle != null}" class="field-hint"
+               th:text="'Intended title: ' + ${r.proposedTitle}">Intended title</p>
+
+            <div th:if="${r.decisionNote != null}" class="alert"
+                 th:classappend="${r.approved()} ? 'alert-success' : 'alert-info'">
+                <strong>Committee:</strong> <span th:text="${r.decisionNote}">…</span>
+            </div>
+
+            <p th:if="${r.decidedAt != null}" class="field-hint" style="margin:8px 0 0">
+                Answered by <span th:text="${r.decidedByName}">PG Coordinator</span>
+                on <span th:text="${#temporals.format(r.decidedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">02 Jan</span>.
+            </p>
+
+            <p th:if="${r.approved() and r.kind.name() == 'SUPERVISOR'}" class="status-note">
+                Your placement was withdrawn. The coordinator will place you with a new guide on the
+                allocation board; watch <a th:href="@{/student/guide}">My guide</a>.
+            </p>
+            <p th:if="${r.approved() and r.kind.name() == 'TITLE'}" class="status-note">
+                Your title is back with you. Edit it and send it for approval again from
+                <a th:href="@{/student/topic}">My topic</a>; your thesis ID does not change.
+            </p>
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

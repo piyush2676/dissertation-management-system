@@ -6,6 +6,7 @@ import com.dms.allocation.AllocationRepository;
 import com.dms.allocation.AllocationService;
 import com.dms.allocation.AllocationStatus;
 import com.dms.audit.AuditLogRepository;
+import com.dms.change.ChangeRequestService;
 import com.dms.logbook.LogbookBoard;
 import com.dms.logbook.LogbookService;
 import com.dms.outcome.OutcomeService;
@@ -42,6 +43,7 @@ public class DashboardService {
     private final ReviewService reviewService;
     private final LogbookService logbookService;
     private final OutcomeService outcomeService;
+    private final ChangeRequestService changeRequestService;
 
     private final TopicRepository topicRepository;
     private final AllocationRepository allocationRepository;
@@ -133,7 +135,8 @@ public class DashboardService {
                 supervisorProfileRepository.count(),
                 guidesFull,
                 submissionRepository.count(),
-                outcomeService.unverifiedCount());
+                outcomeService.unverifiedCount(),
+                changeRequestService.pendingCount());
     }
 
     public Dashboards.Admin admin() {

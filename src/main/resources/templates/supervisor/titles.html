@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Title bank</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'विषय कोष',
+            'Title bank',
+            'Titles you offer scholars. A scholar may take one or bring their own; taking one only prefills their proposal.',
+            'SUPERVISOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>What you have on offer</h2>
+            <p class="lead" th:text="|${openCount} open · the guidelines ask each guide for ${expectedPerGuide}|">
+                1 open · the guidelines ask each guide for 3</p>
+        </div>
+        <span class="badge" th:classappend="${openCount >= expectedPerGuide} ? 'badge-approved' : 'badge-pending'"
+              th:text="|${openCount} / ${expectedPerGuide}|">1 / 3</span>
+    </div>
+
+    <div class="hero" th:with="editing=${mode == 'edit'}">
+        <div class="form-sheet-head">
+            <h2 lang="hi">विषय प्रस्ताव</h2>
+            <p lang="en" th:text="${editing} ? 'Format 3 · Edit a title' : 'Format 3 · Offer a title'">
+                Format 3 · Offer a title</p>
+        </div>
+
+        <form class="form-sheet" method="post" th:object="${form}" novalidate
+              th:action="${editing} ? @{/supervisor/titles/{id}(id=${form.id})} : @{/supervisor/titles}">
+            <input type="hidden" th:field="*{id}">
+
+            <div class="field">
+                <label for="title">Thesis title</label>
+                <input type="text" id="title" th:field="*{title}" maxlength="255"
+                       placeholder="Audio deepfake detection using generative models">
+                <span class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Error</span>
+            </div>
+
+            <div class="field">
+                <label for="abstractText">Brief abstract</label>
+                <textarea id="abstractText" th:field="*{abstractText}" rows="4"
+                          placeholder="Three or four lines: the problem, the approach, what a scholar would actually do."></textarea>
+                <span class="field-error" th:if="${#fields.hasErrors('abstractText')}" th:errors="*{abstractText}">Error</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0 18px">
+                <div class="field">
+                    <label for="domain">Domain or technology</label>
+                    <input type="text" id="domain" th:field="*{domain}" maxlength="128" placeholder="AI/ML">
+                    <span class="field-error" th:if="${#fields.hasErrors('domain')}" th:errors="*{domain}">Error</span>
+                </div>
+                <div class="field">
+                    <label for="expectedOutcome">Expected outcome</label>
+                    <select id="expectedOutcome" th:field="*{expectedOutcome}">
+                        <option value="">— choose —</option>
+                        <option th:each="o : ${outcomes}" th:value="${o}" th:text="${o.label}">Research paper publication</option>
+                    </select>
+                    <span class="field-error" th:if="${#fields.hasErrors('expectedOutcome')}" th:errors="*{expectedOutcome}">Error</span>
+                </div>
+                <div class="field">
+                    <label for="complexity">Complexity</label>
+                    <select id="complexity" th:field="*{complexity}">
+                        <option value="">— choose —</option>
+                        <option th:each="c : ${complexities}" th:value="${c}" th:text="${c.label}">Intermediate</option>
+                    </select>
+                    <span class="field-error" th:if="${#fields.hasErrors('complexity')}" th:errors="*{complexity}">Error</span>
+                </div>
+            </div>
+
+            <div class="btn-row" style="justify-content:flex-start; margin-top:18px">
+                <button type="submit" class="btn btn-gradient" th:text="${editing} ? 'Save' : 'Add to the bank'">Add to the bank</button>
+                <a th:if="${editing}" th:href="@{/supervisor/titles}" class="btn btn-ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <h2 style="margin-top:44px">Your titles</h2>
+
+    <p th:if="${#lists.isEmpty(titles)}" class="status-note">Nothing offered yet.</p>
+
+    <div th:unless="${#lists.isEmpty(titles)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Domain</th>
+                <th>Expected outcome</th>
+                <th>Complexity</th>
+                <th>Status</th>
+                <th class="no-print">&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="t : ${titles}">
+                <td>
+                    <span th:text="${t.title}">Title</span>
+                    <span class="field-hint" style="display:block" th:text="${#strings.abbreviate(t.abstractText, 90)}">Abstract</span>
+                </td>
+                <td th:text="${t.domain}">AI/ML</td>
+                <td th:text="${t.expectedOutcome.label}">Research paper publication</td>
+                <td th:text="${t.complexity.label}">Intermediate</td>
+                <td>
+                    <span class="badge" th:classappend="${t.open()} ? 'badge-approved' : 'badge-draft'"
+                          th:text="${t.status}">OPEN</span>
+                </td>
+                <td class="no-print">
+                    <a class="btn btn-ghost btn-sm" th:href="@{/supervisor/titles/{id}/edit(id=${t.id})}">Edit</a>
+                    <form th:if="${t.open()}" method="post" class="inline-form"
+                          th:action="@{/supervisor/titles/{id}/withdraw(id=${t.id})}">
+                        <button type="submit" class="btn btn-ghost btn-sm">Withdraw</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="status-note">
+        Withdrawing takes a title off the scholars' list. It never touches a proposal already made
+        from it: that became the scholar's own work the moment they proposed it.
+    </p>
+
+</section>
+</body>
+</html>
