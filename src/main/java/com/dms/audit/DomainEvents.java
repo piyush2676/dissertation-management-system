@@ -126,4 +126,30 @@ public final class DomainEvents {
         public String entityType() { return "Submission"; }
         public String newValue() { return "v" + versionNo + " similarity " + similarity + "% ai " + ai + "%"; }
     }
+
+    // ---- review panel -------------------------------------------------------
+
+    /** entityId is the allocation: a panel is a property of one student's dissertation. */
+    public record PanelMemberAdded(String actorEmail, Long entityId, String memberName)
+            implements DomainEvent {
+        public String action() { return "PANEL_MEMBER_ADDED"; }
+        public String entityType() { return "Allocation"; }
+        public String newValue() { return memberName; }
+    }
+
+    public record PanelMemberRemoved(String actorEmail, Long entityId, String memberName)
+            implements DomainEvent {
+        public String action() { return "PANEL_MEMBER_REMOVED"; }
+        public String entityType() { return "Allocation"; }
+        public String oldValue() { return memberName; }
+    }
+
+    // ---- Annexure-6 ---------------------------------------------------------
+
+    public record RecommendationFiled(String actorEmail, Long entityId, String verdict, boolean revised)
+            implements DomainEvent {
+        public String action() { return "RECOMMENDATION_" + (revised ? "REVISED" : "FILED"); }
+        public String entityType() { return "Allocation"; }
+        public String newValue() { return verdict; }
+    }
 }
