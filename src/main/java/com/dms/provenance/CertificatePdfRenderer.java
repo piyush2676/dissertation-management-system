@@ -119,7 +119,8 @@ public class CertificatePdfRenderer {
                     y = text(out, bold(), 12f, MARGIN, y, "Verified outcomes");
                     out.setNonStrokingColor(0f, 0f, 0f);
                     for (String entry : outcomes.split("\\|")) {
-                        y = text(out, mono(), 8.5f, MARGIN, y - 1f, entry.strip().replace("/", "  "));
+                        // Printed as sealed: a reference is often a DOI, and a DOI contains slashes.
+                        y = text(out, mono(), 8.5f, MARGIN, y - 1f, entry.strip());
                     }
                 }
 
