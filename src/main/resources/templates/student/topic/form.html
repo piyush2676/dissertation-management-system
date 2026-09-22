@@ -40,6 +40,11 @@
 
             <input type="hidden" th:field="*{id}">
 
+            <div th:if="${adoptedFrom != null}" class="alert alert-info">
+                Prefilled from <span th:text="${adoptedFrom}">Dr A Sharma</span>'s title bank. Every field
+                is yours to change, and the proposal is yours either way.
+            </div>
+
             <div class="field">
                 <label for="title">Title</label>
                 <input type="text" id="title" th:field="*{title}" maxlength="255"

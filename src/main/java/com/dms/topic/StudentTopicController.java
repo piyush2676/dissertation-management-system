@@ -2,6 +2,8 @@ package com.dms.topic;
 
 import com.dms.common.InvalidStateTransitionException;
 import com.dms.common.NotFoundException;
+import com.dms.titlebank.BankedTitleView;
+import com.dms.titlebank.TitleBankService;
 import com.dms.user.SupervisorProfile;
 
 import jakarta.validation.Valid;
@@ -22,6 +24,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class StudentTopicController {
     private final TopicService topicService;
+    private final TitleBankService titleBankService;
 
     @ModelAttribute("supervisors")
     public List<SupervisorProfile> supervisors() {
@@ -52,13 +55,29 @@ public class StudentTopicController {
         return "student/topic/view";
     }
 
+    /**
+     * fromTitle prefills the form from the faculty title bank (guidelines 4.6). It
+     * is a starting point and nothing more: the scholar edits every field, the
+     * proposal is theirs, and the normal approval runs.
+     */
     @GetMapping("/new")
-    public String newForm(Authentication authentication, Model model) {
+    public String newForm(@RequestParam(required = false) Long fromTitle,
+                          Authentication authentication, Model model) {
         Optional<Topic> existing = topicService.currentTopicFor(authentication.getName());
         if (existing.isPresent() && !existing.get().getStatus().isTerminal()) {
             return "redirect:/student/topic";
         }
-        model.addAttribute("form", new TopicForm());
+        TopicForm form = new TopicForm();
+        if (fromTitle != null) {
+            BankedTitleView banked = titleBankService.adoptable(fromTitle);
+            form.setTitle(banked.title());
+            form.setAbstractText(banked.abstractText());
+            form.setResearchDomain(banked.domain());
+            form.setProposedSupervisorId(banked.supervisorId());
+            form.getExpectedOutcomes().add(banked.expectedOutcome());
+            model.addAttribute("adoptedFrom", banked.supervisorName());
+        }
+        model.addAttribute("form", form);
         model.addAttribute("mode", "new");
         return "student/topic/form";
     }
