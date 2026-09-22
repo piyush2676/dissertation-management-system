@@ -282,10 +282,43 @@ class ReadinessServiceTest {
         lenient().when(panelService.membersOf(any())).thenReturn(List.of());
         lenient().when(recommendationService.viewFor(any())).thenReturn(java.util.Optional.empty());
 
-        ReadinessLedger ledger = service.ledgerFor(allocation);
+        ReadinessLedger ledger = service.ledgerFor(allocation, ReadinessService.Audience.OFFICE);
 
         assertTrue(ledger.vivaEligible());
         assertFalse(ledger.complete(), "no papers, no logbook, no thesis: the checklist is open");
+    }
+
+    // ---- Annexure-6 is confidential ------------------------------------------
+
+    @Test
+    void theOfficeSeesTheVerdictAndTheStudentDoesNot() {
+        Allocation allocation = allocation();
+        when(recommendationService.viewFor(allocation)).thenReturn(Optional.of(
+                new com.dms.recommendation.RecommendationView(11L, "24MCS001", "Test Student", null, null,
+                        "Dr Test", com.dms.recommendation.Verdict.MINOR_REVISIONS,
+                        null, null, null, "Add the ablation table.", "Why DWT over DCT?",
+                        "Dr Test", Instant.now(), Instant.now())));
+
+        ReadinessLedger.Rule office = service.recommendation(allocation, ReadinessService.Audience.OFFICE);
+        ReadinessLedger.Rule student = service.recommendation(allocation, ReadinessService.Audience.STUDENT);
+
+        assertTrue(office.summary().startsWith("[B]"));
+        assertFalse(student.summary().contains("[B]"), "the sheet is confidential to the supervisor and the office");
+        assertTrue(student.evidence().isEmpty(), "not even who filed it, on the student's own page");
+        assertEquals(office.state(), student.state(), "whether the thesis is cleared is not the secret");
+    }
+
+    @Test
+    void aVerdictThatSendsTheThesisBackIsNotMetForEitherReader() {
+        Allocation allocation = allocation();
+        when(recommendationService.viewFor(allocation)).thenReturn(Optional.of(
+                new com.dms.recommendation.RecommendationView(11L, "24MCS001", "Test Student", null, null,
+                        "Dr Test", com.dms.recommendation.Verdict.MAJOR_REVISIONS,
+                        null, null, null, "Rewrite chapter 4.", null,
+                        "Dr Test", Instant.now(), Instant.now())));
+
+        assertEquals(State.NOT_MET, service.recommendation(allocation, ReadinessService.Audience.OFFICE).state());
+        assertEquals(State.NOT_MET, service.recommendation(allocation, ReadinessService.Audience.STUDENT).state());
     }
 
     // ---- fixtures -----------------------------------------------------------

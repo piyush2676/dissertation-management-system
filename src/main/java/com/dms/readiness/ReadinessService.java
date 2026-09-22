@@ -77,16 +77,25 @@ public class ReadinessService {
     private final PanelService panelService;
     private final RecommendationService recommendationService;
 
+    /**
+     * Who is reading. Annexure-6 is confidential to the supervisor and the office,
+     * so a student's own ledger says whether the sheet is filed and whether it
+     * clears the thesis, and nothing about what it says.
+     */
+    public enum Audience {
+        STUDENT, OFFICE
+    }
+
     public Optional<ReadinessLedger> ledgerForStudent(String studentEmail) {
         return allocationService.currentAllocationFor(studentEmail)
                 .filter(a -> a.getStatus().occupiesASeat())
-                .map(a -> ledgerFor(a.getId()));
+                .map(a -> ledgerFor(a, Audience.STUDENT));
     }
 
     public ReadinessLedger ledgerFor(Long allocationId) {
         Allocation allocation = allocationRepository.findWithGraphById(allocationId)
                 .orElseThrow(() -> new NotFoundException("Allocation", allocationId));
-        return ledgerFor(allocation);
+        return ledgerFor(allocation, Audience.OFFICE);
     }
 
     /** One row per placed student in the programme, for the coordinator's overview. */
@@ -95,7 +104,7 @@ public class ReadinessService {
         try {
             for (Allocation allocation : allocationService.cohortFor(programme)) {
                 if (allocation.getStatus().occupiesASeat()) {
-                    ledgers.add(ledgerFor(allocation));
+                    ledgers.add(ledgerFor(allocation, Audience.OFFICE));
                 }
             }
         } catch (IllegalStateException ex) {
@@ -111,7 +120,7 @@ public class ReadinessService {
 
     // ---- assembly -----------------------------------------------------------
 
-    ReadinessLedger ledgerFor(Allocation allocation) {
+    ReadinessLedger ledgerFor(Allocation allocation, Audience audience) {
         StudentProfile student = allocation.getStudent();
         DissertationPhase phase = DissertationPhase.forSemester(student.getProgramme(), student.getSemester())
                 .orElse(null);
@@ -123,7 +132,7 @@ public class ReadinessService {
         rules.add(plagiarism(allocation));
         rules.add(logbook(allocation));
         rules.add(panel(allocation));
-        rules.add(recommendation(allocation));
+        rules.add(recommendation(allocation, audience));
 
         return new ReadinessLedger(
                 allocation.getId(),
@@ -304,13 +313,27 @@ public class ReadinessService {
                 evidence);
     }
 
-    /** Annexure-6: the supervisor's summary sheet, and what it recommends. */
-    Rule recommendation(Allocation allocation) {
+    /**
+     * Annexure-6: the supervisor's summary sheet, and what it recommends.
+     *
+     * <p>The sheet is confidential, so a student sees only that it is filed and
+     * whether their thesis is cleared -- which their guide tells them anyway when
+     * they hand it back. The wording, the queries and the viva questions stay in
+     * the office.
+     */
+    Rule recommendation(Allocation allocation, Audience audience) {
+        boolean office = audience == Audience.OFFICE;
         return recommendationService.viewFor(allocation)
                 .map(view -> new Rule(ReadinessLedger.RECOMMENDATION, "Supervisor's recommendation", "Annexure-6",
                         view.verdict().clearsForDefence() ? State.MET : State.NOT_MET,
-                        "[" + view.verdict().getCode() + "] " + view.verdict().getLabel() + ".",
-                        List.of(new Evidence("Summary sheet filed", view.submittedByName(), view.submittedAt(), null))))
+                        office
+                                ? "[" + view.verdict().getCode() + "] " + view.verdict().getLabel() + "."
+                                : (view.verdict().clearsForDefence()
+                                        ? "Filed, and it clears your thesis for the defence. The sheet itself is confidential."
+                                        : "Filed. Your guide is sending the thesis back before the defence; ask them what for."),
+                        office
+                                ? List.of(new Evidence("Summary sheet filed", view.submittedByName(), view.submittedAt(), null))
+                                : List.of()))
                 .orElseGet(() -> new Rule(ReadinessLedger.RECOMMENDATION, "Supervisor's recommendation", "Annexure-6",
                         State.NOT_MET, "Not filed yet.", List.of()));
     }
