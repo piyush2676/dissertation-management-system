@@ -256,6 +256,15 @@ PanelMember     (allocation, member, addedBy, addedAt)
         -- opinion in an average. Members hold REVIEWER or SUPERVISOR.
 Recommendation  (allocation 1:1, verdict, organisation?, technicalContent?, strengths?,
                  queries?, vivaQuestions?, submittedBy, submittedAt, updatedAt)
+ChangeRequest   (allocation, kind, reason, preferredSupervisor?, proposedTitle?, status,
+                 decisionNote?, requestedBy, requestedAt, decidedBy?, decidedAt?)
+        -- §4.11. kind: SUPERVISOR | TITLE. status: PENDING -> APPROVED | REJECTED.
+        -- At most one PENDING per allocation (partial unique index). Approving is
+        -- what makes the two reversals below legal, and only through here.
+BankedTitle     (supervisor, title, abstractText, domain, expectedOutcome, complexity,
+                 status, createdAt, updatedAt)
+        -- §4.3: each guide proposes at least three titles; §4.6: a scholar may pick
+        -- one instead of inventing their own. status: OPEN | WITHDRAWN.
         -- Annexure-6, the supervisor's summary sheet. verdict: ACCEPTABLE |
         -- MINOR_REVISIONS | MAJOR_REVISIONS | REJECTED. Marked confidential on
         -- the form, so the student never sees it; the coordinator does.
@@ -288,7 +297,18 @@ Topic:       DRAFT -> PROPOSED -> APPROVED
 
 Allocation:  REQUESTED -> ACCEPTED     (capacity permitting)
                        -> DECLINED     (falls back to coordinator)
+                       -> WITHDRAWN    (student pulls the request)
+             ACCEPTED, COORDINATOR_ASSIGNED -> WITHDRAWN
+                       -- phase 16 only, and only through an approved supervisor
+                          change request. Nothing else may call it.
              COORDINATOR_ASSIGNED      (override, bypasses supervisor accept)
+
+Topic:       APPROVED -> CHANGES_REQUESTED
+                       -- phase 16 only, and only through an approved title change
+                          request. The thesis code survives; the round number goes up.
+
+ChangeRequest: PENDING -> APPROVED
+                       -> REJECTED
 
 Submission:  DRAFT -> SUBMITTED -> UNDER_REVIEW -> APPROVED
                                                 -> REVISION_REQUESTED -> SUBMITTED (new version)
@@ -488,6 +508,20 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/supervisor/recommendation/{allocationId}` | GET | `supervisor/recommendation-form` | `allocation`, `form`, `verdicts` | `RecommendationForm` |
 | `/supervisor/recommendation/{allocationId}` | POST | redirect | — | `RecommendationForm` |
 | `/coordinator/recommendation/{allocationId}` | GET | `coordinator/recommendation` | `view` | — |
+| `/student/change-request` | GET | `student/change-request` | `board`, `form`, `supervisors` | `ChangeRequestForm` |
+| `/student/change-request` | POST | redirect | — | `ChangeRequestForm` |
+| `/coordinator/change-requests` | GET | `coordinator/change-requests` | `queue`, `form` | `ChangeRequestDecisionForm` |
+| `/coordinator/change-requests/{id}/decide` | POST | redirect | — | `ChangeRequestDecisionForm` |
+| `/supervisor/titles` | GET | `supervisor/titles` | `titles`, `form`, `mode` | `BankedTitleForm` |
+| `/supervisor/titles` | POST | redirect | — | `BankedTitleForm` |
+| `/supervisor/titles/{id}/edit` | GET | `supervisor/titles` | as above, `mode=edit` | `BankedTitleForm` |
+| `/supervisor/titles/{id}` | POST | redirect | — | `BankedTitleForm` |
+| `/supervisor/titles/{id}/withdraw` | POST | redirect | — | — |
+| `/student/titles` | GET | `student/titles` | `titles`, `q` | — |
+| `/coordinator/exports` | GET | `coordinator/exports` | `programme`, `programmes` | — |
+| `/coordinator/exports/format4.csv` | GET | CSV download | — | — |
+| `/coordinator/exports/format5.csv` | GET | CSV download | — | — |
+| `/coordinator/attainment` | GET | `coordinator/attainment` | `report`, `programme` | — |
 
 Two routes sit outside the role prefixes on purpose. A submission file and a comment
 thread are both legitimately touched by the student, their guide, the coordinator and the
@@ -501,11 +535,13 @@ templates/
 ├── layout/      base, _navbar, _flash, _footer, _pagehero, _versions, _comments
 ├── home.html
 ├── auth/        login
-├── student/     dashboard, topic/form, topic/view, guide, submissions, submission, result, logbook, outcomes, readiness
+├── student/     dashboard, topic/form, topic/view, guide, submissions, submission, result, logbook, outcomes, readiness,
+│              change-request, titles
 ├── supervisor/  dashboard, topics, requests, submissions, submission, evaluate, evaluate-form, logbook, logbook-student,
-│              recommendations, recommendation-form
+│              recommendations, recommendation-form, titles
 ├── review/      panel, panel-score
-├── coordinator/ dashboard, allocate, viva, marksheet, outcomes, readiness, readiness-detail, panels, recommendation
+├── coordinator/ dashboard, allocate, viva, marksheet, outcomes, readiness, readiness-detail, panels, recommendation,
+│              change-requests, exports, attainment
 ├── admin/       dashboard, users, audit
 └── error/       403, 404, 409, 500
 ```
@@ -716,6 +752,35 @@ Supervisor)" and marked confidential, so the recommendation is readable by the s
 wrote it and by the coordinator, and never by the student — there is no student route to it at
 all, not a hidden one. The viva questions it carries are the reason: the guidelines let the
 supervisor decide whether they reach the candidate beforehand.
+
+### Phase 16 decisions
+
+**Two invariants are reversed, and only one door opens either.** §4.11 requires a formal process
+for changing supervisor or title, so `ACCEPTED`/`COORDINATOR_ASSIGNED -> WITHDRAWN` and
+`Topic.APPROVED -> CHANGES_REQUESTED` both become legal — but `AllocationService.withdraw` still
+refuses anything that is not `REQUESTED`, and the new transitions are reachable *only* from
+`ChangeRequestService.approve`. The state machines say what is possible; the services say who may
+do it, and here only one caller may. `AllocationStatusTest` and `TopicStatusTest` were rewritten
+to state the new rule rather than deleted, because the old ones were right about why it mattered.
+
+**A change request is data, not a status on the thing it changes.** Putting a
+`CHANGE_REQUESTED` state on `Allocation` would have meant a student's pending paperwork
+suspending their supervision, and §4.11 is explicit that the scholar keeps working while the
+committee considers it. So the request is its own row with its own tiny state machine, and the
+allocation is untouched until a decision lands. A partial unique index allows one pending request
+per allocation; a student cannot queue three.
+
+**The title bank is the guide's, and adopting one is still a proposal.** §4.3 asks each guide for
+three titles; §4.6 lets a scholar take one *or* bring their own. A banked title therefore
+prefills the Annexure-1 form and nothing more — it does not pre-approve anything, does not bind
+the student to that guide, and the normal approval still runs. Withdrawing a title never touches
+a topic already proposed from it.
+
+**Attainment is computed, never stored.** Every rubric row carries a CO code (phase 12) and every
+evaluation stores marks keyed by criterion id (phase 6), so CO attainment is a query over what is
+already there. Storing it would create a number that silently goes stale the moment an examiner
+rescores. The threshold — the share of students at or above 60% of a CO's marks — is the one
+knob, and it is a constant in `AttainmentReport`, not a column.
 
 ### What stays different from the reference portal
 
