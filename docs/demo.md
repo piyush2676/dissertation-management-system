@@ -156,6 +156,26 @@ the row is back, marked RETURNED with the remark → **Correct and resubmit**. G
 
 Student window: **Print progress report card** — the sealed digest sits in the signature column.
 
+### 6c · Outcomes and the readiness ledger — 2 min
+
+Student window: **Outcomes** → report a paper (kind, venue, indexing, status, DOI) → save.
+Guide window: **Submissions** → open the latest version → record the similarity report
+(e.g. 6.5% and 0%).
+
+Coordinator window: **Outcomes** → the paper is in the queue → follow the reference →
+**Verified**. Then **Readiness** → open the student's ledger.
+
+> "This is the part I would defend hardest. Every requirement the guidelines put between a
+> student and the viva is on one page — marks, each of the seven documents, the publication
+> rule, the similarity thresholds, the logbook — and each line carries the fact that meets it,
+> who verified that fact, when, and the digest it is pinned by. A portal that just greys out a
+> button tells the student nothing. Only one of these is a gate: below half the internal marks
+> the coordinator cannot book the viva at all, because that is the one prerequisite the
+> guidelines state as a rule."
+
+Coordinator window: **Viva** → try to book a student who is short on marks; the refusal names
+the reason.
+
 ### 7 · Evaluation, viva and the mark sheet — 2 min
 
 Guide window: **Evaluate** → open the student → score each criterion → submit.
@@ -179,8 +199,9 @@ Coordinator window: **Mark sheet** → **Provenance** on any row.
 
 > "This dissertation's entire life, rebuilt from the audit trail. Proposed, approved by whom
 > and when, guide accepted, every version filed with the digest of its bytes, revision
-> requested, every countersigned meeting with its digest, marks, viva. None of it was typed
-> by hand and none of it can be edited."
+> requested, every countersigned meeting with its digest, every verified outcome with the
+> coordinator who verified it, marks, viva. None of it was typed by hand and none of it can be
+> edited."
 
 - **Issue certificate** → **Download PDF**.
 - Open the PDF. Point at the digest and the QR code.

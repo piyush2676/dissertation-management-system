@@ -22,7 +22,7 @@ Owner: Piyush Pandey. Repo: `github.com/piyush2676/dissertation-management-syste
 | Java | 21 | |
 | Spring Boot | 4.1.0 | starters renamed vs 3.x — see below |
 | PostgreSQL | 18 | database `dms`, service `postgresql-x64-18` |
-| Flyway | via `spring-boot-starter-flyway` | currently at **V15** |
+| Flyway | via `spring-boot-starter-flyway` | currently at **V16** |
 | Thymeleaf | + `thymeleaf-extras-springsecurity6` | |
 | Spring AI | 2.0.1 | Gemini via Google AI Studio; off unless a key is set |
 | Build | Maven wrapper (`.\mvnw.cmd`) | no global Maven |
@@ -33,9 +33,9 @@ tutorials blindly.
 
 ---
 
-## Current state (2026-09-17)
+## Current state (2026-09-22)
 
-Phases 0–13 complete, verified in a browser, 237 tests green, 141 commits. Flyway at V15.
+Phases 0–14 complete, 266 tests green, 149 commits. Flyway at V16.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -60,8 +60,8 @@ reporting, no self-registration, no borrowed branding.
 | 11 | Verifiable provenance: timeline, certificate, public verify | done |
 | 12 | Guideline alignment: dissertation phase, review milestones, marks-based rubric with bands + CO/PO, Annexure-1 fields, thesis code, co-supervisor | done |
 | 13 | Logbook (Annexure-4): student records meetings, guide countersigns, signed rows digested and listed by the certificate | done |
-| 14 | Outcomes registry, plagiarism fields, deliverable checklist, readiness ledger, 50% viva gate | next |
-| 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | planned |
+| 14 | Outcomes registry, similarity checks, deliverable checklist, readiness ledger, 50% viva gate enforced | done |
+| 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | next |
 | 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | planned |
 
 ### Phase 12 — what changed underneath
@@ -138,7 +138,7 @@ ships inside the overlap check).
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (237 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (266 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -207,7 +207,9 @@ com.dms
 ├── review/       ReviewComment, ReviewService, ReviewCommentController
 ├── security/     SecurityConfig, CustomUserDetailsService, AuthzService
 ├── logbook/      LogbookEntry, LogbookEntryStatus, LogbookService, LogbookBoard, controllers
-├── session/      AcademicSession, Milestone, DissertationPhase
+├── outcome/      Outcome, OutcomeKind/Indexing/Status, OutcomeService, OutcomeBoard, controllers
+├── readiness/    ReadinessLedger, ReadinessService, controllers
+├── session/      AcademicSession, Milestone, DissertationPhase, DeliverableType
 ├── storage/      StorageService, LocalDiskStorageService, StoredFile
 ├── submission/   Submission, SubmissionVersion, SubmissionStatus, SubmissionService, controllers
 ├── ai/           Embedding, SimilarityProvider, CosineSimilarityProvider, EmbeddingService,
@@ -274,6 +276,15 @@ These are load-bearing. Violating one produces a runtime failure, not a compile 
   meeting signed after issue makes the certificate read CHANGED (the coordinator reissues).
 - The canonical hash lives in `common.Digests`; `ProvenanceService.digestOf` delegates. Do not
   add a second SHA-256 helper.
+- **Outcomes: student reports, COORDINATOR verifies** (not the guide — the party who confirms a
+  paper exists should not be the one marking the student). Any student edit clears the
+  verification. Only `verified && status.achieved()` counts toward a rule.
+- **The readiness ledger enforces nothing.** `ReadinessService` is read-only; the single gate is
+  `VivaService.schedule` asking `internalMarksMet` (§7.1, 50% of the phase maximum). Everything
+  else is shown with its evidence for the coordinator to weigh. Do not turn a ledger line into a
+  gate without saying so in `docs/guide.md` §13 first.
+- `PlagiarismCheck` is its own table, one row per version. Never add a similarity column to
+  `SubmissionVersion` — it is append-only and provenance depends on that.
 
 ---
 
@@ -329,4 +340,4 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
-| `src/main/resources/db/migration/` | V1–V15 |
+| `src/main/resources/db/migration/` | V1–V16 |
