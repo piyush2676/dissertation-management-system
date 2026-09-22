@@ -5,6 +5,7 @@ import com.dms.allocation.AllocationRepository;
 import com.dms.allocation.AllocationService;
 import com.dms.allocation.AllocationStatus;
 import com.dms.common.NotFoundException;
+import com.dms.panel.PanelService;
 import com.dms.session.DissertationPhase;
 import com.dms.user.Programme;
 import com.dms.user.StudentProfile;
@@ -38,6 +39,7 @@ public class EvaluationService {
     private final AllocationService allocationService;
     private final VivaScheduleRepository vivaRepository;
     private final UserRepository userRepository;
+    private final PanelService panelService;
 
     /**
      * The scheme this student is marked on: the session's rows for the phase their
@@ -64,9 +66,11 @@ public class EvaluationService {
     /**
      * Records or replaces one examiner's marks.
      *
-     * <p>Only the supervising guide may score, which is the demo-scale rule. A
-     * second examiner would be added by widening this check, not by changing the
-     * shape of the data -- the unique key is already per examiner.
+     * <p>An examiner is the supervising guide or a member of that student's review
+     * panel. Phase 6 keyed this table by (allocation, examiner) precisely so a
+     * second examiner would be a widened check rather than a new shape, and this
+     * is that widening: a panel of two plus the guide is three rows, and the
+     * average, band and pass line are untouched.
      */
     public Evaluation score(String examinerEmail, Long allocationId,
                             Map<Long, Integer> rawScores, String remarks) {
@@ -74,7 +78,7 @@ public class EvaluationService {
         Allocation allocation = allocationRepository.findWithGraphById(allocationId)
                 .orElseThrow(() -> new NotFoundException("Allocation", allocationId));
 
-        if (!allocationRepository.existsByIdAndSupervisorUserEmail(allocationId, examinerEmail)) {
+        if (!mayScore(allocationId, examinerEmail)) {
             throw new NotFoundException("Allocation", allocationId);
         }
         if (!allocation.getStatus().occupiesASeat()) {
@@ -122,6 +126,13 @@ public class EvaluationService {
         evaluation.setSubmittedAt(Instant.now());
 
         return evaluationRepository.save(evaluation);
+    }
+
+    /** The supervising guide, or someone the coordinator put on this student's panel. */
+    @Transactional(readOnly = true)
+    public boolean mayScore(Long allocationId, String examinerEmail) {
+        return allocationRepository.existsByIdAndSupervisorUserEmail(allocationId, examinerEmail)
+                || panelService.isPanelMember(allocationId, examinerEmail);
     }
 
     /** The mark sheet for one cohort: every allocated student with their average. */

@@ -5,6 +5,7 @@ import com.dms.allocation.AllocationRepository;
 import com.dms.allocation.AllocationService;
 import com.dms.allocation.AllocationStatus;
 import com.dms.common.NotFoundException;
+import com.dms.panel.PanelService;
 import com.dms.session.AcademicSession;
 import com.dms.session.DissertationPhase;
 import com.dms.user.Programme;
@@ -46,6 +47,7 @@ class EvaluationServiceTest {
     @Mock private AllocationService allocationService;
     @Mock private VivaScheduleRepository vivaRepository;
     @Mock private UserRepository userRepository;
+    @Mock private PanelService panelService;
 
     @InjectMocks private EvaluationService service;
 
