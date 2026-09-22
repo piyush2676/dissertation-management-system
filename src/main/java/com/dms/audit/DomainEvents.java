@@ -152,4 +152,34 @@ public final class DomainEvents {
         public String entityType() { return "Allocation"; }
         public String newValue() { return verdict; }
     }
+
+    // ---- change requests ----------------------------------------------------
+
+    public record ChangeRequested(String actorEmail, Long entityId, String kind) implements DomainEvent {
+        public String action() { return "CHANGE_REQUESTED"; }
+        public String entityType() { return "ChangeRequest"; }
+        public String newValue() { return kind; }
+    }
+
+    public record ChangeRequestDecided(String actorEmail, Long entityId, String kind, String to)
+            implements DomainEvent {
+        public String action() { return "CHANGE_REQUEST_" + to; }
+        public String entityType() { return "ChangeRequest"; }
+        public String oldValue() { return "PENDING"; }
+        public String newValue() { return kind; }
+    }
+
+    // ---- title bank ---------------------------------------------------------
+
+    public record TitleBanked(String actorEmail, Long entityId, String title) implements DomainEvent {
+        public String action() { return "TITLE_BANKED"; }
+        public String entityType() { return "BankedTitle"; }
+        public String newValue() { return title; }
+    }
+
+    public record TitleWithdrawn(String actorEmail, Long entityId, String title) implements DomainEvent {
+        public String action() { return "TITLE_WITHDRAWN"; }
+        public String entityType() { return "BankedTitle"; }
+        public String oldValue() { return title; }
+    }
 }
