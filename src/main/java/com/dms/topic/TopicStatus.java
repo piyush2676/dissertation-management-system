@@ -18,7 +18,10 @@ public enum TopicStatus {
             DRAFT,             Set.of(PROPOSED),
             PROPOSED,          Set.of(APPROVED, CHANGES_REQUESTED, REJECTED),
             CHANGES_REQUESTED, Set.of(PROPOSED),
-            APPROVED,          Set.of(),
+            // Phase 16: an approved title can be sent back for revision, but only
+            // through ChangeRequestService.approve -- section 4.11's title change.
+            // TopicService.decide cannot reach it: a decision starts from PROPOSED.
+            APPROVED,          Set.of(CHANGES_REQUESTED),
             REJECTED,          Set.of()
     );
     public boolean canTransitionTo(TopicStatus target) {

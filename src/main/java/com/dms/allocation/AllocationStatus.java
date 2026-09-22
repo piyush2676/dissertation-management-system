@@ -11,11 +11,18 @@ public enum AllocationStatus {
     COORDINATOR_ASSIGNED,
 
     WITHDRAWN;
+    /**
+     * A live placement can be withdrawn since phase 16, because guidelines section
+     * 4.11 requires a way to change a supervisor. The state machine only says the
+     * move is possible: the one caller allowed to make it is
+     * ChangeRequestService.approve, after the coordinator has considered a written
+     * request. AllocationService.withdraw still refuses anything but REQUESTED.
+     */
     private static final Map<AllocationStatus, Set<AllocationStatus>> TRANSITIONS = Map.of(
             REQUESTED,            Set.of(ACCEPTED, DECLINED, WITHDRAWN),
-            ACCEPTED,             Set.of(),
+            ACCEPTED,             Set.of(WITHDRAWN),
             DECLINED,             Set.of(),
-            COORDINATOR_ASSIGNED, Set.of(),
+            COORDINATOR_ASSIGNED, Set.of(WITHDRAWN),
             WITHDRAWN,            Set.of()
     );
 

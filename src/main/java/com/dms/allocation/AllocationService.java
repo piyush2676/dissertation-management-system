@@ -132,7 +132,13 @@ public class AllocationService {
             throw new NotFoundException("Allocation", allocationId);
         }
 
-        if (!allocation.getStatus().canTransitionTo(AllocationStatus.WITHDRAWN)) {
+        // Phase 16 made ACCEPTED and COORDINATOR_ASSIGNED withdrawable so that
+        // guidelines section 4.11 could have a supervisor change. That door is
+        // ChangeRequestService.approve, after the committee has considered a
+        // written request -- not this one. A student pulls a request they made,
+        // not a placement they have.
+        if (allocation.getStatus() != AllocationStatus.REQUESTED
+                || !allocation.getStatus().canTransitionTo(AllocationStatus.WITHDRAWN)) {
             throw new InvalidStateTransitionException(allocation.getStatus(), AllocationStatus.WITHDRAWN);
         }
 

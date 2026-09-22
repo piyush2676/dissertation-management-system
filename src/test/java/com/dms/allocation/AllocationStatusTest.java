@@ -32,8 +32,8 @@ class AllocationStatusTest {
     }
 
     @Test
-    void everyOutcomeIsTerminal() {
-        for (AllocationStatus outcome : Set.of(ACCEPTED, DECLINED, COORDINATOR_ASSIGNED, WITHDRAWN)) {
+    void aRefusedOrAbandonedRequestIsTheEndOfIt() {
+        for (AllocationStatus outcome : Set.of(DECLINED, WITHDRAWN)) {
             assertTrue(outcome.isTerminal(), outcome + " must be terminal");
             assertTrue(outcome.allowedNext().isEmpty(), outcome + " must allow nothing next");
 
@@ -44,13 +44,25 @@ class AllocationStatusTest {
     }
 
     @Test
-    void requestedIsTheOnlyNonTerminalState() {
-        assertFalse(REQUESTED.isTerminal());
+    void aLivePlacementCanOnlyEndByBeingWithdrawn() {
+        // Phase 16, guidelines section 4.11: a supervisor change has to be possible.
+        // The move is legal here; ChangeRequestService.approve is the only caller
+        // allowed to make it, and AllocationService.withdraw still refuses it.
+        for (AllocationStatus live : Set.of(ACCEPTED, COORDINATOR_ASSIGNED)) {
+            assertEquals(Set.of(WITHDRAWN), live.allowedNext(),
+                    live + " must lead nowhere except WITHDRAWN");
+            assertFalse(live.canTransitionTo(ACCEPTED), live + " must not re-accept");
+            assertFalse(live.canTransitionTo(REQUESTED), live + " must not go back to a request");
+        }
+    }
 
-        long nonTerminal = Set.of(AllocationStatus.values()).stream()
-                .filter(s -> !s.isTerminal())
-                .count();
-        assertEquals(1, nonTerminal, "only REQUESTED may be non-terminal");
+    @Test
+    void onlyARequestOrALivePlacementIsNonTerminal() {
+        assertFalse(REQUESTED.isTerminal());
+        assertFalse(ACCEPTED.isTerminal());
+        assertFalse(COORDINATOR_ASSIGNED.isTerminal());
+        assertTrue(DECLINED.isTerminal());
+        assertTrue(WITHDRAWN.isTerminal());
     }
 
     @Test

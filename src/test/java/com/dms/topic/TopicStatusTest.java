@@ -48,11 +48,14 @@ class TopicStatusTest {
     }
 
     @Test
-    void approvedIsTerminal() {
-        assertTrue(APPROVED.isTerminal());
-        assertTrue(APPROVED.allowedNext().isEmpty());
+    void anApprovedTitleCanOnlyGoBackForRevision() {
+        // Phase 16, guidelines section 4.11: a title change has to be possible.
+        // Only ChangeRequestService.approve may make this move; TopicService.decide
+        // starts from PROPOSED and cannot reach it.
+        assertFalse(APPROVED.isTerminal());
+        assertEquals(Set.of(CHANGES_REQUESTED), APPROVED.allowedNext());
 
-        for (TopicStatus target : TopicStatus.values()) {
+        for (TopicStatus target : Set.of(DRAFT, PROPOSED, APPROVED, REJECTED)) {
             assertFalse(APPROVED.canTransitionTo(target),
                     "APPROVED must not move to " + target);
         }
