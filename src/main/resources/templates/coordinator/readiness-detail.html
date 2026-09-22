@@ -25,6 +25,7 @@
         </div>
         <div class="btn-row no-print">
             <a th:href="@{/coordinator/readiness}" class="btn btn-ghost btn-sm">All students</a>
+            <a th:href="@{/coordinator/recommendation/{id}(id=${ledger.allocationId})}" class="btn btn-ghost btn-sm">Summary sheet</a>
             <a th:href="@{/provenance/{id}(id=${ledger.allocationId})}" class="btn btn-ghost btn-sm">Provenance</a>
             <button type="button" class="btn btn-ghost btn-sm" data-print>Print</button>
         </div>

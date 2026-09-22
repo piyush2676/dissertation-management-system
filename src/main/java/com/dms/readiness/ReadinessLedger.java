@@ -43,6 +43,8 @@ public record ReadinessLedger(
     public static final String PUBLICATION = "PUBLICATION";
     public static final String PLAGIARISM = "PLAGIARISM";
     public static final String LOGBOOK = "LOGBOOK";
+    public static final String PANEL = "PANEL";
+    public static final String RECOMMENDATION = "RECOMMENDATION";
 
     public Rule rule(String code) {
         return rules.stream().filter(r -> r.code().equals(code)).findFirst().orElse(null);

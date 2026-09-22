@@ -15,7 +15,10 @@ import com.dms.outcome.OutcomeBoard;
 import com.dms.outcome.OutcomeIndexing;
 import com.dms.outcome.OutcomeKind;
 import com.dms.outcome.OutcomeService;
+import com.dms.panel.PanelBoard;
+import com.dms.panel.PanelService;
 import com.dms.readiness.ReadinessLedger.Evidence;
+import com.dms.recommendation.RecommendationService;
 import com.dms.readiness.ReadinessLedger.Rule;
 import com.dms.readiness.ReadinessLedger.State;
 import com.dms.session.DeliverableType;
@@ -71,6 +74,8 @@ public class ReadinessService {
     private final MilestoneRepository milestoneRepository;
     private final OutcomeService outcomeService;
     private final LogbookService logbookService;
+    private final PanelService panelService;
+    private final RecommendationService recommendationService;
 
     public Optional<ReadinessLedger> ledgerForStudent(String studentEmail) {
         return allocationService.currentAllocationFor(studentEmail)
@@ -117,6 +122,8 @@ public class ReadinessService {
         rules.add(publication(allocation));
         rules.add(plagiarism(allocation));
         rules.add(logbook(allocation));
+        rules.add(panel(allocation));
+        rules.add(recommendation(allocation));
 
         return new ReadinessLedger(
                 allocation.getId(),
@@ -280,6 +287,32 @@ public class ReadinessService {
                         + PlagiarismCheck.MAX_AI_PERCENT.toPlainString() + "% required.",
                 List.of(new Evidence((c.getTool() == null ? "Report" : c.getTool()) + " read by the guide",
                         c.getCheckedBy().getEmail(), c.getCheckedAt(), latest == null ? null : latest.getSha256())));
+    }
+
+    /** §2.2.1: a review panel of two, none of whom is the student's own guide. */
+    Rule panel(Allocation allocation) {
+        List<PanelBoard.MemberRow> members = panelService.membersOf(allocation);
+        List<Evidence> evidence = new ArrayList<>();
+        for (PanelBoard.MemberRow m : members) {
+            evidence.add(new Evidence(m.name() + " appointed", m.email(), m.addedAt(), null));
+        }
+        boolean met = members.size() >= PanelService.EXPECTED_SIZE;
+        return new Rule(ReadinessLedger.PANEL, "Review panel", "§2.2.1",
+                met ? State.MET : State.NOT_MET,
+                members.size() + " of " + PanelService.EXPECTED_SIZE + " faculty appointed; the student's own"
+                        + " guide cannot sit on it.",
+                evidence);
+    }
+
+    /** Annexure-6: the supervisor's summary sheet, and what it recommends. */
+    Rule recommendation(Allocation allocation) {
+        return recommendationService.viewFor(allocation)
+                .map(view -> new Rule(ReadinessLedger.RECOMMENDATION, "Supervisor's recommendation", "Annexure-6",
+                        view.verdict().clearsForDefence() ? State.MET : State.NOT_MET,
+                        "[" + view.verdict().getCode() + "] " + view.verdict().getLabel() + ".",
+                        List.of(new Evidence("Summary sheet filed", view.submittedByName(), view.submittedAt(), null))))
+                .orElseGet(() -> new Rule(ReadinessLedger.RECOMMENDATION, "Supervisor's recommendation", "Annexure-6",
+                        State.NOT_MET, "Not filed yet.", List.of()));
     }
 
     /** Annexure-4: the progress report card goes in with the thesis, so at least one countersigned meeting. */

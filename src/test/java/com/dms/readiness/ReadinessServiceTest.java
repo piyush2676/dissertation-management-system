@@ -16,7 +16,9 @@ import com.dms.outcome.OutcomeIndexing;
 import com.dms.outcome.OutcomeKind;
 import com.dms.outcome.OutcomeService;
 import com.dms.outcome.OutcomeStatus;
+import com.dms.panel.PanelService;
 import com.dms.readiness.ReadinessLedger.State;
+import com.dms.recommendation.RecommendationService;
 import com.dms.session.AcademicSession;
 import com.dms.session.DeliverableType;
 import com.dms.session.DissertationPhase;
@@ -70,6 +72,8 @@ class ReadinessServiceTest {
     @Mock private MilestoneRepository milestoneRepository;
     @Mock private OutcomeService outcomeService;
     @Mock private LogbookService logbookService;
+    @Mock private PanelService panelService;
+    @Mock private RecommendationService recommendationService;
 
     @InjectMocks private ReadinessService service;
 
@@ -275,6 +279,8 @@ class ReadinessServiceTest {
         lenient().when(submissionRepository.findByAllocationOrderByMilestoneSequenceNoAsc(any())).thenReturn(List.of());
         lenient().when(outcomeService.countedRowsFor(any())).thenReturn(List.of());
         lenient().when(logbookService.signedRowsFor(any())).thenReturn(List.of());
+        lenient().when(panelService.membersOf(any())).thenReturn(List.of());
+        lenient().when(recommendationService.viewFor(any())).thenReturn(java.util.Optional.empty());
 
         ReadinessLedger ledger = service.ledgerFor(allocation);
 
