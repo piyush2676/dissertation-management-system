@@ -32,6 +32,8 @@ public class DashboardController {
         if (authorities.contains("ROLE_COORDINATOR")) return "redirect:/coordinator/dashboard";
         if (authorities.contains("ROLE_SUPERVISOR")) return "redirect:/supervisor/dashboard";
         if (authorities.contains("ROLE_STUDENT")) return "redirect:/student/dashboard";
+        // A reviewer who is not also a supervisor has one job: their panel list.
+        if (authorities.contains("ROLE_REVIEWER")) return "redirect:/review/panel";
         return "redirect:/";
     }
 

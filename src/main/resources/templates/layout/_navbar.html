@@ -80,9 +80,12 @@
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/submissions}">Submissions</a></li>
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/logbook}">Logbook</a></li>
             <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/evaluate}">Evaluate</a></li>
+            <li sec:authorize="hasRole('SUPERVISOR')"><a th:href="@{/supervisor/recommendation}">Summary sheets</a></li>
+            <li sec:authorize="hasRole('REVIEWER')"><a th:href="@{/review/panel}">Panel</a></li>
 
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/dashboard}">Dashboard</a></li>
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/allocate}">Allocate guides</a></li>
+            <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/panels}">Panels</a></li>
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/viva}">Viva</a></li>
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/marksheet}">Mark sheet</a></li>
             <li sec:authorize="hasRole('COORDINATOR')"><a th:href="@{/coordinator/outcomes}">Outcomes</a></li>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Summary sheets</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'मूल्यांकन सारांश',
+            'Evaluation summary sheets',
+            'Annexure-6 for each student you supervise. Confidential to you and the coordinator.',
+            'SUPERVISOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>Your students</h2>
+            <p class="lead">One sheet each. Filing again revises it rather than adding a second.</p>
+        </div>
+    </div>
+
+    <p th:if="${#lists.isEmpty(students)}" class="status-note">You are not supervising anyone this session.</p>
+
+    <div th:unless="${#lists.isEmpty(students)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th>Roll no</th>
+                <th>Student</th>
+                <th>Topic</th>
+                <th>Recommendation</th>
+                <th class="no-print">&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${students}">
+                <td th:text="${s.rollNo}">24MCS001</td>
+                <td th:text="${s.studentName}">Avika Singh</td>
+                <td th:text="${s.topicTitle} ?: '—'">Topic</td>
+                <td>
+                    <span th:if="${s.filed()}" class="badge"
+                          th:classappend="${s.verdict.clearsForDefence()} ? 'badge-approved' : 'badge-rejected'"
+                          th:text="|[${s.verdict.code}] ${s.verdict.label}|">[A] Acceptable as it is</span>
+                    <span th:unless="${s.filed()}" class="badge badge-pending">NOT FILED</span>
+                </td>
+                <td class="no-print">
+                    <a class="btn btn-ghost btn-sm" th:href="@{/supervisor/recommendation/{id}(id=${s.allocationId})}"
+                       th:text="${s.filed()} ? 'Revise' : 'File'">File</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</section>
+</body>
+</html>

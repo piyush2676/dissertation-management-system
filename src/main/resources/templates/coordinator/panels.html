@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Review panels</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'समीक्षा समिति',
+            'Review panels',
+            'Who assesses each student at the review presentations. A guide never sits on their own student panel.',
+            'COORDINATOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>Panels this session</h2>
+            <p class="lead" th:text="|${board.sessionLabel} · ${board.panelsComplete()} of ${#lists.size(board.rows)} at full strength|">
+                2026-27 · 1 of 3 at full strength</p>
+        </div>
+        <div class="btn-row no-print">
+            <a th:each="p : ${programmes}" th:href="@{/coordinator/panels(programme=${p})}"
+               class="btn btn-sm" th:classappend="${p == programme} ? 'btn-primary' : 'btn-ghost'"
+               th:text="${#strings.replace(p, '_', ' ')}">MTECH</a>
+        </div>
+    </div>
+
+    <p th:if="${board.isEmptyCohort()}" class="status-note">No placed students in this programme this session.</p>
+
+    <div th:each="r : ${board.rows}" class="hero" style="padding:24px; margin-bottom:16px">
+        <div class="page-head" style="margin-bottom:10px">
+            <div>
+                <h3 style="font-size:20px; margin:0">
+                    <span th:text="${r.studentName}">Avika Singh</span>
+                    <span class="field-hint" style="display:inline; font-weight:400" th:text="'· ' + ${r.rollNo}">· 24MCS001</span>
+                </h3>
+                <p class="lead" style="margin:4px 0 0">
+                    guide <span th:text="${r.supervisorName}">Dr A Sharma</span>
+                    <span th:if="${r.topicTitle != null}"> · <span th:text="${r.topicTitle}">Topic</span></span>
+                </p>
+            </div>
+            <span class="badge" th:classappend="${r.complete()} ? 'badge-approved' : 'badge-pending'"
+                  th:text="|${r.size()} / ${expectedSize}|">1 / 2</span>
+        </div>
+
+        <p th:if="${#lists.isEmpty(r.members)}" class="status-note" style="margin:6px 0">
+            No panel appointed yet.
+        </p>
+
+        <div th:unless="${#lists.isEmpty(r.members)}" class="table-wrap" style="margin:6px 0 12px">
+            <table>
+                <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Email</th>
+                    <th>Appointed</th>
+                    <th class="no-print">&nbsp;</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${r.members}">
+                    <td th:text="${m.name}">Dr B Pandey</td>
+                    <td th:text="${m.email}">guide2@college.edu</td>
+                    <td th:text="${m.addedAt != null} ? ${#temporals.format(m.addedAt.atZone(zone), 'dd MMM yyyy')} : '—'">01 Jan</td>
+                    <td class="no-print">
+                        <form method="post" class="inline-form"
+                              th:action="@{/coordinator/panels/{a}/remove/{m}(a=${r.allocationId}, m=${m.userId}, programme=${programme})}">
+                            <button type="submit" class="btn btn-ghost btn-sm">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <form method="post" class="inline-form no-print"
+              th:action="@{/coordinator/panels/{a}/add(a=${r.allocationId}, programme=${programme})}">
+            <select name="memberId" required aria-label="Faculty member">
+                <option value="">Appoint a faculty member</option>
+                <option th:each="f : ${board.appointable}"
+                        th:value="${f.userId}"
+                        th:disabled="${r.conflicts(f.userId) or r.alreadyOn(f.userId)}"
+                        th:text="${r.conflicts(f.userId)} ? |${f.name} — this student's guide| : ${f.name}">Dr B Pandey</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">Appoint</button>
+        </form>
+    </div>
+
+    <p class="status-note">
+        The guidelines put the supervisor's own assessment inside the internal marks, so the guide
+        still scores. What the greyed-out rows protect is the average: the mark sheet is the mean of
+        every examiner's total, and a guide on their own student's panel would count twice. Removing
+        a member leaves any marks they recorded on the mark sheet — an evaluation is a record of what
+        someone judged, not a membership perk.
+    </p>
+
+</section>
+</body>
+</html>

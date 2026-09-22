@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Panel assessments</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'समीक्षा समिति',
+            'Panel assessments',
+            'Students the coordinator has put you on the review panel for. Your marks join the average with the other examiners.',
+            'REVIEWER')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>Your panel</h2>
+            <p class="lead">One set of marks per examiner; scoring again replaces your own row, never anyone else's.</p>
+        </div>
+        <span class="badge badge-pending" th:text="${#lists.size(assignments)} + ' students'">0 students</span>
+    </div>
+
+    <div th:if="${#lists.isEmpty(assignments)}" class="card">
+        <h3>No panel duty</h3>
+        <p>The coordinator has not appointed you to a review panel this session.</p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(assignments)}" class="table-wrap reveal">
+        <table>
+            <thead>
+            <tr>
+                <th>Roll no</th>
+                <th>Student</th>
+                <th>Topic</th>
+                <th>Guide</th>
+                <th class="no-print">&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${assignments}">
+                <td th:text="${a.rollNo}">24MCS001</td>
+                <td th:text="${a.studentName}">Avika Singh</td>
+                <td th:text="${a.topicTitle} ?: '—'">Topic</td>
+                <td th:text="${a.supervisorName}">Dr A Sharma</td>
+                <td class="no-print">
+                    <a class="btn btn-primary btn-sm" th:href="@{/review/panel/{id}(id=${a.allocationId})}">Score</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="status-note">
+        You are not this student's guide, which is why you are on their panel. Your marks are one
+        examiner's row: the mark sheet averages every row, so nobody's opinion counts twice.
+    </p>
+
+</section>
+</body>
+</html>

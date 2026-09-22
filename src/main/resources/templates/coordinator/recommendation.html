@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Summary sheet</title>
+</head>
+<body>
+<section th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'मूल्यांकन सारांश',
+            'Supervisor’s summary sheet',
+            'Annexure-6 as the supervisor filed it. Confidential to the office; the student has no route to this page.',
+            'COORDINATOR')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2 th:text="${view.studentName}">Avika Singh</h2>
+            <p class="lead" style="margin:0">
+                <span th:text="${view.rollNo}">24MCS001</span>
+                <span th:if="${view.thesisCode != null}"> · <code th:text="${view.thesisCode}">MT26-001</code></span>
+                <span th:if="${view.topicTitle != null}"> · <span th:text="${view.topicTitle}">Topic</span></span>
+                · guide <span th:text="${view.supervisorName}">Dr A Sharma</span>
+            </p>
+        </div>
+        <div class="btn-row no-print">
+            <a th:href="@{/coordinator/readiness/{id}(id=${view.allocationId})}" class="btn btn-ghost btn-sm">Readiness</a>
+            <button type="button" class="btn btn-ghost btn-sm" data-print>Print</button>
+        </div>
+    </div>
+
+    <div class="hero">
+        <div class="page-head" style="margin-bottom:14px">
+            <div>
+                <h3 style="margin:0">Recommendation</h3>
+                <p class="lead" style="margin:4px 0 0"
+                   th:text="|[${view.verdict.code}] ${view.verdict.label}|">[A] Acceptable as it is</p>
+            </div>
+            <span class="badge" th:classappend="${view.verdict.clearsForDefence()} ? 'badge-approved' : 'badge-rejected'"
+                  th:text="${view.verdict.clearsForDefence()} ? 'CLEARS FOR DEFENCE' : 'BACK TO THE CANDIDATE'">CLEARS FOR DEFENCE</span>
+        </div>
+
+        <div class="field" th:if="${view.organisation != null}">
+            <label>Organisation and presentation</label>
+            <p style="margin:0; white-space:pre-line" th:text="${view.organisation}">…</p>
+        </div>
+        <div class="field" th:if="${view.technicalContent != null}">
+            <label>Technical contents</label>
+            <p style="margin:0; white-space:pre-line" th:text="${view.technicalContent}">…</p>
+        </div>
+        <div class="field" th:if="${view.strengths != null}">
+            <label>Highlights, strong and weak points</label>
+            <p style="margin:0; white-space:pre-line" th:text="${view.strengths}">…</p>
+        </div>
+        <div class="field" th:if="${view.queries != null}">
+            <label>Queries and suggested modifications</label>
+            <p style="margin:0; white-space:pre-line" th:text="${view.queries}">…</p>
+        </div>
+        <div class="field" th:if="${view.vivaQuestions != null}">
+            <label>Questions for the viva voce</label>
+            <div class="paper">
+                <p class="paper-note" th:text="${view.vivaQuestions}">…</p>
+            </div>
+        </div>
+
+        <p class="field-hint" style="margin-top:14px">
+            Filed by <span th:text="${view.submittedByName}">Dr A Sharma</span>
+            on <span th:text="${#temporals.format(view.submittedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan</span><span
+                th:if="${view.revised()}">, revised
+            <span th:text="${#temporals.format(view.updatedAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">02 Jan</span></span>.
+        </p>
+    </div>
+
+</section>
+</body>
+</html>
