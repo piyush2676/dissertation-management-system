@@ -28,7 +28,7 @@ Built, verified in a browser, and covered by tests:
 | 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | done |
 | 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | done |
 
-`.\mvnw.cmd test` — 310 tests, green. Flyway at V18. `scripts/acceptance.sh` — 20 assertions.
+`.\mvnw.cmd test` — 310 tests, green. Flyway at V19. `scripts/acceptance.sh` — 20 assertions.
 Phases 12 to 16 are complete: every mandate in section 13's table is carried.
 
 **Phases 12–16 follow one source document:** `docs/m.tech_m.tech int._dissertation_guidelines_v3.md`,
@@ -777,9 +777,9 @@ prefills the Annexure-1 form and nothing more — it does not pre-approve anythi
 the student to that guide, and the normal approval still runs. Withdrawing a title never touches
 a topic already proposed from it.
 
-**Attainment is computed, never stored.** Every rubric row carries a CO code (phase 12) and every
-evaluation stores marks keyed by criterion id (phase 6), so CO attainment is a query over what is
-already there. Storing it would create a number that silently goes stale the moment an examiner
+**Attainment is computed, never stored.** Every rubric row carries a CO code (phase 12, and V19
+for the rows that predate it) and every evaluation stores marks keyed by criterion id (phase 6),
+so CO attainment is a query over what is already there. Storing it would create a number that silently goes stale the moment an examiner
 rescores. The threshold — the share of students at or above 60% of a CO's marks — is the one
 knob, and it is a constant in `AttainmentReport`, not a column.
 

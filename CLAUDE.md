@@ -22,7 +22,7 @@ Owner: Piyush Pandey. Repo: `github.com/piyush2676/dissertation-management-syste
 | Java | 21 | |
 | Spring Boot | 4.1.0 | starters renamed vs 3.x — see below |
 | PostgreSQL | 18 | database `dms`, service `postgresql-x64-18` |
-| Flyway | via `spring-boot-starter-flyway` | currently at **V18** |
+| Flyway | via `spring-boot-starter-flyway` | currently at **V19** |
 | Thymeleaf | + `thymeleaf-extras-springsecurity6` | |
 | Spring AI | 2.0.1 | Gemini via Google AI Studio; off unless a key is set |
 | Build | Maven wrapper (`.\mvnw.cmd`) | no global Maven |
@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 310 tests green, 167 commits. Flyway at V18.
+Phases 0–16 complete, 310 tests green, 169 commits. Flyway at V19.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -83,6 +83,12 @@ reporting, no self-registration, no borrowed branding.
   legacy FINAL rows (5 generic criteria out of 10). A fresh DB gets Format 6 + Format 15. The
   local DB's two MTECH students at semester 8 (impossible; stale seed) were set to 4 by hand on
   2026-09-17.
+- **V19 gave those legacy FINAL rows their CO codes** (CO1/CO2/CO3 — the ones §1.2 defines for
+  the Final Dissertation, not Format 15's undefined CO4/CO5). Without it CO attainment grouped on
+  a null column and read empty for the whole FINAL cohort. Guarded on `co_code IS NULL` and
+  matched by name: a no-op after phase 12, and it cannot overwrite a departmental code. **If the
+  seeder ever gains a column the rubric groups on, the guard means old rows need a migration —
+  `seedRubrics` will not revisit them.**
 
 ### Phase 7 — Google AI Studio, not Anthropic
 
@@ -370,4 +376,4 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
-| `src/main/resources/db/migration/` | V1–V18 |
+| `src/main/resources/db/migration/` | V1–V19 |
