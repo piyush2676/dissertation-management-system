@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 310 tests green, 169 commits. Flyway at V19.
+Phases 0–16 complete, 314 tests green, 171 commits. Flyway at V19.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -150,12 +150,32 @@ ships inside the overlap check).
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (310 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (314 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
 
 `-o` (offline) is safe and much faster — dependencies are already in the local repo.
+
+### Real cohort import
+
+`CohortImporter` loads the department's own allocation list (M.Tech Int. 2022-27, 58 scholars,
+42 faculty) when `dms.import.cohort-file` points at a CSV. Off unless that property is set, and
+idempotent — a roll number already on record is skipped.
+
+- **The data never enters git.** `/data/` and `*.xlsx` are gitignored, and the property lives in
+  the gitignored `application-local.properties`. The importer is committed; the list is not.
+- **No contact details are imported.** The source sheet carries institutional mail ids and mobile
+  numbers; none are read. Sign-in addresses are generated — `<rollNo>@college.edu` for scholars,
+  `firstname.lastname@college.edu` for faculty — so nothing in the database is a real address.
+  Imported accounts share the password `niet123`, local demonstration only.
+- **Faculty identity is by derived address**, and the derivation turns every non-letter into a
+  gap first. The sheet writes one guide with a plain space and elsewhere with a non-breaking
+  space; matching on the raw string split them into two accounts. `CohortImporterTest` pins it.
+- The sheet has **no thesis titles** despite its filename, so no topics are created — scholars
+  propose those in the app, which is the workflow anyway.
+- Regenerate the CSV from a new workbook with the scratchpad scripts, or hand-write it: the
+  header is `thesisId,studentName,rollNo,supervisor,coSupervisor,titleFormReceived`.
 
 ### Demo accounts
 
