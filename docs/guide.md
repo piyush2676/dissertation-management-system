@@ -249,6 +249,16 @@ Outcome         (allocation, kind, title, venue?, indexing, status, reference?, 
         -- reported state, not a workflow -- there is no transition map.
 PlagiarismCheck (submissionVersion 1:1, similarityPercent, aiPercent, tool?, note?,
                  checkedBy, checkedAt)
+PanelMember     (allocation, member, addedBy, addedAt)
+        -- §2.2.1's review panel, per student. unique (allocation, member). The
+        -- student's own guide and co-supervisor cannot be members: they already
+        -- score as the guide, and appointing them twice would double-weight one
+        -- opinion in an average. Members hold REVIEWER or SUPERVISOR.
+Recommendation  (allocation 1:1, verdict, organisation?, technicalContent?, strengths?,
+                 queries?, vivaQuestions?, submittedBy, submittedAt, updatedAt)
+        -- Annexure-6, the supervisor's summary sheet. verdict: ACCEPTABLE |
+        -- MINOR_REVISIONS | MAJOR_REVISIONS | REJECTED. Marked confidential on
+        -- the form, so the student never sees it; the coordinator does.
         -- §8.3: similarity under 10%, AI-generated 0%. Its own row so the
         -- version stays append-only. The guide records it against one version.
 Milestone.deliverable?  SYNOPSIS | LITERATURE_SURVEY | SYSTEM_DESIGN | TECHNICAL_REPORT | FINAL_THESIS
@@ -468,6 +478,16 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/student/readiness` | GET | `student/readiness` | `ledger` | — |
 | `/coordinator/readiness` | GET | `coordinator/readiness` | `rows`, `programme` | — |
 | `/coordinator/readiness/{allocationId}` | GET | `coordinator/readiness-detail` | `ledger` | — |
+| `/coordinator/panels` | GET | `coordinator/panels` | `board`, `programme`, `form` | `PanelMemberForm` |
+| `/coordinator/panels/{allocationId}/add` | POST | redirect | — | `PanelMemberForm` |
+| `/coordinator/panels/{allocationId}/remove/{memberId}` | POST | redirect | — | — |
+| `/review/panel` | GET | `review/panel` | `assignments` | — |
+| `/review/panel/{allocationId}` | GET | `review/panel-score` | `allocation`, `rubric`, `form` | `EvaluationForm` |
+| `/review/panel/{allocationId}` | POST | redirect `/review/panel` | — | `EvaluationForm` |
+| `/supervisor/recommendation` | GET | `supervisor/recommendations` | `students` | — |
+| `/supervisor/recommendation/{allocationId}` | GET | `supervisor/recommendation-form` | `allocation`, `form`, `verdicts` | `RecommendationForm` |
+| `/supervisor/recommendation/{allocationId}` | POST | redirect | — | `RecommendationForm` |
+| `/coordinator/recommendation/{allocationId}` | GET | `coordinator/recommendation` | `view` | — |
 
 Two routes sit outside the role prefixes on purpose. A submission file and a comment
 thread are both legitimately touched by the student, their guide, the coordinator and the
@@ -482,8 +502,10 @@ templates/
 ├── home.html
 ├── auth/        login
 ├── student/     dashboard, topic/form, topic/view, guide, submissions, submission, result, logbook, outcomes, readiness
-├── supervisor/  dashboard, topics, requests, submissions, submission, evaluate, evaluate-form, logbook, logbook-student
-├── coordinator/ dashboard, allocate, viva, marksheet, outcomes, readiness, readiness-detail
+├── supervisor/  dashboard, topics, requests, submissions, submission, evaluate, evaluate-form, logbook, logbook-student,
+│              recommendations, recommendation-form
+├── review/      panel, panel-score
+├── coordinator/ dashboard, allocate, viva, marksheet, outcomes, readiness, readiness-detail, panels, recommendation
 ├── admin/       dashboard, users, audit
 └── error/       403, 404, 409, 500
 ```
@@ -666,6 +688,34 @@ verification by a party who does not also mark the student is the stronger fact 
 edit by the student after verification clears it, so a verified row always describes what was
 seen. Verified outcomes join the certificate as a conditional `outcomes` fact, exactly as the
 logbook does.
+
+### Phase 15 decisions
+
+**The guide still scores; they just cannot sit on their own student's panel.** §7.1 puts the
+supervisor's assessment inside the internal marks, so removing the guide from scoring would
+contradict the guidelines. What the conflict rule actually protects is the average: the mark
+sheet already means "the mean of every examiner's total", so appointing a guide to their own
+student's panel would let one person's opinion count twice. The service refuses the supervisor
+and the co-supervisor, and the database refuses a duplicate member. That is a narrower rule than
+the reference portal's "double-blind" claim and it is one this system can actually keep.
+
+**Panel scoring lives under `/review/**`, not `/supervisor/**`.** A panel member holds REVIEWER,
+which the role prefixes do not admit to the supervisor area, and inventing a second prefix would
+mean two routes to one form. `/review/**` already exists for exactly this case — it authorises by
+ownership in the service rather than by URL — so panel scoring joins it. This is also the first
+job the REVIEWER role has had since phase 1; it was seeded and unused.
+
+**One `Evaluation` row per examiner, unchanged.** Phase 6 keyed evaluations by
+(allocation, examiner) and phase 12 left that alone, so a panel of two plus the guide is three
+rows and the existing average, band and pass line need no change at all. Widening
+`EvaluationService.score` from "the supervising guide" to "the supervising guide or a panel
+member" is the whole of the scoring change — which is what that key was for.
+
+**Annexure-6 is confidential, and the model says so.** The form is headed "(To be filled by
+Supervisor)" and marked confidential, so the recommendation is readable by the supervisor who
+wrote it and by the coordinator, and never by the student — there is no student route to it at
+all, not a hidden one. The viva questions it carries are the reason: the guidelines let the
+supervisor decide whether they reach the candidate beforehand.
 
 ### What stays different from the reference portal
 
