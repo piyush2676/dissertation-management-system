@@ -56,6 +56,15 @@ public record ReadinessLedger(
         return marks != null && marks.met();
     }
 
+    /**
+     * Whether the office can open the Annexure-6 sheet. Office ledgers only: the
+     * student's ledger carries no evidence on this line, so it always reads false.
+     */
+    public boolean recommendationFiled() {
+        Rule sheet = rule(RECOMMENDATION);
+        return sheet != null && !sheet.evidence().isEmpty();
+    }
+
     public long metCount() {
         return rules.stream().filter(Rule::met).count();
     }
