@@ -28,7 +28,8 @@ WORK="${TMPDIR:-/tmp}/dms-acceptance"
 mkdir -p "$WORK"
 WORK_WIN=$(cd "$WORK" && pwd -W 2>/dev/null || echo "$WORK")
 
-PSQL="/c/Program Files/PostgreSQL/18/bin/psql.exe"
+# psql on PATH wins (macOS/Linux); otherwise the Windows install location.
+PSQL="${PSQL:-$(command -v psql || echo "/c/Program Files/PostgreSQL/18/bin/psql.exe")}"
 
 # sed rather than grep -oP: this shell's grep refuses PCRE outside a UTF-8 locale,
 # and an empty password makes psql sit waiting on stdin instead of failing.
@@ -174,20 +175,24 @@ curl -s -b "$WORK_WIN/g.jar" -o /dev/null -X POST "$B/supervisor/submissions/$SU
 check "12. submission approved" "APPROVED" "$(q "select status from submissions where id=$SUB")"
 
 # --- 4. evaluation + viva ---------------------------------------------------
+# Since phase 12 each row is scored out of its own max_marks (10, 15, 35, ...),
+# so 80% means 8/10 of each row's maximum, not a flat 8. student3 is in
+# semester 3, the PRE phase, whose maximum is 100 -- hence 80.00 below.
 ARGS=()
-for C in $(q "select rc.id from rubric_criteria rc join academic_sessions s on s.id=rc.session_id
+for C in $(q "select rc.id || '=' || (rc.max_marks * 8 / 10) from rubric_criteria rc
+              join academic_sessions s on s.id=rc.session_id
               where s.programme='MTECH' order by rc.sequence_no"); do
-  ARGS+=(--data-urlencode "scores[$C]=8")
+  ARGS+=(--data-urlencode "scores[${C%%=*}]=${C#*=}")
 done
 T=$(tok "$WORK_WIN/g.jar" "/supervisor/evaluate/$AID")
 curl -s -b "$WORK_WIN/g.jar" -o /dev/null -X POST "$B/supervisor/evaluate/$AID" \
   "${ARGS[@]}" --data-urlencode "remarks=Solid work." --data-urlencode "_csrf=$T"
-check "13. scored 8/10 across the rubric" "80.00" "$(q "select total from evaluations where allocation_id=$AID")"
+check "13. scored 80% of every criterion" "80.00" "$(q "select total from evaluations where allocation_id=$AID")"
 
 T=$(tok "$WORK_WIN/c.jar" /coordinator/viva)
 curl -s -b "$WORK_WIN/c.jar" -o /dev/null -X POST "$B/coordinator/viva/schedule?programme=MTECH" \
   --data-urlencode "allocationId=$AID" --data-urlencode "scheduledAt=2027-02-11T10:30" \
-  --data-urlencode "venue=Seminar Hall, CSE Block" --data-urlencode "panel=Dr A Sharma, Dr B Pandey" \
+  --data-urlencode "venue=Seminar Hall, CSE Block" --data-urlencode "externalExaminers=Dr C Rao, IIT Delhi" \
   --data-urlencode "_csrf=$T"
 check "14. viva scheduled" "SCHEDULED" "$(q "select status from viva_schedules where allocation_id=$AID")"
 

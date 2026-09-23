@@ -12,7 +12,8 @@
 set -u
 
 STUDENT="${1:-student4@gmail.com}"
-PSQL="/c/Program Files/PostgreSQL/18/bin/psql.exe"
+# psql on PATH wins (macOS/Linux); otherwise the Windows install location.
+PSQL="${PSQL:-$(command -v psql || echo "/c/Program Files/PostgreSQL/18/bin/psql.exe")}"
 
 # sed rather than grep -oP: this shell's grep refuses PCRE outside a UTF-8 locale.
 PGPASSWORD=$(sed -n 's/^spring\.datasource\.password=//p' application-local.properties | tr -d '\r')
