@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 314 tests green, 171 commits. Flyway at V19.
+Phases 0–16 complete, 314 tests green, 173 commits, pushed to `origin/main`. Flyway at V19.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -138,12 +138,42 @@ invariant instead of checking explicitly.
 
 ### Cut from scope
 
-Email notifications (in-app shipped instead; `spring-boot-starter-mail` is still unused),
 OTP verification (there is no self-registration to verify — accounts come from institute
-records), admin user CRUD (read-only roll instead), viva panel as its own table
-(free-text names instead), archive search UI, and three of the five planned AI features
-(regulations Q&A, chapter summary, and the standalone archive search page -- retrieval itself
-ships inside the overlap check).
+records), admin user CRUD (read-only roll instead), archive search UI, and three of the five
+planned AI features (regulations Q&A, chapter summary, and the standalone archive search page —
+retrieval itself ships inside the overlap check).
+
+Two entries here have since changed and the note was wrong until 2026-09-23: **mail is wired**
+(`account/SmtpMailer` on `JavaMailSender`, phase 10 — still optional, in-app notifications work
+without it), and **the review panel did get its own table** in phase 15 (`panel_members`).
+
+---
+
+## What is left
+
+Nothing on the guideline roadmap. These are the open ends, in the order they would bite:
+
+1. **The AI features have never run against a live key.** `TopicNoveltyService` and
+   `SupervisorMatchingService` are unit-tested against a stubbed provider, and the app boots
+   without a key by design — but nobody has watched them answer. Before demoing them: get a key
+   from `aistudio.google.com/apikey`, uncomment the three lines in
+   `application-local.properties.example`, and walk both pages.
+2. **The viva schedule's `panel` is still free text** while `panel_members` is a real table since
+   phase 15. Nothing links them, so a coordinator can book a viva naming people who are not on
+   the panel. Populating the field from the panel, or dropping it for a join, is the obvious fix.
+3. **The imported cohort has no topics.** The department's sheet carries no thesis titles, so 58
+   scholars have allocations and no proposals. If a titles sheet turns up, extend `CohortImporter`
+   to create the topics with their real `MInt._` codes — `Topic.thesisCode` already takes them.
+4. **The AI is absent from the landing page.** `home.html` has four sections and mentions none of
+   it. A card in *Built for every role* would fix it; word it as overlap against the department
+   archive, never as plagiarism detection.
+5. **pgvector.** Still not installable on this machine (headers-only BuildTools, elevation needed
+   for `Program Files\PostgreSQL8\`). One class plus one migration when it is.
+6. **The three cut AI features**, if they are ever wanted: regulations Q&A, chapter summary,
+   standalone archive search.
+
+Deliberately not on this list: anything the guidelines mandate. Section 13 of `docs/guide.md`
+maps every mandate to the phase that carries it, and all sixteen are done.
 
 ---
 
