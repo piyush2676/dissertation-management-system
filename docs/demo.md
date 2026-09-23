@@ -3,10 +3,11 @@
 A click-by-click run for a presentation or viva. Roughly **14 minutes** at a steady pace, or
 20 with the optional detours.
 
-The run uses **`student4@gmail.com`** — the integrated M.Tech student, who starts with no topic,
-no guide and no submissions, and whose address is deliberately unconfirmed. Students 1 to 3
-already hold completed records, so keep them for "here is what a finished file looks like"
-rather than driving them live.
+The run uses **`student4@gmail.com`** — the integrated M.Tech student (semester 9, so the
+pre-dissertation phase), who starts with no topic, no guide and no submissions, and whose address
+is deliberately unconfirmed. Everything the run shows, `student4` creates on the way, so it works
+on a freshly seeded database. Students 1 to 3 start blank too on a fresh database; they only hold
+records if earlier runs (or `scripts/acceptance.sh`, which drives `student3`) left them there.
 
 ---
 
@@ -22,14 +23,16 @@ bash scripts/demo-reset.sh
 **2. Start the app.**
 
 ```powershell
-.\mvnw.cmd spring-boot:run
+.\mvnw.cmd spring-boot:run     # Windows
+./mvnw spring-boot:run         # macOS / Linux
 ```
 
 Wait for `Started DissertationManagementSystemApplication` before opening a browser.
 
 **3. Prepare the browser.**
 
-- **Hard-refresh once** (`Ctrl+Shift+R`) so you are not showing a cached stylesheet.
+- **Hard-refresh once** (`Ctrl+Shift+R`, or `Cmd+Shift+R` on a Mac) so you are not showing a
+  cached stylesheet.
 - Open **two windows**, not two tabs — one for the student, one for the guide. Swapping windows
   is faster than logging in and out, and it makes the two-sided workflow obvious.
 - Use a **private window for the second account**, or the two sessions fight over one cookie.
@@ -68,7 +71,8 @@ Sign in as `student4@gmail.com` / `student123`.
 
 - **Dashboard** — the pipeline shows step 1 highlighted, because the system knows this student
   has not proposed anything.
-- **My topic → Propose a topic.** Title, an abstract of a paragraph, pick `Dr A Sharma`, submit.
+- **My topic → Propose a topic.** Title, an abstract of a paragraph, research domain, objectives,
+  at least one expected outcome (these are the Annexure-1 fields), pick `Dr A Sharma`, submit.
 - Status reads `PROPOSED`.
 
 ### 3 · Guide approves it — 1 min
@@ -104,9 +108,11 @@ warning badge on a student whose topic is not approved.)*
 
 Student window:
 
-- **Submissions** — every milestone in the session is listed, filed or not. The integrated
-  programme has four where M.Tech has five.
-- Upload your PDF against **Synopsis**, with a note.
+- **Submissions** — every milestone for the student's phase is listed, filed or not: the three
+  reviews of the pre-dissertation phase, because `student4` is in semester 9. A semester-10
+  student would see the final phase's three instead — the phase is derived from the semester,
+  never stored.
+- Upload your PDF against **Review 1 - Problem statement**, with a note.
 - **Try uploading the same file again.** Refused.
 
 > "Byte-identical re-uploads are rejected — they add nothing to the history and hide the real
@@ -132,10 +138,10 @@ Guide window: review v2 and **Approve**.
 
 ### 6 · Search — 1 min
 
-**This one rewards a little theatre.** In the guide window, search the header for **`Avika`** —
-a student supervised by `guide1`. Results appear.
+**This one rewards a little theatre.** In the guide window, search the header for **`Piyush`** —
+`student4`, whom `guide1` accepted a few minutes ago. Results appear.
 
-Now sign in as `guide2@college.edu` / `guide123` and search **`Avika`** again.
+Now sign in as `guide2@college.edu` / `guide123` and search **`Piyush`** again.
 
 > "Nothing. Search is scoped inside the query, not filtered afterwards — a guide literally cannot
 > retrieve a row for another guide's student. Search is a classic way to leak records sideways,
@@ -307,7 +313,8 @@ Sign in as `admin@college.edu` / `admin123` → **Audit trail**.
 | Symptom | Fix |
 |---|---|
 | Old colour scheme | Hard-refresh, `Ctrl+Shift+R` |
-| `Port 8080 was already in use` | `netstat -ano \| findstr :8080`, then `taskkill /F /PID <pid>` |
+| `Port 8080 was already in use` | Windows: `netstat -ano \| findstr :8080`, then `taskkill /F /PID <pid>`. macOS: `lsof -ti :8080`, then `kill <pid>` |
+| Login always fails on a Mac after a reboot | PostgreSQL is not running: `pg_ctl -D ~/.local/pgdata -l ~/.local/pgdata/server.log start` |
 | Login always fails | `application-local.properties` missing or wrong database password |
 | Browser overwrites the address you typed | Autofill. Turn it off in the demo profile |
 | A page shows 409 | The system refusing an illegal state transition. **Correct behaviour** — say so, it is a good moment |
