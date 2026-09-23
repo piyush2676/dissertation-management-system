@@ -103,7 +103,7 @@ Seeded only when the users table is empty. **Demo credentials — never for a re
 ## Testing
 
 ```powershell
-.\mvnw.cmd test                      # 314 tests
+.\mvnw.cmd test                      # 316 tests
 bash scripts/acceptance.sh 8081      # 20 end-to-end assertions against a running app
 ```
 
@@ -205,8 +205,6 @@ Known limitations, recorded rather than hidden:
   and instant at department scale; past a few thousand rows it is one class and one migration.
 - **Three of the five planned AI features were cut** — regulations Q&A, chapter summary and a
   standalone archive search page. Retrieval itself ships inside the overlap check.
-- **The viva panel is still free text** on the schedule, even though review panels are now their
-  own table. The two are not linked yet.
 - **No self-registration**, so no OTP. Accounts come from institute records, and there is an
   importer for the department's own allocation list.
 - **Admin user management is read-only.** The roll and the audit trail, not CRUD.

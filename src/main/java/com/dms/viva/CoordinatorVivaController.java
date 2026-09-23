@@ -23,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/coordinator")
@@ -45,13 +46,16 @@ public class CoordinatorVivaController {
         model.addAttribute("programme", programme);
 
         try {
-            model.addAttribute("schedules", vivaService.scheduleFor(programme));
+            List<VivaSchedule> schedules = vivaService.scheduleFor(programme);
+            model.addAttribute("schedules", schedules);
+            model.addAttribute("panels", vivaService.panelsFor(schedules));
 
             AllocationBoard board = allocationService.board(programme);
             model.addAttribute("placed", board.allocated());
             model.addAttribute("sessionLabel", board.sessionLabel());
         } catch (IllegalStateException ex) {
             model.addAttribute("schedules", List.of());
+            model.addAttribute("panels", Map.of());
             model.addAttribute("placed", List.of());
             model.addAttribute("error", ex.getMessage());
         }
@@ -78,7 +82,7 @@ public class CoordinatorVivaController {
         try {
             vivaService.schedule(authentication.getName(), form.getAllocationId(),
                     form.getScheduledAt().atZone(ZoneId.systemDefault()).toInstant(),
-                    form.getVenue(), form.getPanel());
+                    form.getVenue(), form.getExternalExaminers());
             redirectAttributes.addFlashAttribute("success", "Viva scheduled.");
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());

@@ -5,6 +5,8 @@ import com.dms.allocation.AllocationRepository;
 import com.dms.allocation.AllocationService;
 import com.dms.common.InvalidStateTransitionException;
 import com.dms.common.NotFoundException;
+import com.dms.panel.PanelBoard;
+import com.dms.panel.PanelService;
 import com.dms.readiness.ReadinessService;
 import com.dms.user.Programme;
 import com.dms.user.User;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -28,6 +31,7 @@ public class VivaService {
     private final AllocationService allocationService;
     private final UserRepository userRepository;
     private final ReadinessService readinessService;
+    private final PanelService panelService;
 
     /**
      * Books, or moves, a defence. Scheduling the same student twice updates the
@@ -35,7 +39,7 @@ public class VivaService {
      * allocation, so a second row could not be written anyway.
      */
     public VivaSchedule schedule(String coordinatorEmail, Long allocationId,
-                                 Instant scheduledAt, String venue, String panel) {
+                                 Instant scheduledAt, String venue, String externalExaminers) {
 
         if (scheduledAt == null) {
             throw new IllegalArgumentException("Pick a date and time.");
@@ -77,7 +81,8 @@ public class VivaService {
 
         viva.setScheduledAt(scheduledAt);
         viva.setVenue(venue.strip());
-        viva.setPanel(panel == null || panel.isBlank() ? null : panel.strip());
+        viva.setExternalExaminers(externalExaminers == null || externalExaminers.isBlank()
+                ? null : externalExaminers.strip());
         viva.setScheduledBy(coordinator);
         viva.setUpdatedAt(Instant.now());
         return vivaRepository.save(viva);
@@ -103,6 +108,18 @@ public class VivaService {
             return List.of();
         }
         return vivaRepository.findByAllocationSessionOrderByScheduledAtAsc(cohort.get(0).getSession());
+    }
+
+    /** The internal panel for each booking, keyed by allocation id. */
+    @Transactional(readOnly = true)
+    public Map<Long, List<PanelBoard.MemberRow>> panelsFor(List<VivaSchedule> schedules) {
+        return panelService.membersByAllocation(
+                schedules.stream().map(VivaSchedule::getAllocation).toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<PanelBoard.MemberRow> panelFor(VivaSchedule viva) {
+        return panelService.membersOf(viva.getAllocation());
     }
 
     @Transactional(readOnly = true)

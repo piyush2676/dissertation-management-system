@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,15 +63,7 @@ public class PanelService {
             return new PanelBoard(programme, null, List.of(), List.of());
         }
 
-        // One read for the whole cohort rather than one per student.
-        Map<Long, List<PanelBoard.MemberRow>> byAllocation = new HashMap<>();
-        for (PanelMember member : panelRepository.findByAllocationInOrderByAddedAtAsc(cohort)) {
-            byAllocation.computeIfAbsent(member.getAllocation().getId(), k -> new ArrayList<>())
-                    .add(new PanelBoard.MemberRow(member.getMember().getId(),
-                            member.getMember().getFullName(),
-                            member.getMember().getEmail(),
-                            member.getAddedAt()));
-        }
+        Map<Long, List<PanelBoard.MemberRow>> byAllocation = membersByAllocation(cohort);
 
         List<PanelBoard.Row> rows = new ArrayList<>();
         for (Allocation allocation : cohort) {
@@ -175,6 +168,28 @@ public class PanelService {
 
     public record Assignment(Long allocationId, String rollNo, String studentName,
                              String supervisorName, String topicTitle) {
+    }
+
+    // ---- viva ---------------------------------------------------------------
+
+    /**
+     * Each student's panel keyed by allocation id, in one read for the whole list
+     * rather than one per student. A student with no panel has no key.
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, List<PanelBoard.MemberRow>> membersByAllocation(Collection<Allocation> allocations) {
+        Map<Long, List<PanelBoard.MemberRow>> byAllocation = new HashMap<>();
+        if (allocations.isEmpty()) {
+            return byAllocation;
+        }
+        for (PanelMember member : panelRepository.findByAllocationInOrderByAddedAtAsc(allocations)) {
+            byAllocation.computeIfAbsent(member.getAllocation().getId(), k -> new ArrayList<>())
+                    .add(new PanelBoard.MemberRow(member.getMember().getId(),
+                            member.getMember().getFullName(),
+                            member.getMember().getEmail(),
+                            member.getAddedAt()));
+        }
+        return byAllocation;
     }
 
     // ---- readiness ----------------------------------------------------------

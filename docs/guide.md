@@ -237,8 +237,12 @@ RubricCriterion (session, phase, name, maxMarks, weightage, coCode?, poMapping?)
         -- guidelines print beside every row; GradeBand (S/A/B/C at 81/61/41) is
         -- a function of percentage, not a column.
 Evaluation      (submission, examiner, scores JSONB, total, remarks, submittedAt)
-VivaSchedule    (allocation, scheduledAt, venue, status)
-PanelMember     (vivaSchedule, user, role)
+VivaSchedule    (allocation, scheduledAt, venue, externalExaminers?, status)
+        -- The internal panel is not stored on the booking: it is the student's
+        -- PanelMember rows, joined at display time, so a viva cannot name faculty
+        -- the coordinator never appointed. Only external examiners, who are
+        -- usually not accounts, are free text (column still named panel).
+PanelMember     (allocation, member, addedBy, addedAt)
 Notification    (recipient, type, payload, readAt, createdAt)
 LogbookEntry    (allocation, meetingNo, meetingAt, workAssigned, workCompleted, challenges?,
                  status, supervisorRemarks?, signedBy?, signedAt?, entryDigest?)
@@ -461,7 +465,7 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/student/submissions` | GET | `student/submissions` | `board` | `SubmissionUploadForm` |
 | `/student/submissions/{milestoneId}/upload` | POST | redirect | — | `SubmissionUploadForm` |
 | `/student/submissions/{id}` | GET | `student/submission` | `detail`, `comments` | — |
-| `/student/result` | GET | `student/result` | `result`, `viva` | — |
+| `/student/result` | GET | `student/result` | `result`, `viva`, `panel` (the internal panel, read from `panel_members`) | — |
 | `/supervisor/dashboard` | GET | `supervisor/dashboard` | `board` | — |
 | `/supervisor/topics` | GET | `supervisor/topics` | `pending`, `decided` | `TopicDecisionForm` |
 | `/supervisor/topics/{id}/decide` | POST | redirect | — | `TopicDecisionForm` |
@@ -475,7 +479,7 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/coordinator/dashboard` | GET | `coordinator/dashboard` | `board` | — |
 | `/coordinator/allocate` | GET | `coordinator/allocate` | `board`, `programme` | `AllocationAssignForm` |
 | `/coordinator/allocate/assign` | POST | redirect | — | `AllocationAssignForm` (studentId, supervisorId, coSupervisorId?) |
-| `/coordinator/viva` | GET | `coordinator/viva` | `schedules`, `placed` | `VivaScheduleForm` |
+| `/coordinator/viva` | GET | `coordinator/viva` | `schedules`, `panels` (allocation id → members), `placed` | `VivaScheduleForm` (allocationId, scheduledAt, venue, externalExaminers?) |
 | `/coordinator/marksheet` | GET | `coordinator/marksheet` | `sheet` (rubric rows carry phase, coCode, poMapping; rows carry percent and band) | — |
 | `/admin/dashboard` | GET | `admin/dashboard` | `board`, `recentTopics` | — |
 | `/admin/users` | GET | `admin/users` | `users`, `students`, `supervisors` | — |

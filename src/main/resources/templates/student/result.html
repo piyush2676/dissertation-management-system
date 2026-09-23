@@ -60,9 +60,13 @@
                 <label>Venue</label>
                 <p style="margin:0" th:text="${viva.venue}">Seminar Hall, CSE Block</p>
             </div>
-            <div class="field" th:if="${viva.panel != null}">
+            <div class="field" th:unless="${#lists.isEmpty(panel)}">
                 <label>Panel</label>
-                <p style="margin:0" th:text="${viva.panel}">Dr A Sharma, Dr B Pandey</p>
+                <p style="margin:0" th:text="${#strings.listJoin(panel.![name], ', ')}">Dr A Sharma, Dr B Pandey</p>
+            </div>
+            <div class="field" th:if="${viva.externalExaminers != null}">
+                <label>External examiners</label>
+                <p style="margin:0" th:text="${viva.externalExaminers}">Dr C Rao</p>
             </div>
         </div>
 

@@ -26,6 +26,6 @@ public class VivaScheduleForm {
     @Size(max = 255)
     private String venue;
 
-    @Size(max = 1000, message = "Keep the panel list under 1000 characters")
-    private String panel;
+    @Size(max = 1000, message = "Keep the external examiners under 1000 characters")
+    private String externalExaminers;
 }

@@ -13,11 +13,13 @@ import lombok.experimental.FieldDefaults;
 import java.time.Instant;
 
 /**
- * When and where a student defends, and who sits on the panel.
+ * When and where a student defends, and which external examiners attend.
  *
- * <p>The panel is a free-text list of names rather than its own table. External
- * examiners are common and often not users of this system, so modelling them as
- * accounts would mean creating logins for people who never sign in.
+ * <p>The internal panel is not stored here. It is the student's {@code panel_members}
+ * rows, read at display time, so a booking can never name faculty the coordinator
+ * did not appoint. Only the external examiners are free text: they are usually not
+ * users of this system, and modelling them as accounts would mean creating logins
+ * for people who never sign in. The column keeps its phase-6 name, {@code panel}.
  */
 @Entity
 @Table(name = "viva_schedules")
@@ -41,8 +43,8 @@ public class VivaSchedule {
     @Column(nullable = false, length = 255)
     String venue;
 
-    @Column(columnDefinition = "TEXT")
-    String panel;
+    @Column(name = "panel", columnDefinition = "TEXT")
+    String externalExaminers;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)

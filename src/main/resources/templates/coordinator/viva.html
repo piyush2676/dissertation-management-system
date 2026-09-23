@@ -44,7 +44,14 @@
                 </td>
                 <td th:text="${#temporals.format(v.scheduledAt.atZone(zone), 'dd MMM yyyy, HH:mm')}">01 Jan</td>
                 <td th:text="${v.venue}">Seminar Hall</td>
-                <td th:text="${v.panel} ?: '—'">Dr A Sharma, Dr B Pandey</td>
+                <td th:with="members=${panels[v.allocation.id]}">
+                    <span th:if="${members == null}" class="status-note">No panel appointed</span>
+                    <span th:unless="${members == null}"
+                          th:text="${#strings.listJoin(members.![name], ', ')}">Dr A Sharma, Dr B Pandey</span>
+                    <th:block th:if="${v.externalExaminers != null}">
+                        <br><span class="status-note" th:text="|External: ${v.externalExaminers}|">External: Dr C Rao</span>
+                    </th:block>
+                </td>
                 <td>
                     <span class="badge"
                           th:classappend="${v.status.name() == 'HELD'} ? 'badge-approved'
@@ -105,9 +112,11 @@
             </div>
 
             <div class="field">
-                <label for="panel">Panel</label>
-                <input type="text" id="panel" th:field="*{panel}" maxlength="1000"
-                       placeholder="Internal and external examiners, comma separated">
+                <label for="externalExaminers">External examiners</label>
+                <input type="text" id="externalExaminers" th:field="*{externalExaminers}" maxlength="1000"
+                       placeholder="Names and institutions, comma separated">
+                <span class="field-error" th:if="${#fields.hasErrors('externalExaminers')}"
+                      th:errors="*{externalExaminers}">Too long</span>
             </div>
 
             <div class="btn-row" style="justify-content:flex-start">
@@ -118,8 +127,10 @@
 
     <p class="status-note">
         Scheduling the same student again moves the existing booking rather than creating
-        a second one. The panel is recorded as names because external examiners are
-        usually not accounts on this system.
+        a second one. The internal panel is whoever is appointed on the
+        <a th:href="@{/coordinator/panels(programme=${programme})}">Panels</a> page, so it cannot
+        drift from the people who scored the reviews. External examiners are typed as names
+        because they are usually not accounts on this system.
     </p>
 
 </section>
