@@ -24,9 +24,9 @@ This system answers that question for every step.
 
 | Role | Can |
 |---|---|
-| **Student** | Propose a topic, request a guide, file each milestone, read and resolve review comments, see the viva and the result |
-| **Guide** | Approve or send back a topic, accept or decline students within capacity, read submissions, comment on a specific page, score against the rubric |
-| **Coordinator** | Place a student with a guide when the request route stalls, schedule vivas, read the cohort mark sheet |
+| **Student** | Browse the faculty title bank, propose a topic, request a guide, file each milestone, keep the logbook, report research outcomes, read and resolve review comments, follow their readiness ledger, see the viva and the result |
+| **Guide** | Offer titles, approve or send back a topic, accept or decline students within capacity, read submissions, comment on a specific page, countersign logbook entries, record the similarity report, score against the rubric, file the Annexure-6 summary sheet |
+| **Coordinator** | Place a student with a guide when the request route stalls, appoint review panels, verify research outcomes, answer change requests, schedule vivas, read the cohort mark sheet, export the department lists and CO attainment |
 | **Admin** | The account roll and the full audit trail |
 
 A user may hold several roles. A professor who supervises *and* reviews is one account, and the
@@ -44,6 +44,13 @@ navigation renders both link groups from their authorities.
 - **Audit and notifications as listeners.** Services publish domain events. The audit trail and
   the notification feed are two listeners on those events; neither service knows they exist.
 - **Bounded AI.** Advisory only, always labelled, never deciding anything. See below.
+- **Evidence over locked buttons.** The readiness ledger shows every requirement between a
+  scholar and the viva with the fact that satisfies it, who verified that fact and when. One
+  rule is a gate — half the internal marks, which the guidelines state as a rule — and the rest
+  are reported for the coordinator to weigh.
+- **Tamper-evident provenance.** A dissertation's whole history is rebuilt from the audit trail
+  and sealed into a certificate; a public page recomputes the digest and says whether the
+  register has moved since it was issued.
 
 ---
 
@@ -73,7 +80,7 @@ Put your PostgreSQL password in it. The file is gitignored — no credential ent
 .\mvnw.cmd spring-boot:run
 ```
 
-Flyway applies `V1`–`V11` on first boot and `DataSeeder` creates the demo accounts, an academic
+Flyway applies `V1`–`V19` on first boot and `DataSeeder` creates the demo accounts, an academic
 session with milestones, and a default marking rubric. Then open <http://localhost:8080>.
 
 ### Demo accounts
@@ -96,8 +103,8 @@ Seeded only when the users table is empty. **Demo credentials — never for a re
 ## Testing
 
 ```powershell
-.\mvnw.cmd test                      # 151 tests
-bash scripts/acceptance.sh 8081      # 19 end-to-end assertions against a running app
+.\mvnw.cmd test                      # 314 tests
+bash scripts/acceptance.sh 8081      # 20 end-to-end assertions against a running app
 ```
 
 Unit tests cover every state machine (illegal transitions **must** throw), the service rules,
@@ -181,17 +188,28 @@ transaction; a JPA entity with a lazy association never reaches a template.
 
 ## Status
 
-Phases 0–9 complete: auth and roles, topic approval, session and allocation, submissions with
-version history, audit trail, review comments, rubric evaluation and viva, AI overlap and
-matching, in-app notifications.
+Phases 0–16 complete. Beyond the core workflow, the system now follows the institute's
+dissertation guidelines: the two dissertation phases with their own review milestones and
+marking schemes, the Annexure-1 proposal fields and thesis codes, the Annexure-4 logbook with
+countersigning sealed into the provenance chain, research outcomes verified by the coordinator,
+similarity reporting, the readiness ledger, review panels, the Annexure-6 summary sheet, the
+section 4.11 change request, the faculty title bank, Format 4 and 5 exports, and CO attainment.
+
+`docs/guide.md` section 13 maps each guideline mandate to the phase that carries it.
 
 Known limitations, recorded rather than hidden:
 
-- A coordinator placement is terminal — a misplacement cannot be undone from the UI. The fix is
-  one transition, but it reverses an invariant the tests deliberately pin.
-- Email notification is not implemented; notifications are in-app only.
-- There is no self-registration, so there is no OTP or email verification. Accounts come from
-  institute records.
+- **The AI features need a key.** They are off by default and have not been exercised against a
+  live Gemini key; the code path is covered by unit tests with a stubbed provider.
+- **pgvector is not installed**, so embeddings are stored as JSONB and scanned exactly. Correct
+  and instant at department scale; past a few thousand rows it is one class and one migration.
+- **Three of the five planned AI features were cut** — regulations Q&A, chapter summary and a
+  standalone archive search page. Retrieval itself ships inside the overlap check.
+- **The viva panel is still free text** on the schedule, even though review panels are now their
+  own table. The two are not linked yet.
+- **No self-registration**, so no OTP. Accounts come from institute records, and there is an
+  importer for the department's own allocation list.
+- **Admin user management is read-only.** The roll and the audit trail, not CRUD.
 
 ---
 
