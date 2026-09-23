@@ -52,6 +52,9 @@ public class TopicNoveltyService {
             2. What appears genuinely new about it.
             3. One concrete suggestion for sharpening the contribution.
 
+            Write plain text: no Markdown, no asterisks, no headings. Number the three points
+            1, 2 and 3, one short paragraph each -- the page shows the note exactly as written.
+
             Do not approve or reject the topic and do not recommend that anyone else does.
             Do not describe this as plagiarism -- the only corpus here is this department's
             own archive. If the listed topics are not meaningfully similar, say so plainly.
@@ -63,7 +66,7 @@ public class TopicNoveltyService {
     private final AiReportRepository reportRepository;
     private final AiAvailability ai;
 
-    @Value("${spring.ai.google.genai.chat.model:gemini-2.5-flash}")
+    @Value("${spring.ai.google.genai.chat.model:gemini-3.6-flash}")
     private String chatModelName;
 
     public boolean embeddingsAvailable() {

@@ -7,13 +7,19 @@
 spring.datasource.password=your-postgres-password
 
 # Phase 7 -- Google AI Studio (Gemini), free tier.
-# Create a key at https://aistudio.google.com/apikey , then uncomment all three
+# Create a key at https://aistudio.google.com/apikey , then uncomment all five
 # lines below. The two switches matter: the AI features are off by default so a
 # checkout without a key still starts.
 #
+# The embedding model reads its own api-key property, so the key goes in twice.
+# The last line narrows application.properties' exclusion list: the embedding
+# model needs the embedding *connection* bean that a key-less checkout excludes,
+# and without this line the app refuses to start once the switches are on.
+#
 # The key can also come from the GOOGLE_API_KEY environment variable, in which
-# case uncomment only the two switches.
-# spring.ai.google.genai.api-key=AIza...
+# case leave both api-key lines commented and uncomment the other three.
+# spring.ai.google.genai.api-key=your-key
+# spring.ai.google.genai.embedding.api-key=your-key
 # spring.ai.model.chat=google-genai
 # spring.ai.model.embedding.text=google-genai
-# spring.autoconfigure.exclude=
+# spring.autoconfigure.exclude=org.springframework.ai.model.google.genai.autoconfigure.image.GoogleGenAiImageConnectionAutoConfiguration
