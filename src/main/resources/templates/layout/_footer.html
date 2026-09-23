@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
 <footer class="site-footer" th:fragment="footer">
@@ -29,10 +29,10 @@
             <div class="footer-col">
                 <h4>Roles</h4>
                 <ul>
-                    <li><a th:href="@{/student/dashboard}">Students</a></li>
-                    <li><a th:href="@{/supervisor/dashboard}">Supervisors</a></li>
-                    <li><a th:href="@{/coordinator/dashboard}">Coordinators</a></li>
-                    <li><a th:href="@{/admin/dashboard}">Admin</a></li>
+                    <li sec:authorize="isAnonymous() or hasRole('STUDENT')"><a th:href="@{/student/dashboard}">Students</a></li>
+                    <li sec:authorize="isAnonymous() or hasRole('SUPERVISOR')"><a th:href="@{/supervisor/dashboard}">Supervisors</a></li>
+                    <li sec:authorize="isAnonymous() or hasRole('COORDINATOR')"><a th:href="@{/coordinator/dashboard}">Coordinators</a></li>
+                    <li sec:authorize="isAnonymous() or hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Admin</a></li>
                 </ul>
             </div>
 
