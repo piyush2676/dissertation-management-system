@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 314 tests green, 176 commits, pushed to `origin/main`. Flyway at V19.
+Phases 0–16 complete, 316 tests green, 176 commits, pushed to `origin/main`. Flyway at V19.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -158,19 +158,29 @@ Nothing on the guideline roadmap. These are the open ends, in the order they wou
    without a key by design — but nobody has watched them answer. Before demoing them: get a key
    from `aistudio.google.com/apikey`, uncomment the three lines in
    `application-local.properties.example`, and walk both pages.
-2. **The viva schedule's `panel` is still free text** while `panel_members` is a real table since
-   phase 15. Nothing links them, so a coordinator can book a viva naming people who are not on
-   the panel. Populating the field from the panel, or dropping it for a join, is the obvious fix.
-3. **The imported cohort has no topics.** The department's sheet carries no thesis titles, so 58
+2. **The imported cohort has no topics.** The department's sheet carries no thesis titles, so 58
    scholars have allocations and no proposals. If a titles sheet turns up, extend `CohortImporter`
    to create the topics with their real `MInt._` codes — `Topic.thesisCode` already takes them.
-4. **The AI is absent from the landing page.** `home.html` has four sections and mentions none of
-   it. A card in *Built for every role* would fix it; word it as overlap against the department
-   archive, never as plagiarism detection.
-5. **pgvector.** Still not installable on this machine (headers-only BuildTools, elevation needed
+3. **pgvector.** Still not installable on this machine (headers-only BuildTools, elevation needed
    for `Program Files\PostgreSQL8\`). One class plus one migration when it is.
-6. **The three cut AI features**, if they are ever wanted: regulations Q&A, chapter summary,
+4. **The three cut AI features**, if they are ever wanted: regulations Q&A, chapter summary,
    standalone archive search.
+
+Closed on 2026-09-23: **the viva's internal panel is now a join** on `panel_members`
+(`VivaService.panelsFor` / `panelFor`); the free-text column survives only as
+`externalExaminers`, still named `panel` in SQL so no migration was needed. **The landing page
+has an AI card** ("Advice, not verdicts"), and the Admin card no longer claims account CRUD.
+The acceptance script also scores 80% of each criterion's own `max_marks` now — the flat
+`scores=8` it posted predated phase 12 and totalled 48 on a fresh DB, which the viva gate then
+refused.
+
+Also 2026-09-23, from a rehearsal of `docs/demo.md` on a freshly seeded database (macOS): the
+walkthrough leaned on records only the Windows DB had — it searched for `Avika` as guide1's
+student, but a fresh seed allocates nobody — and on pre-phase-12 milestones ("Synopsis", four vs
+five). It now searches for `Piyush` (student4, whom the run itself places with guide1) and names
+the three PRE reviews. The readiness page's *Summary sheet* button only renders once Annexure-6
+is filed (it was a 404 before), and the footer's role links render only for that role or a
+signed-out visitor. Both scripts now use `psql` from PATH before the Windows path.
 
 Deliberately not on this list: anything the guidelines mandate. Section 13 of `docs/guide.md`
 maps every mandate to the phase that carries it, and all sixteen are done.
@@ -180,7 +190,7 @@ maps every mandate to the phase that carries it, and all sixteen are done.
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (314 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (316 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
