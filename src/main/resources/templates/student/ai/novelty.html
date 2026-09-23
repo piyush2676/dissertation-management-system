@@ -23,8 +23,10 @@
         <a th:href="@{/student/topic}" class="btn btn-ghost">Go to my topic</a>
     </div>
 
-    <div th:if="${hasTopic and !embeddingsAvailable}"
-         th:replace="~{layout/_aipanel :: unconfigured('This check')}"></div>
+    <!-- th:replace runs before th:if on one element, so the condition lives on the block. -->
+    <th:block th:if="${hasTopic and !embeddingsAvailable}">
+        <div th:replace="~{layout/_aipanel :: unconfigured('This check')}"></div>
+    </th:block>
 
     <div th:if="${hasTopic and embeddingsAvailable}">
 
