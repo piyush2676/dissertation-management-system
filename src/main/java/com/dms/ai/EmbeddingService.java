@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -30,7 +31,7 @@ public class EmbeddingService {
     private final EmbeddingRepository embeddingRepository;
     private final AiAvailability ai;
 
-    @Value("${spring.ai.google.genai.embedding.text.model:text-embedding-004}")
+    @Value("${spring.ai.google.genai.embedding.text.model:gemini-embedding-001}")
     private String modelName;
 
     public boolean isAvailable() {
@@ -51,7 +52,10 @@ public class EmbeddingService {
         String hash = sha256(cleaned);
         Optional<Embedding> existing = embeddingRepository.findByKindAndRefId(kind, refId);
 
-        if (existing.isPresent() && hash.equals(existing.get().getSourceHash())) {
+        // Same text is not enough: vectors from two models live in different spaces,
+        // so a row embedded by an earlier model is redone rather than compared.
+        if (existing.isPresent() && hash.equals(existing.get().getSourceHash())
+                && Objects.equals(modelName, existing.get().getModel())) {
             return existing.get();
         }
 

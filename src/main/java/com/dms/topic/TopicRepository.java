@@ -41,6 +41,8 @@ public interface TopicRepository extends JpaRepository<Topic,Long> {
     @EntityGraph(attributePaths = {"student", "student.user"})
     List<Topic> findTop5ByStatusOrderByDecidedAtDesc(TopicStatus status);
 
+    List<Topic> findByStatus(TopicStatus status);
+
     // ---- search -------------------------------------------------------------
     //
     // Each variant carries its own scope in the where clause rather than
