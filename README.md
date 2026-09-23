@@ -103,7 +103,7 @@ Seeded only when the users table is empty. **Demo credentials — never for a re
 ## Testing
 
 ```powershell
-.\mvnw.cmd test                      # 316 tests
+.\mvnw.cmd test                      # 321 tests
 bash scripts/acceptance.sh 8081      # 20 end-to-end assertions against a running app
 ```
 
@@ -199,8 +199,9 @@ section 4.11 change request, the faculty title bank, Format 4 and 5 exports, and
 
 Known limitations, recorded rather than hidden:
 
-- **The AI features need a key.** They are off by default and have not been exercised against a
-  live Gemini key; the code path is covered by unit tests with a stubbed provider.
+- **The AI features need a key.** They are off by default; with a Google AI Studio key both have
+  been run live (overlap check and guide matching, 2026-09-24). Answers take ten seconds or so,
+  longer when Gemini is busy, and the page says so if the model does not answer.
 - **pgvector is not installed**, so embeddings are stored as JSONB and scanned exactly. Correct
   and instant at department scale; past a few thousand rows it is one class and one migration.
 - **Three of the five planned AI features were cut** — regulations Q&A, chapter summary and a

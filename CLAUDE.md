@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 316 tests green, 176 commits, pushed to `origin/main`. Flyway at V19.
+Phases 0–16 complete, 321 tests green, 176 commits, pushed to `origin/main`. Flyway at V19.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -153,17 +153,12 @@ without it), and **the review panel did get its own table** in phase 15 (`panel_
 
 Nothing on the guideline roadmap. These are the open ends, in the order they would bite:
 
-1. **The AI features have never run against a live key.** `TopicNoveltyService` and
-   `SupervisorMatchingService` are unit-tested against a stubbed provider, and the app boots
-   without a key by design — but nobody has watched them answer. Before demoing them: get a key
-   from `aistudio.google.com/apikey`, uncomment the three lines in
-   `application-local.properties.example`, and walk both pages.
-2. **The imported cohort has no topics.** The department's sheet carries no thesis titles, so 58
+1. **The imported cohort has no topics.** The department's sheet carries no thesis titles, so 58
    scholars have allocations and no proposals. If a titles sheet turns up, extend `CohortImporter`
    to create the topics with their real `MInt._` codes — `Topic.thesisCode` already takes them.
-3. **pgvector.** Still not installable on this machine (headers-only BuildTools, elevation needed
+2. **pgvector.** Still not installable on this machine (headers-only BuildTools, elevation needed
    for `Program Files\PostgreSQL8\`). One class plus one migration when it is.
-4. **The three cut AI features**, if they are ever wanted: regulations Q&A, chapter summary,
+3. **The three cut AI features**, if they are ever wanted: regulations Q&A, chapter summary,
    standalone archive search.
 
 Closed on 2026-09-23: **the viva's internal panel is now a join** on `panel_members`
@@ -182,6 +177,19 @@ the three PRE reviews. The readiness page's *Summary sheet* button only renders 
 is filed (it was a 404 before), and the footer's role links render only for that role or a
 signed-out visitor. Both scripts now use `psql` from PATH before the Windows path.
 
+2026-09-24, **the AI features ran live for the first time**, and four things broke that the
+stubbed tests could not see: `gemini-2.5-flash` and `text-embedding-004` are closed to new keys
+(now `gemini-3.6-flash` and `gemini-embedding-001` at 768 dims); the documented enable steps
+crashed on start, because the embedding model needs the embedding *connection* bean that
+`application.properties` excludes (the `.example` now narrows the exclusion, and the embedding
+model's separate `embedding.api-key` is set too); the "switched off" panel always rendered,
+because `th:replace` outranks `th:if` on one element (moved to a `th:block`); and Spring AI's
+default of 10 retries at x5 backoff held the page open for many minutes (now 2 attempts). Also
+added: `AiArchiveBackfill` indexes approved topics at start, `embedAndStore` re-embeds a row from
+another model, and the prompt asks for plain text because the note renders verbatim.
+**zsh trap for curl probes:** `"$M:generateContent"` is read as a history modifier on `$M` and
+silently mangles the URL into an empty-bodied 404 — write `${M}`.
+
 Deliberately not on this list: anything the guidelines mandate. Section 13 of `docs/guide.md`
 maps every mandate to the phase that carries it, and all sixteen are done.
 
@@ -190,7 +198,7 @@ maps every mandate to the phase that carries it, and all sixteen are done.
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (316 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (321 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```

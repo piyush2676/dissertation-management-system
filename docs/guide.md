@@ -568,8 +568,11 @@ Added last, on a working system. Two features shipped of the five planned.
 **Provider: Google AI Studio (Gemini), not Anthropic.** The original plan named Anthropic for
 the narrative half and left the embedding model unnamed. Anthropic ships no embedding model, and
 three of the five features are embedding-driven, so the plan always needed a second provider.
-Gemini covers both on one key with a free tier — `gemini-2.5-flash` for the note,
-`text-embedding-004` for the vectors.
+Gemini covers both on one key with a free tier — `gemini-3.6-flash` for the note,
+`gemini-embedding-001` at 768 dimensions for the vectors. (The first choices,
+`gemini-2.5-flash` and `text-embedding-004`, were closed to newly created keys in 2026.
+Because every embedding row records its model, a row from an earlier model is re-embedded
+rather than compared against vectors from a different space.)
 
 Key from `GOOGLE_API_KEY`, or `spring.ai.google.genai.api-key` in the gitignored
 `application-local.properties` — **never committed**. Off by default; see section 0.
@@ -577,6 +580,11 @@ Key from `GOOGLE_API_KEY`, or `spring.ai.google.genai.api-key` in the gitignored
 Two economies worth naming. Every embedding row stores the SHA-256 of the text it was built
 from, so unchanged text is never re-embedded and never re-billed. And each feature runs only when
 the user asks: embedding on page load would burn quota rendering a page nobody was reading.
+The one exception is `AiArchiveBackfill`: on start, with a key present, it indexes approved
+topics that never reached the archive (anything approved while the AI was off). Without it the
+overlap check compared against an empty corpus and reported "nothing close". The digest makes
+every start after the first cost nothing, and it stops at the first failure so a quota problem
+is not multiplied across the archive.
 
 **Hard constraint, designed in from the start:** the LLM never assigns a final grade or an
 approve/reject decision. Every AI output is advisory, rendered in a visually distinct panel
