@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 314 tests green, 173 commits, pushed to `origin/main`. Flyway at V19.
+Phases 0–16 complete, 314 tests green, 176 commits, pushed to `origin/main`. Flyway at V19.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
