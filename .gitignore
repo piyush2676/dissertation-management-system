@@ -49,3 +49,7 @@ application-local.properties
 # importer that reads these is committed; the files themselves are not.
 /data/
 *.xlsx
+
+# The institute's own guidelines document. Kept locally because the design
+# cites it section by section; not mirrored to a public repo.
+docs/*guidelines_v3.md
