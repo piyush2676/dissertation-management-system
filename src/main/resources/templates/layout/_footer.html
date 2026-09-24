@@ -8,7 +8,12 @@
         <div class="footer-grid">
 
             <div class="footer-col footer-brand">
-                <span class="brand-mark">NIET</span>
+                <!-- The mark is dark lettering on transparency, so on the dark footer it
+                     sits on a white plate, as the institute's own footer does. -->
+                <a class="footer-logo" th:href="@{/}">
+                    <img th:src="@{/images/niet-logo.png}"
+                         alt="Noida Institute of Engineering and Technology" width="293" height="112">
+                </a>
                 <p class="footer-tagline">
                     Noida Institute of Engineering and Technology — an autonomous
                     institute. Topic approval, guide allocation, milestones and
