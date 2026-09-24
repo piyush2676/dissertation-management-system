@@ -59,7 +59,7 @@
                 <tbody>
                 <tr th:each="e : ${rule.evidence}">
                     <td th:text="${e.fact}">v2 approved</td>
-                    <td th:text="${e.by} ?: '—'">guide@college.edu</td>
+                    <td th:text="${e.by} ?: '—'">guide@niet.co.in</td>
                     <td th:text="${e.at != null} ? ${#temporals.format(e.at.atZone(zone), 'dd MMM yyyy, HH:mm')} : '—'">01 Jan</td>
                     <td><code th:text="${e.ref != null} ? ${#strings.abbreviate(e.ref, 16)} : '—'">a1b2c3d4e5f6</code></td>
                 </tr>

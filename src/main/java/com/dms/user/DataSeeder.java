@@ -47,15 +47,15 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
 
-        createUser("admin@college.edu", "admin123", "Dept Admin", Set.of(ADMIN));
-        createUser("coordinator@college.edu", "coord123", "PG COORDINATOR", Set.of(COORDINATOR));
+        createUser(InstituteMail.address("admin"), "admin123", "Dept Admin", Set.of(ADMIN));
+        createUser(InstituteMail.address("coordinator"), "coord123", "PG COORDINATOR", Set.of(COORDINATOR));
 
-        User guide1 = createUser("guide1@college.edu", "guide123", "Dr A Sharma", Set.of(SUPERVISOR, REVIEWER));
-        User guide2 = createUser("guide2@college.edu", "guide123", "Dr B Pandey", Set.of(SUPERVISOR));
-        User student1 = createUser("student1@college.edu", "student123", "Avika Singh", Set.of(STUDENT));
-        User student2 = createUser("student2@college.edu", "student123", "Neha Kumari", Set.of(STUDENT));
-        User student3 = createUser("student3@college.edu", "student123", "Anjana Nair", Set.of(STUDENT));
-        User student4 = createUser("student4@gmail.com", "student123", "Piyush Pandey", Set.of(STUDENT));
+        User guide1 = createUser(InstituteMail.address("guide1"), "guide123", "Dr A Sharma", Set.of(SUPERVISOR, REVIEWER));
+        User guide2 = createUser(InstituteMail.address("guide2"), "guide123", "Dr B Pandey", Set.of(SUPERVISOR));
+        User student1 = createUser(InstituteMail.address("student1"), "student123", "Avika Singh", Set.of(STUDENT));
+        User student2 = createUser(InstituteMail.address("student2"), "student123", "Neha Kumari", Set.of(STUDENT));
+        User student3 = createUser(InstituteMail.address("student3"), "student123", "Anjana Nair", Set.of(STUDENT));
+        User student4 = createUser(InstituteMail.address("student4"), "student123", "Piyush Pandey", Set.of(STUDENT));
         createSupervisorProfile(guide1, "Associate Professor", "CSE", "machine learning,federated systems,privacy-preserving computation", 5);
         createSupervisorProfile(guide2, "Assistant Professor", "CSE", "distributed databases,query optimisation", 3);
         createStudentProfile(student1, "24MCS001", MTECH, "CSE", "2024-2026", 4);
@@ -140,12 +140,10 @@ public class DataSeeder implements CommandLineRunner {
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setFullName(fullName);
         user.setRoles(new HashSet<>(roles));
-        // Seeded accounts come from institute records, so their addresses count as
-        // confirmed. The one on a public mail domain deliberately does not, which
-        // gives the confirmation flow something real to demonstrate.
-        if (!email.endsWith("@gmail.com")) {
-            user.setEmailVerifiedAt(Instant.now());
-        }
+        // Seeded accounts stand for institute records on the institute's own domain,
+        // so their addresses count as confirmed. No student is seeded on a public mail
+        // domain: sign-in is by ERP address.
+        user.setEmailVerifiedAt(Instant.now());
         return userRepository.save(user);
     }
     private void createStudentProfile(User user,String rollNo,Programme programme,String department,String batch,Integer semester){

@@ -112,7 +112,7 @@
         <li th:each="e : ${timeline.entries}">
             <span class="notice-date"
                   th:text="${#temporals.format(e.at().atZone(zone), 'dd MMM yyyy, HH:mm:ss')} + ' · ' + ${e.actorEmail()}">
-                01 Jan · someone@college.edu</span>
+                01 Jan · someone@niet.co.in</span>
             <span class="notice-title" th:text="${e.readableAction()}">topic approved</span>
             <span th:if="${!#strings.isEmpty(e.detail())}" class="status-note"
                   th:text="${e.detail()}">PROPOSED -> APPROVED</span>

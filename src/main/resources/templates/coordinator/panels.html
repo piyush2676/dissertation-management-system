@@ -61,7 +61,7 @@
                 <tbody>
                 <tr th:each="m : ${r.members}">
                     <td th:text="${m.name}">Dr B Pandey</td>
-                    <td th:text="${m.email}">guide2@college.edu</td>
+                    <td th:text="${m.email}">guide2@niet.co.in</td>
                     <td th:text="${m.addedAt != null} ? ${#temporals.format(m.addedAt.atZone(zone), 'dd MMM yyyy')} : '—'">01 Jan</td>
                     <td class="no-print">
                         <form method="post" class="inline-form"

@@ -15,9 +15,9 @@ class CohortImporterTest {
 
     @Test
     void aTitleIsStrippedAndTheNameBecomesTheAddress() {
-        assertEquals("hitesh.singh@college.edu", CohortImporter.emailFor("Dr. Hitesh Singh"));
-        assertEquals("roshni.prasad@college.edu", CohortImporter.emailFor("Ms. Roshni Prasad"));
-        assertEquals("pradeep.kumar@college.edu", CohortImporter.emailFor("Mr Pradeep Kumar"));
+        assertEquals("hitesh.singh@niet.co.in", CohortImporter.emailFor("Dr. Hitesh Singh"));
+        assertEquals("roshni.prasad@niet.co.in", CohortImporter.emailFor("Ms. Roshni Prasad"));
+        assertEquals("pradeep.kumar@niet.co.in", CohortImporter.emailFor("Mr Pradeep Kumar"));
     }
 
     @Test
@@ -33,17 +33,17 @@ class CohortImporterTest {
 
     @Test
     void aNameWithNoTitleStillResolves() {
-        assertEquals("raju@college.edu", CohortImporter.emailFor("Raju"));
+        assertEquals("raju@niet.co.in", CohortImporter.emailFor("Raju"));
     }
 
     @Test
-    void generatedAddressesNeverCarryTheInstituteDomain() {
-        // The source sheet holds real mail ids like 0221MCSD006@niet.co.in. None
-        // of them are imported, and nothing generated may look like one.
+    void generatedAddressesAreDerivedOnTheInstituteErpDomain() {
+        // Since 2026-09-24 sign-in is by ERP address on @niet.co.in. The addresses are
+        // still derived from the name, never read from the sheet's mail-id column.
         for (String name : new String[]{"Dr. Hitesh Singh", "Ms Sana Anjum", "Mr. Ibrar Ahmad"}) {
             String email = CohortImporter.emailFor(name);
-            assertTrue(email.endsWith(CohortImporter.MAIL_DOMAIN), email);
-            assertFalse(email.contains("niet.co.in"), email);
+            assertTrue(email.endsWith("@niet.co.in"), email);
+            assertFalse(email.contains("@gmail.com"), email);
         }
     }
 }

@@ -36,7 +36,7 @@
             <tbody>
             <tr th:each="e : ${entries.content}">
                 <td th:text="${#temporals.format(e.at.atZone(zone), 'dd MMM yyyy, HH:mm:ss')}">01 Jan</td>
-                <td th:text="${e.actorEmail}">student1@college.edu</td>
+                <td th:text="${e.actorEmail}">student1@niet.co.in</td>
                 <td><code th:text="${e.action}">TOPIC_APPROVED</code></td>
                 <td th:text="|${e.entityType} #${e.entityId}|">Topic #1</td>
                 <td th:text="${e.oldValue} ?: '—'">PROPOSED</td>

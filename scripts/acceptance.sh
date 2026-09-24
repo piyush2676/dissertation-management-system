@@ -8,7 +8,7 @@
 #
 #   ./scripts/acceptance.sh [PORT] [STUDENT_EMAIL]
 #
-# Defaults to port 8081 and student3@college.edu, so it does not collide with an
+# Defaults to port 8081 and student3@niet.co.in, so it does not collide with an
 # app you are running yourself on 8080 or with data an earlier run left behind.
 #
 # Git Bash note: MSYS2_ARG_CONV_EXCL stops MSYS mangling the multipart argument,
@@ -17,9 +17,9 @@
 set -u
 
 PORT="${1:-8081}"
-STUDENT="${2:-student3@college.edu}"
-GUIDE="guide1@college.edu"
-COORDINATOR="coordinator@college.edu"
+STUDENT="${2:-student3@niet.co.in}"
+GUIDE="guide1@niet.co.in"
+COORDINATOR="coordinator@niet.co.in"
 B="http://localhost:${PORT}"
 
 export MSYS2_ARG_CONV_EXCL='*'
@@ -201,7 +201,7 @@ V1=$(q "select id from submission_versions where submission_id=$SUB order by ver
 check "15. student downloads v1" "200" \
   "$(curl -s -b "$WORK_WIN/s.jar" -o /dev/null -w '%{http_code}' "$B/files/submissions/versions/$V1")"
 check "16. guide2 cannot reach the submission" "404" \
-  "$(login guide2@college.edu "$WORK_WIN/g2.jar" guide123 > /dev/null; \
+  "$(login guide2@niet.co.in "$WORK_WIN/g2.jar" guide123 > /dev/null; \
      curl -s -b "$WORK_WIN/g2.jar" -o /dev/null -w '%{http_code}' "$B/supervisor/submissions/$SUB")"
 check "17. mark sheet renders" "200" \
   "$(curl -s -b "$WORK_WIN/c.jar" -o /dev/null -w '%{http_code}' "$B/coordinator/marksheet")"

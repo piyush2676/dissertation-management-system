@@ -56,8 +56,11 @@ public class CohortImporter implements CommandLineRunner {
 
     /** Imported accounts share one password. Local demonstration only, never a deployment. */
     static final String DEFAULT_PASSWORD = "niet123";
-    /** Sign-in addresses are generated; the real mail ids are not imported. */
-    static final String MAIL_DOMAIN = "@college.edu";
+    /**
+     * Sign-in addresses are derived on the institute domain; the mail ids in the sheet
+     * are still not read. See {@link InstituteMail} on what that means once SMTP is on.
+     */
+    static final String MAIL_DOMAIN = InstituteMail.DOMAIN;
 
     private final UserRepository userRepository;
     private final StudentProfileRepository studentProfileRepository;
@@ -193,7 +196,8 @@ public class CohortImporter implements CommandLineRunner {
     private static final Set<String> TITLES = Set.of("dr", "mr", "mrs", "ms", "prof");
 
     /**
-     * "Dr. Hitesh Singh" becomes hitesh.singh@college.edu. Never the real address.
+     * "Dr. Hitesh Singh" becomes hitesh.singh@niet.co.in -- derived from the name, never
+     * read from the sheet.
      *
      * <p>Everything that is not a letter becomes a gap before anything else is
      * decided, so a full stop, a double space and the non-breaking space the sheet
