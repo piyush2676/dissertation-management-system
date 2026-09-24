@@ -46,4 +46,23 @@ class CohortImporterTest {
             assertFalse(email.contains("@gmail.com"), email);
         }
     }
+
+    @Test
+    void aScholarSignsInWithTheirErpIdOnTheInstituteDomain() {
+        assertEquals("0221mcsd006@niet.co.in", CohortImporter.scholarEmail("0221MCSD006", "2201330100501"));
+    }
+
+    @Test
+    void withoutAnErpIdTheRollNumberIsUsed() {
+        assertEquals("2201330100501@niet.co.in", CohortImporter.scholarEmail("", "2201330100501"));
+    }
+
+    @Test
+    void notPlacedIsNobodyNotAFacultyMemberCalledNp() {
+        assertTrue(CohortImporter.isPlaceholder("NP"));
+        assertTrue(CohortImporter.isPlaceholder(" n/a "));
+        assertTrue(CohortImporter.isPlaceholder("LEFT"));
+        assertTrue(CohortImporter.isPlaceholder(""));
+        assertFalse(CohortImporter.isPlaceholder("Dr. Hitesh Singh"));
+    }
 }

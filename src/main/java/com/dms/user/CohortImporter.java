@@ -124,7 +124,7 @@ public class CohortImporter implements CommandLineRunner {
                 continue;
             }
 
-            User user = createUser(row.studentName(), row.rollNo() + MAIL_DOMAIN, Set.of(Role.STUDENT));
+            User user = createUser(row.studentName(), scholarEmail(row.erpId(), row.rollNo()), Set.of(Role.STUDENT));
             StudentProfile student = new StudentProfile();
             student.setUser(user);
             student.setRollNo(row.rollNo());
@@ -135,11 +135,11 @@ public class CohortImporter implements CommandLineRunner {
             studentProfileRepository.save(student);
             students++;
 
-            if (session == null || row.supervisor().isBlank()) {
+            if (session == null || isPlaceholder(row.supervisor())) {
                 continue;
             }
             SupervisorProfile guide = faculty.computeIfAbsent(row.supervisor(), this::facultyFor);
-            SupervisorProfile co = row.coSupervisor().isBlank() ? null
+            SupervisorProfile co = isPlaceholder(row.coSupervisor()) ? null
                     : faculty.computeIfAbsent(row.coSupervisor(), this::facultyFor);
             if (co != null && co.getId().equals(guide.getId())) {
                 co = null; // the sheet names the same person twice; the model refuses it
@@ -192,6 +192,28 @@ public class CohortImporter implements CommandLineRunner {
         return userRepository.save(user);
     }
 
+    /**
+     * What the sheet writes where there is no guide: "NP" (not placed) and "LEFT" (the
+     * guide has left the institute). Taken as names, each became a faculty account --
+     * "Np", "Left" -- offered to every student as a guide.
+     */
+    private static final Set<String> PLACEHOLDERS =
+            Set.of("", "np", "na", "n/a", "nil", "none", "tbd", "left", "-", "--");
+
+    static boolean isPlaceholder(String name) {
+        return name == null || PLACEHOLDERS.contains(name.replace('\u00a0', ' ').strip().toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * A scholar signs in with their ERP ID on the institute domain, as the ERP does:
+     * 0221MCSD006 becomes 0221mcsd006@niet.co.in (stored lower-case; sign-in ignores
+     * case). A row without an ERP ID falls back to the roll number.
+     */
+    static String scholarEmail(String erpId, String rollNo) {
+        String local = erpId == null || erpId.isBlank() ? rollNo : erpId;
+        return (local.strip() + MAIL_DOMAIN).toLowerCase(Locale.ROOT);
+    }
+
     /** Honorifics the sheet uses. Dropped so an address is the person, not their title. */
     private static final Set<String> TITLES = Set.of("dr", "mr", "mrs", "ms", "prof");
 
@@ -224,7 +246,7 @@ public class CohortImporter implements CommandLineRunner {
     }
 
     private record Row(String thesisId, String studentName, String rollNo,
-                       String supervisor, String coSupervisor, String titleFormReceived) {
+                       String supervisor, String coSupervisor, String titleFormReceived, String erpId) {
     }
 
     /**
@@ -254,7 +276,8 @@ public class CohortImporter implements CommandLineRunner {
                     at(fields, header, "rollNo"),
                     at(fields, header, "supervisor"),
                     at(fields, header, "coSupervisor"),
-                    at(fields, header, "titleFormReceived")));
+                    at(fields, header, "titleFormReceived"),
+                    at(fields, header, "erpId")));
         }
         return rows;
     }
