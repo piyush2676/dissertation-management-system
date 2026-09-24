@@ -22,7 +22,7 @@ Owner: Piyush Pandey. Repo: `github.com/piyush2676/dissertation-management-syste
 | Java | 21 | |
 | Spring Boot | 4.1.0 | starters renamed vs 3.x — see below |
 | PostgreSQL | 18 | database `dms`, service `postgresql-x64-18` |
-| Flyway | via `spring-boot-starter-flyway` | currently at **V19** |
+| Flyway | via `spring-boot-starter-flyway` | currently at **V20** |
 | Thymeleaf | + `thymeleaf-extras-springsecurity6` | |
 | Spring AI | 2.0.1 | Gemini via Google AI Studio; off unless a key is set |
 | Build | Maven wrapper (`.\mvnw.cmd`) | no global Maven |
@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 321 tests green, 176 commits, pushed to `origin/main`. Flyway at V19.
+Phases 0–16 complete, 338 tests green, 176 commits, pushed to `origin/main`. Flyway at V20.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -139,9 +139,9 @@ invariant instead of checking explicitly.
 ### Cut from scope
 
 OTP verification (there is no self-registration to verify — accounts come from institute
-records), admin user CRUD (read-only roll instead), archive search UI, and three of the five
-planned AI features (regulations Q&A, chapter summary, and the standalone archive search page —
-retrieval itself ships inside the overlap check).
+records), admin user CRUD (read-only roll instead), archive search UI, and one of the five
+planned AI features (the standalone archive search page — retrieval itself ships inside the
+overlap check). Regulations Q&A and the chapter summary were cut too, then built on 2026-09-24.
 
 Two entries here have since changed and the note was wrong until 2026-09-23: **mail is wired**
 (`account/SmtpMailer` on `JavaMailSender`, phase 10 — still optional, in-app notifications work
@@ -158,8 +158,12 @@ Nothing on the guideline roadmap. These are the open ends, in the order they wou
    to create the topics with their real `MInt._` codes — `Topic.thesisCode` already takes them.
 2. **pgvector.** Still not installable on this machine (headers-only BuildTools, elevation needed
    for `Program Files\PostgreSQL8\`). One class plus one migration when it is.
-3. **The three cut AI features**, if they are ever wanted: regulations Q&A, chapter summary,
-   standalone archive search.
+3. **Regulations Q&A has only run against a stand-in corpus** (`docs/guide.md`, via
+   `dms.ai.regulations-file`), because the guidelines file is not on the Mac it was built on.
+   On a machine that has `docs/m.tech_m.tech int._dissertation_guidelines_v3.md`, restart and
+   ask a few real questions: the splitter's numbered-heading rule was written against the
+   format the OCR'd file is described as having, not against the file itself.
+4. **The cut AI feature**, if it is ever wanted: standalone archive search.
 
 Closed on 2026-09-23: **the viva's internal panel is now a join** on `panel_members`
 (`VivaService.panelsFor` / `panelFor`); the free-text column survives only as
@@ -190,6 +194,21 @@ another model, and the prompt asks for plain text because the note renders verba
 **zsh trap for curl probes:** `"$M:generateContent"` is read as a history modifier on `$M` and
 silently mangles the URL into an empty-bodied 404 — write `${M}`.
 
+2026-09-24, **chapter summary and regulations Q&A shipped** (`ChapterSummaryService`,
+`RegulationCorpus` + `RegulationsService`). The summary is guide-only, PDF-only, one
+`AiReport` per immutable version, and the prompt forbids marks, bands and verdicts. The Q&A
+indexes passages in a background thread at start through `EmbeddingService.embedAndStoreAll`,
+which batches 50 texts per request (56 passages = 2 calls) and skips unchanged digests; `trim`
+drops rows past the end of a shortened file. A model failure on the Q&A still returns the
+passages. Questions are never stored.
+
+2026-09-24, **every account moved to `@niet.co.in`**, the ERP sign-in domain: seeder and
+importer via `InstituteMail`, existing databases via V20 (guarded against collisions). No
+student is seeded on `@gmail.com` any more, so no demo account shows the unconfirmed-address
+banner; the flow itself is unchanged. V20 leaves `audit_log.actor_email` alone (history), and
+certificates issued before it verify CHANGED, because the marks fact seals examiner addresses —
+the coordinator reissues. The footer now shows the NIET logo on a white plate.
+
 Deliberately not on this list: anything the guidelines mandate. Section 13 of `docs/guide.md`
 maps every mandate to the phase that carries it, and all sixteen are done.
 
@@ -198,7 +217,7 @@ maps every mandate to the phase that carries it, and all sixteen are done.
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (321 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (338 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -213,9 +232,12 @@ idempotent — a roll number already on record is skipped.
 
 - **The data never enters git.** `/data/` and `*.xlsx` are gitignored, and the property lives in
   the gitignored `application-local.properties`. The importer is committed; the list is not.
-- **No contact details are imported.** The source sheet carries institutional mail ids and mobile
-  numbers; none are read. Sign-in addresses are generated — `<rollNo>@college.edu` for scholars,
-  `firstname.lastname@college.edu` for faculty — so nothing in the database is a real address.
+- **No contact details are read from the sheet.** It carries mail ids and mobile numbers; none
+  are read. Sign-in addresses are *derived* on the institute's ERP domain — `<rollNo>@niet.co.in`
+  for scholars, `firstname.lastname@niet.co.in` for faculty (`InstituteMail`, decided
+  2026-09-24; it used to be the placeholder `@college.edu`, so nothing was a real address).
+  **Derived addresses may now be real ERP mailboxes**: with SMTP configured, password resets and
+  alerts from this system can reach real people. Keep mail off on any demonstration database.
   Imported accounts share the password `niet123`, local demonstration only.
 - **Faculty identity is by derived address**, and the derivation turns every non-letter into a
   gap first. The sheet writes one guide with a plain space and elsewhere with a non-breaking
@@ -231,12 +253,12 @@ Seeded by `DataSeeder` only when the users table is empty. Demo credentials, nev
 
 | Email | Password | Roles |
 |---|---|---|
-| `admin@college.edu` | `admin123` | ADMIN |
-| `coordinator@college.edu` | `coord123` | COORDINATOR |
-| `guide1@college.edu` | `guide123` | SUPERVISOR + REVIEWER (cap 5) |
-| `guide2@college.edu` | `guide123` | SUPERVISOR (cap 3) |
-| `student1..3@college.edu` | `student123` | STUDENT, M.Tech |
-| `student4@gmail.com` | `student123` | STUDENT, integrated |
+| `admin@niet.co.in` | `admin123` | ADMIN |
+| `coordinator@niet.co.in` | `coord123` | COORDINATOR |
+| `guide1@niet.co.in` | `guide123` | SUPERVISOR + REVIEWER (cap 5) |
+| `guide2@niet.co.in` | `guide123` | SUPERVISOR (cap 3) |
+| `student1..3@niet.co.in` | `student123` | STUDENT, M.Tech |
+| `student4@niet.co.in` | `student123` | STUDENT, integrated |
 
 ---
 
@@ -444,4 +466,4 @@ student → `/admin/**`, guide → `/admin/**`, coordinator → `/supervisor/**`
 | `docs/phase1-contract.md` | Phase 1 auth contract (historical) |
 | `docs/diagram-prompts.md`, `docs/diagrams/` | PPT diagram sources |
 | `application-local.properties` | DB password, gitignored |
-| `src/main/resources/db/migration/` | V1–V19 |
+| `src/main/resources/db/migration/` | V1–V20 |

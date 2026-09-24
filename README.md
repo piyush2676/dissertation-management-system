@@ -80,7 +80,7 @@ Put your PostgreSQL password in it. The file is gitignored — no credential ent
 .\mvnw.cmd spring-boot:run
 ```
 
-Flyway applies `V1`–`V19` on first boot and `DataSeeder` creates the demo accounts, an academic
+Flyway applies `V1`–`V20` on first boot and `DataSeeder` creates the demo accounts, an academic
 session with milestones, and a default marking rubric. Then open <http://localhost:8080>.
 
 ### Demo accounts
@@ -89,12 +89,12 @@ Seeded only when the users table is empty. **Demo credentials — never for a re
 
 | Email | Password | Roles |
 |---|---|---|
-| `admin@college.edu` | `admin123` | ADMIN |
-| `coordinator@college.edu` | `coord123` | COORDINATOR |
-| `guide1@college.edu` | `guide123` | SUPERVISOR + REVIEWER (capacity 5) |
-| `guide2@college.edu` | `guide123` | SUPERVISOR (capacity 3) |
-| `student1@college.edu` | `student123` | STUDENT — M.Tech |
-| `student4@gmail.com` | `student123` | STUDENT — integrated M.Tech |
+| `admin@niet.co.in` | `admin123` | ADMIN |
+| `coordinator@niet.co.in` | `coord123` | COORDINATOR |
+| `guide1@niet.co.in` | `guide123` | SUPERVISOR + REVIEWER (capacity 5) |
+| `guide2@niet.co.in` | `guide123` | SUPERVISOR (capacity 3) |
+| `student1@niet.co.in` | `student123` | STUDENT — M.Tech |
+| `student4@niet.co.in` | `student123` | STUDENT — integrated M.Tech |
 
 `docs/demo.md` is a click-by-click walkthrough for a presentation.
 
@@ -103,7 +103,7 @@ Seeded only when the users table is empty. **Demo credentials — never for a re
 ## Testing
 
 ```powershell
-.\mvnw.cmd test                      # 321 tests
+.\mvnw.cmd test                      # 338 tests
 bash scripts/acceptance.sh 8081      # 20 end-to-end assertions against a running app
 ```
 
@@ -124,18 +124,23 @@ It resets only the student it runs as, so it is repeatable.
 
 ## AI features (optional)
 
-Two features, both advisory, both off unless a key is configured:
+Four features, all advisory, all off unless a key is configured:
 
 - **Topic overlap check** — embeds the abstract, retrieves the nearest approved topics from the
   department archive, and asks a model to describe the overlap and what is genuinely new.
 - **Guide matching** — ranks faculty by how close their stated research interests sit to the topic.
+- **Chapter summary for the guide** — on a submission, a summary of the latest PDF version and
+  five questions worth putting to the student. Guide only, one per version, never a mark.
+- **Regulations Q&A** — any signed-in user asks about the guidelines; the answer is written from
+  the closest passages only, cites their sections, and prints the passages beneath it. Needs the
+  department's guidelines file on the server, which is deliberately not in the repository.
 
 **Provider: Google AI Studio (Gemini), free tier.** Anthropic ships no embedding model and three
 of the five originally planned features are embedding-driven, so a second provider was always
 required; Gemini covers chat and embeddings on one key.
 
-To enable, get a key at <https://aistudio.google.com/apikey> and uncomment three lines in
-`application-local.properties`. Without it the pages say so plainly and everything else works.
+To enable, get a key at <https://aistudio.google.com/apikey> and uncomment the five lines in
+`application-local.properties.example` (copied into your `application-local.properties`). Without it the pages say so plainly and everything else works.
 
 **Hard constraint, enforced in the service and not the template:** the model never approves,
 rejects or grades. Every output renders inside a panel labelled *AI-generated — verify before
@@ -199,13 +204,15 @@ section 4.11 change request, the faculty title bank, Format 4 and 5 exports, and
 
 Known limitations, recorded rather than hidden:
 
-- **The AI features need a key.** They are off by default; with a Google AI Studio key both have
-  been run live (overlap check and guide matching, 2026-09-24). Answers take ten seconds or so,
-  longer when Gemini is busy, and the page says so if the model does not answer.
+- **The AI features need a key.** They are off by default; with a Google AI Studio key all four have
+  been run live (2026-09-24). Answers take ten seconds to a minute depending on how busy Gemini is,
+  and each page says so if the model does not answer.
 - **pgvector is not installed**, so embeddings are stored as JSONB and scanned exactly. Correct
   and instant at department scale; past a few thousand rows it is one class and one migration.
-- **Three of the five planned AI features were cut** — regulations Q&A, chapter summary and a
-  standalone archive search page. Retrieval itself ships inside the overlap check.
+- **One of the five planned AI features was cut** — a standalone archive search page. Retrieval
+  itself ships inside the overlap check.
+- **The chapter summary reads PDFs only.** Word uploads get a plain "PDF only" note rather than a
+  second document library.
 - **No self-registration**, so no OTP. Accounts come from institute records, and there is an
   importer for the department's own allocation list.
 - **Admin user management is read-only.** The roll and the audit trail, not CRUD.

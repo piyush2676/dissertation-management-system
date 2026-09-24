@@ -28,7 +28,7 @@ Built, verified in a browser, and covered by tests:
 | 15 | Review panels (guide excluded), panel scoring, Annexure-6 recommendation | done |
 | 16 | Supervisor/title change request, title bank, Format 4/5 exports, CO attainment | done |
 
-`.\mvnw.cmd test` — 310 tests, green. Flyway at V19. `scripts/acceptance.sh` — 20 assertions.
+`.\mvnw.cmd test` — 338 tests, green. Flyway at V20. `scripts/acceptance.sh` — 20 assertions.
 Phases 12 to 16 are complete: every mandate in section 13's table is carried.
 
 **Phases 12–16 follow one source document:** `docs/m.tech_m.tech int._dissertation_guidelines_v3.md`,
@@ -412,14 +412,14 @@ Seeded on first startup only — `DataSeeder` no-ops when the users table is non
 
 | Email | Password | Roles |
 |---|---|---|
-| `admin@college.edu` | `admin123` | ADMIN |
-| `coordinator@college.edu` | `coord123` | COORDINATOR |
-| `guide1@college.edu` | `guide123` | SUPERVISOR + REVIEWER (capacity 5) |
-| `guide2@college.edu` | `guide123` | SUPERVISOR (capacity 3) |
-| `student1@college.edu` | `student123` | STUDENT — M.Tech |
-| `student2@college.edu` | `student123` | STUDENT — M.Tech |
-| `student3@college.edu` | `student123` | STUDENT — M.Tech |
-| `student4@gmail.com` | `student123` | STUDENT — integrated B.Tech+M.Tech |
+| `admin@niet.co.in` | `admin123` | ADMIN |
+| `coordinator@niet.co.in` | `coord123` | COORDINATOR |
+| `guide1@niet.co.in` | `guide123` | SUPERVISOR + REVIEWER (capacity 5) |
+| `guide2@niet.co.in` | `guide123` | SUPERVISOR (capacity 3) |
+| `student1@niet.co.in` | `student123` | STUDENT — M.Tech |
+| `student2@niet.co.in` | `student123` | STUDENT — M.Tech |
+| `student3@niet.co.in` | `student123` | STUDENT — M.Tech |
+| `student4@niet.co.in` | `student123` | STUDENT — integrated B.Tech+M.Tech |
 
 `guide1` holding two roles is the case worth demonstrating: one account, two link groups in
 the navbar, driven entirely by `sec:authorize`.
@@ -527,6 +527,10 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/coordinator/exports/format4.csv` | GET | CSV download | — | — |
 | `/coordinator/exports/format5.csv` | GET | CSV download | — | — |
 | `/coordinator/attainment` | GET | `coordinator/attainment` | `report`, `programme` | — |
+| `/supervisor/submissions/{id}` | GET | `supervisor/submission` | adds `summary` (latest version's `AiReport`, or absent), `summaryAvailable`, `latestIsPdf` | — |
+| `/supervisor/submissions/{id}/versions/{versionId}/summary` | POST | redirect | — | — |
+| `/help/regulations` | GET | `help/regulations` | `ready` (document loaded), `aiAvailable`, `passageCount`, flash `answer` | `RegulationQuestionForm` |
+| `/help/regulations` | POST | redirect | — | `RegulationQuestionForm` |
 
 Two routes sit outside the role prefixes on purpose. A submission file and a comment
 thread are both legitimately touched by the student, their guide, the coordinator and the
@@ -547,6 +551,7 @@ templates/
 ├── review/      panel, panel-score
 ├── coordinator/ dashboard, allocate, viva, marksheet, outcomes, readiness, readiness-detail, panels, recommendation,
 │              change-requests, exports, attainment
+├── help/        regulations
 ├── admin/       dashboard, users, audit
 └── error/       403, 404, 409, 500
 ```
@@ -555,15 +560,15 @@ templates/
 
 ## 10. Spring AI design (Phase 7)
 
-Added last, on a working system. Two features shipped of the five planned.
+Added last, on a working system. Four features shipped of the five planned.
 
 | Feature | How | State |
 |---|---|---|
 | Topic overlap check | Embed the abstract, retrieve top-k approved topics, model writes the note | **shipped** |
 | Supervisor matching | Cosine: topic embedding vs `researchInterests` | **shipped** |
 | Archive semantic search | Standalone search page over the same vectors | cut — retrieval ships inside the overlap check |
-| Regulations Q&A | RAG over the department handbook PDF | cut |
-| Chapter summary for reviewer | 200-word summary + draft review checklist | cut |
+| Regulations Q&A | RAG over the institute guidelines, answers cite their sections | **shipped** (2026-09-24) |
+| Chapter summary for reviewer | 200-word summary + draft review checklist, per version | **shipped** (2026-09-24) |
 
 **Provider: Google AI Studio (Gemini), not Anthropic.** The original plan named Anthropic for
 the narrative half and left the embedding model unnamed. Anthropic ships no embedding model, and
@@ -585,6 +590,30 @@ topics that never reached the archive (anything approved while the AI was off). 
 overlap check compared against an empty corpus and reported "nothing close". The digest makes
 every start after the first cost nothing, and it stops at the first failure so a quota problem
 is not multiplied across the archive.
+
+**Chapter summary (reviewer).** On `/supervisor/submissions/{id}` the guide can ask for a
+summary of the latest version: about 200 words of what the document claims and does, then five
+or so questions a reviewer should put to the student. PDF only -- text comes out through
+PDFBox, which is already on the classpath for certificates; a Word upload gets a plain "PDF
+only" line rather than a new dependency. The text sent is capped (first ~40,000 characters),
+and a scanned PDF with no text layer is refused with that reason, not summarised from nothing.
+Stored as an `AiReport` of kind `CHAPTER_SUMMARY` keyed by version id: versions are immutable,
+so one summary per version is correct forever and a second click shows it without a call.
+Only the supervising guide may generate or read it -- the ownership check is
+`SubmissionService.isSupervisorOf`, and there is no student route. The prompt forbids marks,
+grades, band words and verdicts; the checklist is questions, never judgements.
+
+**Regulations Q&A.** `/help/regulations`, any signed-in user. The corpus is the guidelines
+Markdown at `dms.ai.regulations-file` (default: the gitignored
+`docs/m.tech_m.tech int._dissertation_guidelines_v3.md`), split into passages under their
+nearest heading. Passages are embedded as `REGULATION_PASSAGE` rows keyed by their index, the
+first time the page is used after a start; the digest skips unchanged passages, and rows past
+the current passage count are deleted so an edited document cannot leave stale passages behind.
+A question is embedded, the five closest passages retrieved, and the model answers **from those
+passages only**, citing the headings it used; the page lists the cited passages under the
+answer so the reader checks the source, not the model. When the document is not on the
+server the page says so and makes no call. Questions and answers are not stored -- a question
+is not a record of anything.
 
 **Hard constraint, designed in from the start:** the LLM never assigns a final grade or an
 approve/reject decision. Every AI output is advisory, rendered in a visually distinct panel

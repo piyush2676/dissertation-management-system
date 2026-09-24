@@ -3,9 +3,9 @@
 A click-by-click run for a presentation or viva. Roughly **14 minutes** at a steady pace, or
 20 with the optional detours.
 
-The run uses **`student4@gmail.com`** — the integrated M.Tech student (semester 9, so the
-pre-dissertation phase), who starts with no topic, no guide and no submissions, and whose address
-is deliberately unconfirmed. Everything the run shows, `student4` creates on the way, so it works
+The run uses **`student4@niet.co.in`** — the integrated M.Tech student (semester 9, so the
+pre-dissertation phase), who starts with no topic, no guide and no submissions. Every account signs
+in with its institute ERP address on `@niet.co.in`. Everything the run shows, `student4` creates on the way, so it works
 on a freshly seeded database. Students 1 to 3 start blank too on a fresh database; they only hold
 records if earlier runs (or `scripts/acceptance.sh`, which drives `student3`) left them there.
 
@@ -62,12 +62,7 @@ Point out the header: institute mark, the dissertation-cell contact, and the sea
 
 ### 2 · Student proposes a topic — 2 min
 
-Sign in as `student4@gmail.com` / `student123`.
-
-**Stop on the red banner at the top** — *your email address is not confirmed*.
-
-> "Notifications inside the system are one thing, but if the institute imported a typo'd address
-> nobody finds out until it matters. Until an address is confirmed reachable, the system says so."
+Sign in as `student4@niet.co.in` / `student123`.
 
 - **Dashboard** — the pipeline shows step 1 highlighted, because the system knows this student
   has not proposed anything.
@@ -77,7 +72,7 @@ Sign in as `student4@gmail.com` / `student123`.
 
 ### 3 · Guide approves it — 1 min
 
-Switch to the guide window. Sign in as `guide1@college.edu` / `guide123`.
+Switch to the guide window. Sign in as `guide1@niet.co.in` / `guide123`.
 
 - **Dashboard** leads with what is waiting, so nobody hunts through three pages.
 - Point at **Alerts** — the unread count went up the moment the student submitted.
@@ -141,7 +136,7 @@ Guide window: review v2 and **Approve**.
 **This one rewards a little theatre.** In the guide window, search the header for **`Piyush`** —
 `student4`, whom `guide1` accepted a few minutes ago. Results appear.
 
-Now sign in as `guide2@college.edu` / `guide123` and search **`Piyush`** again.
+Now sign in as `guide2@niet.co.in` / `guide123` and search **`Piyush`** again.
 
 > "Nothing. Search is scoped inside the query, not filtered afterwards — a guide literally cannot
 > retrieve a row for another guide's student. Search is a classic way to leak records sideways,
@@ -241,7 +236,7 @@ Guide window: **Evaluate** → open the student → score each criterion → sub
 > id — so the department can reweight the marking scheme between years without a code change or a
 > migration. The total is weighted by each criterion's share."
 
-Coordinator window (`coordinator@college.edu` / `coord123`):
+Coordinator window (`coordinator@niet.co.in` / `coord123`):
 
 - **Viva** → the **BTECH MTECH INTEGRATED** tab → schedule the defence.
 - **Mark sheet** → the student shows an average and an outcome.
@@ -285,7 +280,7 @@ the coordinator reissues.
 
 ### 9 · The audit trail — 1 min
 
-Sign in as `admin@college.edu` / `admin123` → **Audit trail**.
+Sign in as `admin@niet.co.in` / `admin123` → **Audit trail**.
 
 > "Every state change you just watched is here — who did it, to which record, when, and what
 > changed. Written by an event listener inside the same transaction as the change, so an action
@@ -298,10 +293,11 @@ Sign in as `admin@college.edu` / `admin123` → **Audit trail**.
 
 | Ask | Show |
 |---|---|
-| "What if someone forgets their password?" | **Forgotten your password?** on the sign-in page. Enter `student4@gmail.com`, then read the link out of the application log. Set a new password, then **paste the same link again** — refused. Single-use, one-hour expiry. |
+| "What if someone forgets their password?" | **Forgotten your password?** on the sign-in page. Enter `student4@niet.co.in`, then read the link out of the application log. Set a new password, then **paste the same link again** — refused. Single-use, one-hour expiry. |
+| "How do you know an address is real?" | Before the demo run `bash scripts/demo-reset.sh --unconfirmed`. Sign in as `student4@niet.co.in`: the red *not confirmed* banner is at the top. Click **Send me the link**, copy the `verify-email` link from the application log, open it — confirmed, banner gone. Open it again: refused, single-use. "Accounts come from institute records, but a record can hold a typo; until the address is proved reachable, the system says so." |
 | "Does it leak who has an account?" | Request a reset for `nobody@example.com`. Identical response, no token issued. "Telling a stranger which addresses exist would turn this page into a roll of the department." |
 | "Is it secure?" | Sign in as `guide2` and open another guide's submission URL directly — **404, not 403**. A stranger learns nothing about whether the record exists. |
-| "What about AI?" | **Overlap check** under the student menu. Without a key it says so plainly; with one it embeds the abstract, retrieves the nearest approved topics and writes an advisory note — inside a panel labelled *AI-generated*, which never approves or rejects anything. |
+| "What about AI?" | **Overlap check** under the student menu. Without a key it says so plainly; with one it embeds the abstract, retrieves the nearest approved topics and writes an advisory note — inside a panel labelled *AI-generated*, which never approves or rejects anything. Then, as the guide on a submission: **Summarise this version** — a description and five questions, never a mark, and the student never sees it. And **Regulations** in any role's menu: the answer cites its sections and prints the passages beneath it. |
 | "Can one person hold two roles?" | `guide1` is SUPERVISOR **and** REVIEWER — one account, two link groups, driven by `sec:authorize`. |
 | "Accessibility?" | The **A+ / A / A−** controls on the right edge scale the whole interface and remember the choice. |
 | "How do you know it works?" | `bash scripts/acceptance.sh 8081` — 20 assertions across the whole chain, live. |
