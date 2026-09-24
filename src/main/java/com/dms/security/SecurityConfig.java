@@ -30,7 +30,9 @@ public class SecurityConfig {
                         .permitAll().requestMatchers("/student/**").hasRole("STUDENT").
                         requestMatchers("/supervisor/**").hasRole("SUPERVISOR")
                         .requestMatchers("/coordinator/**").hasRole("COORDINATOR").
-                        requestMatchers("/admin/**").hasRole("ADMIN").anyRequest().
+                        requestMatchers("/admin/**").hasRole("ADMIN")
+                        // The dissertation report: head of the dissertation cell and head of department.
+                        .requestMatchers("/reports/**").hasAnyRole("COORDINATOR", "ADMIN").anyRequest().
                         authenticated()).formLogin(form -> form.loginPage("/login").
                 defaultSuccessUrl("/dashboard",true).failureUrl("/login?error").permitAll())
                 .logout(logout -> logout.logoutSuccessUrl("/login?logout").permitAll());

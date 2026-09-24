@@ -100,6 +100,7 @@
             <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Dashboard</a></li>
             <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/users}">Users</a></li>
             <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/audit}">Audit trail</a></li>
+            <li sec:authorize="hasAnyRole('COORDINATOR','ADMIN')"><a th:href="@{/reports}">Reports</a></li>
 
             <li sec:authorize="isAnonymous()"><a th:href="@{/#steps}">How it works</a></li>
             <li sec:authorize="isAnonymous()"><a th:href="@{/#roles}">Roles</a></li>

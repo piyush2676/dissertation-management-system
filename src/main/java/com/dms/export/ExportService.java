@@ -135,10 +135,24 @@ public class ExportService {
                 if (i > 0) {
                     out.append(',');
                 }
-                out.append('"').append(row[i] == null ? "" : row[i].replace("\"", "\"\"")).append('"');
+                out.append('"').append(defuse(row[i]).replace("\"", "\"\"")).append('"');
             }
             out.append("\r\n");
         }
         return out.toString();
+    }
+
+    /**
+     * Excel runs a cell that starts with = + - or @ as a formula, and titles and
+     * names are typed by students. A leading apostrophe makes it plain text -- the
+     * OWASP rule for CSV injection.
+     */
+    static String defuse(String cell) {
+        if (cell == null || cell.isEmpty()) {
+            return "";
+        }
+        char first = cell.charAt(0);
+        return first == '=' || first == '+' || first == '-' || first == '@' || first == '\t' || first == '\r'
+                ? "'" + cell : cell;
     }
 }

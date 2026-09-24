@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>Dissertation report</title>
+</head>
+<body>
+<section>
+
+    <div th:replace="~{layout/_pagehero :: hero(
+            'शोध प्रबंध रिपोर्ट',
+            'Dissertation report',
+            'Every scholar in the programme, with their topic, guides, submissions, marks and progress.',
+            'ALL')}"></div>
+
+    <div class="page-head">
+        <div>
+            <h2>Download the report</h2>
+            <p class="lead">
+                <span th:text="${scholars}">58</span> scholars in
+                <span th:text="${#strings.replace(programme, '_', ' ')}">MTECH</span>, placed or not.
+            </p>
+        </div>
+        <div class="btn-row no-print">
+            <a th:each="p : ${programmes}" th:href="@{/reports(programme=${p})}"
+               class="btn btn-sm" th:classappend="${p == programme} ? 'btn-primary' : 'btn-ghost'"
+               th:text="${#strings.replace(p, '_', ' ')}">MTECH</a>
+        </div>
+    </div>
+
+    <div class="card-grid reveal">
+        <article class="card">
+            <h3>Excel</h3>
+            <p>One row per scholar, twenty-four columns, header frozen and filterable. The one to
+                sort and filter in.</p>
+            <a class="btn btn-primary btn-sm"
+               th:href="@{/reports/dissertations.xlsx(programme=${programme})}">Download Excel</a>
+        </article>
+
+        <article class="card">
+            <h3>PDF</h3>
+            <p>The same data as a printable landscape table, grouped into ten columns, numbered pages.
+                The one to print or attach.</p>
+            <a class="btn btn-primary btn-sm"
+               th:href="@{/reports/dissertations.pdf(programme=${programme})}">Download PDF</a>
+        </article>
+
+        <article class="card">
+            <h3>CSV</h3>
+            <p>The same twenty-four columns as plain text, for any other system to read.</p>
+            <a class="btn btn-primary btn-sm"
+               th:href="@{/reports/dissertations.csv(programme=${programme})}">Download CSV</a>
+        </article>
+    </div>
+
+    <h3 style="margin-top:32px">What each row carries</h3>
+    <p class="lead">
+        Thesis ID, scholar, roll number, sign-in address, semester and phase; thesis title, research
+        domain and topic status; supervisor, co-supervisor and placement; milestones filed of the
+        phase's total, the latest submission and its similarity reading; countersigned logbook
+        meetings and verified outcomes; internal marks with grade band and examiner count; readiness;
+        viva; and the supervisor's Annexure-6 recommendation.
+    </p>
+    <p class="status-note">
+        Generated from the register when you click, so all three files agree with each other and
+        with the pages. Scholars without a guide are listed too, as not placed. The file carries
+        supervisors' confidential recommendations: it is for the department office only.
+    </p>
+
+</section>
+</body>
+</html>

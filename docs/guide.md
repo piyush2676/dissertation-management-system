@@ -529,8 +529,23 @@ loose attributes, which is what keeps a lazy entity from ever reaching a templat
 | `/coordinator/attainment` | GET | `coordinator/attainment` | `report`, `programme` | — |
 | `/supervisor/submissions/{id}` | GET | `supervisor/submission` | adds `summary` (latest version's `AiReport`, or absent), `summaryAvailable`, `latestIsPdf` | — |
 | `/supervisor/submissions/{id}/versions/{versionId}/summary` | POST | redirect | — | — |
+| `/reports` | GET | `reports/index` | `programme`, `programmes` | — |
+| `/reports/dissertations.csv` | GET | CSV download (`?programme=`) | — | — |
+| `/reports/dissertations.xlsx` | GET | Excel download (`?programme=`) | — | — |
+| `/reports/dissertations.pdf` | GET | PDF download (`?programme=`) | — | — |
 | `/help/regulations` | GET | `help/regulations` | `ready` (document loaded), `aiAvailable`, `passageCount`, flash `answer` | `RegulationQuestionForm` |
 | `/help/regulations` | POST | redirect | — | `RegulationQuestionForm` |
+
+**The dissertation report** (`/reports/**`, COORDINATOR or ADMIN — the head of the
+dissertation cell and the head of department) is one row per student in the programme,
+placed or not: identity, topic and its status, guide and co-guide, milestones filed of the
+phase's total, latest submission, similarity reading, countersigned meetings, verified
+outcomes, internal marks with band, readiness, viva and the Annexure-6 verdict. One
+`DissertationReport` is assembled once and written three ways -- CSV and Excel by hand, like
+Format 4/5, and PDF through PDFBox -- so the three can never disagree. The verdict is office-only
+information and both roles are office. CSV cells that begin with `=`, `+`, `-` or `@` are
+prefixed with an apostrophe, because a student-typed title is otherwise a formula when the
+office opens it in Excel.
 
 Two routes sit outside the role prefixes on purpose. A submission file and a comment
 thread are both legitimately touched by the student, their guide, the coordinator and the
@@ -552,6 +567,7 @@ templates/
 ├── coordinator/ dashboard, allocate, viva, marksheet, outcomes, readiness, readiness-detail, panels, recommendation,
 │              change-requests, exports, attainment
 ├── help/        regulations
+├── reports/     index
 ├── admin/       dashboard, users, audit
 └── error/       403, 404, 409, 500
 ```
