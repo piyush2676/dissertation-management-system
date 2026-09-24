@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 349 tests green, 176 commits, pushed to `origin/main`. Flyway at V20.
+Phases 0–16 complete, 351 tests green, 176 commits, pushed to `origin/main`. Flyway at V20.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -158,12 +158,7 @@ Nothing on the guideline roadmap. These are the open ends, in the order they wou
    to create the topics with their real `MInt._` codes — `Topic.thesisCode` already takes them.
 2. **pgvector.** Still not installable on this machine (headers-only BuildTools, elevation needed
    for `Program Files\PostgreSQL8\`). One class plus one migration when it is.
-3. **Regulations Q&A has only run against a stand-in corpus** (`docs/guide.md`, via
-   `dms.ai.regulations-file`), because the guidelines file is not on the Mac it was built on.
-   On a machine that has `docs/m.tech_m.tech int._dissertation_guidelines_v3.md`, restart and
-   ask a few real questions: the splitter's numbered-heading rule was written against the
-   format the OCR'd file is described as having, not against the file itself.
-4. **The cut AI feature**, if it is ever wanted: standalone archive search.
+3. **The cut AI feature**, if it is ever wanted: standalone archive search.
 
 Closed on 2026-09-23: **the viva's internal panel is now a join** on `panel_members`
 (`VivaService.panelsFor` / `panelFor`); the free-text column survives only as
@@ -217,6 +212,15 @@ strings, frozen filterable header) -- no POI; PDF is PDFBox landscape with the 2
 also covers Format 4/5. Rows sort by roll number. The report reads marks, readiness and the verdict
 from the mark sheet and readiness ledger rather than recomputing them.
 
+2026-09-24, **regulations Q&A on the real guidelines**. The Mac copy of
+`docs/m.tech_m.tech int._dissertation_guidelines_v3.md` was generated from the 98-page PDF (it has a
+text layer, no OCR needed): chapters become `#`, dotted section numbers `##`; contents-page lines
+ending in page numbers and list items continuing on a lower-case line are left as text. 10
+chapters, 82 sections, 144 passages. `RegulationCorpus` now needs a dotted number (`4.11`) for a
+numbered heading, so list items ("1. Request Submission:") stay inside their section. The free
+tier embeds **100 texts a minute**, fewer than the passages, so `embedAndStoreAll` commits row by
+row (no transaction) and the background indexer retries up to six times, 65 s apart.
+
 Deliberately not on this list: anything the guidelines mandate. Section 13 of `docs/guide.md`
 maps every mandate to the phase that carries it, and all sixteen are done.
 
@@ -225,7 +229,7 @@ maps every mandate to the phase that carries it, and all sixteen are done.
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (349 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (351 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
