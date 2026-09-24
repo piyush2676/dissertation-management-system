@@ -105,6 +105,8 @@
             <li sec:authorize="isAnonymous()"><a th:href="@{/#roles}">Roles</a></li>
             <li sec:authorize="isAnonymous()"><a th:href="@{/#numbers}">In numbers</a></li>
 
+            <li sec:authorize="isAuthenticated()"><a th:href="@{/help/regulations}">Regulations</a></li>
+
             <li sec:authorize="isAuthenticated()">
                 <a th:href="@{/notifications}">
                     Alerts<span th:if="${unreadNotifications != null and unreadNotifications > 0}"
