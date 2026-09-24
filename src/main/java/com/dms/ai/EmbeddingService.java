@@ -11,8 +11,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,6 +29,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class EmbeddingService {
+
+    /** Texts per embedding request. Gemini's batch endpoint takes up to 100. */
+    private static final int BATCH = 50;
 
     private final EmbeddingRepository embeddingRepository;
     private final AiAvailability ai;
@@ -74,6 +79,64 @@ public class EmbeddingService {
         return embeddingRepository.save(embedding);
     }
 
+    /**
+     * Embeds many records of one kind, skipping those whose text and model are
+     * unchanged, and sends the rest in batches rather than one request each -- a
+     * guidelines document is a hundred-odd passages, and one call per passage would
+     * spend a free-tier minute's quota on a single page load. Returns how many
+     * records are now current.
+     */
+    @Transactional
+    public int embedAndStoreAll(EmbeddingKind kind, Map<Long, String> textsByRef) {
+        Map<Long, Embedding> existing = new HashMap<>();
+        for (Embedding e : embeddingRepository.findByKindAndRefIdIn(kind, textsByRef.keySet())) {
+            existing.put(e.getRefId(), e);
+        }
+
+        List<Long> pendingRefs = new ArrayList<>();
+        List<String> pendingTexts = new ArrayList<>();
+        List<String> pendingHashes = new ArrayList<>();
+        for (Map.Entry<Long, String> entry : textsByRef.entrySet()) {
+            String cleaned = clean(entry.getValue());
+            if (cleaned.isBlank()) {
+                continue;
+            }
+            String hash = sha256(cleaned);
+            Embedding row = existing.get(entry.getKey());
+            if (row != null && hash.equals(row.getSourceHash()) && Objects.equals(modelName, row.getModel())) {
+                continue;
+            }
+            pendingRefs.add(entry.getKey());
+            pendingTexts.add(cleaned);
+            pendingHashes.add(hash);
+        }
+
+        for (int from = 0; from < pendingTexts.size(); from += BATCH) {
+            int to = Math.min(from + BATCH, pendingTexts.size());
+            List<float[]> vectors = callModel(pendingTexts.subList(from, to));
+            for (int i = from; i < to; i++) {
+                float[] raw = vectors.get(i - from);
+                Embedding row = existing.getOrDefault(pendingRefs.get(i), new Embedding());
+                row.setKind(kind);
+                row.setRefId(pendingRefs.get(i));
+                row.setModel(modelName);
+                row.setDimensions(raw.length);
+                row.setVector(box(raw));
+                row.setSourceHash(pendingHashes.get(i));
+                row.setCreatedAt(Instant.now());
+                embeddingRepository.save(row);
+            }
+        }
+        log.debug("embedded {} of {} {} rows", pendingTexts.size(), textsByRef.size(), kind);
+        return textsByRef.size();
+    }
+
+    /** Deletes this kind's rows at or past {@code count}, for a corpus that shrank. */
+    @Transactional
+    public int trim(EmbeddingKind kind, long count) {
+        return embeddingRepository.deleteByKindFrom(kind, count);
+    }
+
     /** Embeds without storing -- for a query vector that is not itself a record. */
     public double[] embedQuery(String text) {
         String cleaned = clean(text);
@@ -97,6 +160,17 @@ public class EmbeddingService {
             // Quota, network, malformed key. Advisory features must degrade, never
             // take a page down with them.
             log.warn("embedding call failed: {}", ex.getMessage());
+            throw new AiUnavailableException("The embedding service did not respond. Try again shortly.", ex);
+        }
+    }
+
+    private List<float[]> callModel(List<String> texts) {
+        try {
+            return ai.embeddingModel().embed(texts);
+        } catch (AiUnavailableException ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            log.warn("batch embedding call failed: {}", ex.getMessage());
             throw new AiUnavailableException("The embedding service did not respond. Try again shortly.", ex);
         }
     }

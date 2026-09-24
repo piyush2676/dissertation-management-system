@@ -9,12 +9,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -56,6 +61,21 @@ class EmbeddingServiceTest {
 
         assertEquals(MODEL, redone.getModel());
         verify(ai, times(2)).embeddingModel();
+    }
+
+    @Test
+    void aBatchSkipsCurrentRowsAndSendsTheRestInOneRequest() {
+        Embedding current = storeOnce();
+        EmbeddingModel model = ai.embeddingModel();
+        when(embeddingRepository.findByKindAndRefIdIn(eq(EmbeddingKind.TOPIC), any())).thenReturn(List.of(current));
+        when(model.embed(anyList())).thenReturn(List.of(new float[] {0.4f, 0.5f, 0.6f}));
+
+        Map<Long, String> texts = new LinkedHashMap<>();
+        texts.put(7L, "Federated forecasting");
+        texts.put(8L, "Edge scheduling");
+        service.embedAndStoreAll(EmbeddingKind.TOPIC, texts);
+
+        verify(model).embed(List.of("Edge scheduling"));
     }
 
     /** Embeds the text once from an empty store and returns the saved row. */
