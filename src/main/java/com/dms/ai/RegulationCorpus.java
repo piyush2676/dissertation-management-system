@@ -32,9 +32,15 @@ public class RegulationCorpus {
 
     static final int TARGET_CHARS = 1200;
 
-    /** Markdown headings, and the OCR'd numbered headings the guidelines use ("4.11 Change of supervisor"). */
+    /**
+     * Markdown headings, and numbered section headings ("4.11 Change of supervisor").
+     * A section number needs at least one dot-level: the guidelines are full of list
+     * items -- "1. Request Submission:", "3. Decision & Approval:" -- and taken as
+     * headings they cut a section into fragments cited by their list number instead
+     * of the section they belong to.
+     */
     private static final Pattern MARKDOWN_HEADING = Pattern.compile("^#{1,6}\\s+(.+)$");
-    private static final Pattern NUMBERED_HEADING = Pattern.compile("^(\\d+(?:\\.\\d+){0,3})\\.?\\s+\\S.{0,90}$");
+    private static final Pattern NUMBERED_HEADING = Pattern.compile("^(\\d+(?:\\.\\d+){1,3})\\.?\\s+\\S.{0,90}$");
 
     public record Passage(int index, String heading, String text) {
         /** What gets embedded: the heading is part of what the passage is about. */

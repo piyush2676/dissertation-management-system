@@ -58,6 +58,23 @@ class RegulationCorpusTest {
     }
 
     @Test
+    void aNumberedListItemStaysInsideItsSection() {
+        List<RegulationCorpus.Passage> passages = RegulationCorpus.split("""
+                ## 4.11 Procedure to change the supervisor
+
+                1. Request Submission:
+                The scholar submits a written request.
+
+                2. Committee Review:
+                The committee reviews it.
+                """);
+
+        assertEquals(1, passages.size());
+        assertEquals("4.11 Procedure to change the supervisor", passages.get(0).heading());
+        assertTrue(passages.get(0).text().contains("Request Submission"));
+    }
+
+    @Test
     void aMissingDocumentLeavesTheCorpusUnloaded(@TempDir Path dir) {
         RegulationCorpus corpus = new RegulationCorpus(dir.resolve("absent.md").toString());
 
