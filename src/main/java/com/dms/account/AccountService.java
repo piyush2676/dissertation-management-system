@@ -46,7 +46,7 @@ public class AccountService {
     /** Sends a confirmation link. Silent when the address is unknown or already confirmed. */
     @Transactional
     public void sendVerification(String email) {
-        Optional<User> found = userRepository.findByEmail(email == null ? "" : email.strip());
+        Optional<User> found = userRepository.findByEmail(email == null ? "" : email.strip().toLowerCase(java.util.Locale.ROOT));
         if (found.isEmpty()) {
             log.debug("verification requested for an unknown address");
             return;
@@ -89,7 +89,7 @@ public class AccountService {
     /** Sends a reset link. Silent when the address is unknown, for the reason above. */
     @Transactional
     public void sendPasswordReset(String email) {
-        Optional<User> found = userRepository.findByEmail(email == null ? "" : email.strip());
+        Optional<User> found = userRepository.findByEmail(email == null ? "" : email.strip().toLowerCase(java.util.Locale.ROOT));
         if (found.isEmpty()) {
             log.debug("password reset requested for an unknown address");
             return;

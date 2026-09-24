@@ -17,7 +17,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+        // Addresses are stored lower-case, and an ERP ID is usually typed in capitals
+        // (0221MCSD006@niet.co.in), so sign-in ignores case.
+        User user = userRepository.findByEmail(email == null ? "" : email.strip().toLowerCase(java.util.Locale.ROOT))
                 .orElseThrow(() -> new UsernameNotFoundException("No user with email " + email));
 
         List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
