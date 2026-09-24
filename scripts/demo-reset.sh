@@ -4,14 +4,24 @@
 # again. Clears their topic, allocation, submissions, versions, comments,
 # evaluation, viva and notifications -- nothing else is touched.
 #
-#   ./scripts/demo-reset.sh [STUDENT_EMAIL]
+#   ./scripts/demo-reset.sh [--unconfirmed] [STUDENT_EMAIL]
 #
-# Defaults to student4@gmail.com, the integrated M.Tech student the walkthrough
+# Defaults to student4@niet.co.in, the integrated M.Tech student the walkthrough
 # uses. Safe to run repeatedly, and safe while the application is running.
+#
+# --unconfirmed also clears the student's email confirmation, so the next sign-in
+# shows the "not confirmed" banner and the confirmation flow can be demonstrated.
+# Without a mail server the link is written to the application log.
 
 set -u
 
-STUDENT="${1:-student4@gmail.com}"
+UNCONFIRMED=0
+if [ "${1:-}" = "--unconfirmed" ]; then
+  UNCONFIRMED=1
+  shift
+fi
+
+STUDENT="${1:-student4@niet.co.in}"
 # psql on PATH wins (macOS/Linux); otherwise the Windows install location.
 PSQL="${PSQL:-$(command -v psql || echo "/c/Program Files/PostgreSQL/18/bin/psql.exe")}"
 
@@ -61,10 +71,16 @@ q "delete from review_comments where submission_version_id in (
    delete from notifications where recipient_id =
      (select id from users where email = '$STUDENT');" > /dev/null
 
+if [ "$UNCONFIRMED" = 1 ]; then
+  q "delete from auth_tokens where purpose = 'EMAIL_VERIFICATION' and user_id = (select id from users where email = '$STUDENT');
+     update users set email_verified_at = null where email = '$STUDENT';" > /dev/null
+fi
+
 echo "Reset $STUDENT (student profile $SID)."
 echo
 echo "  topics        $(q "select count(*) from topics where student_id = $SID")"
 echo "  allocations   $(q "select count(*) from allocations where student_id = $SID")"
 echo "  notifications $(q "select count(*) from notifications n join users u on u.id = n.recipient_id where u.email = '$STUDENT'")"
+echo "  email         $(q "select case when email_verified_at is null then 'NOT confirmed (banner will show)' else 'confirmed' end from users where email = '$STUDENT'")"
 echo
 echo "Ready. Follow docs/demo.md."
