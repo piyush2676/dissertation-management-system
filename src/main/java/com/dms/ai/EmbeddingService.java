@@ -85,8 +85,12 @@ public class EmbeddingService {
      * guidelines document is a hundred-odd passages, and one call per passage would
      * spend a free-tier minute's quota on a single page load. Returns how many
      * records are now current.
+     *
+     * <p>Deliberately not one transaction: each row commits as its batch lands. The
+     * free tier allows 100 embeddings a minute, so a 192-passage corpus stops part
+     * way on the first run, and one transaction threw away the rows it had already
+     * paid for. Kept rows are skipped by digest on the retry.
      */
-    @Transactional
     public int embedAndStoreAll(EmbeddingKind kind, Map<Long, String> textsByRef) {
         Map<Long, Embedding> existing = new HashMap<>();
         for (Embedding e : embeddingRepository.findByKindAndRefIdIn(kind, textsByRef.keySet())) {

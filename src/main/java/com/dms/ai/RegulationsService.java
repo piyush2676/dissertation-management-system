@@ -67,6 +67,11 @@ public class RegulationsService {
 
     private volatile boolean indexed;
 
+    static final int INDEX_ATTEMPTS = 6;
+
+    /** A little over the free tier's one-minute quota window. Package-private for the tests. */
+    long retryDelayMillis = 65_000;
+
     public boolean documentLoaded() {
         return corpus.isLoaded();
     }
@@ -97,9 +102,28 @@ public class RegulationsService {
         if (!corpus.isLoaded() || !ai.embeddingsAvailable()) {
             return;
         }
-        Thread worker = new Thread(this::index, "regulations-index");
+        Thread worker = new Thread(this::indexWithRetries, "regulations-index");
         worker.setDaemon(true);
         worker.start();
+    }
+
+    /**
+     * The free tier embeds 100 texts a minute, fewer than the guidelines have
+     * passages, so the first run stops at the quota. Each stop keeps what it stored;
+     * waiting out the minute and running again picks up from there.
+     */
+    void indexWithRetries() {
+        for (int attempt = 1; attempt <= INDEX_ATTEMPTS && !indexed; attempt++) {
+            index();
+            if (!indexed && attempt < INDEX_ATTEMPTS) {
+                try {
+                    Thread.sleep(retryDelayMillis);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        }
     }
 
     /** Brings the passage embeddings in line with the file. Package-private for the tests. */

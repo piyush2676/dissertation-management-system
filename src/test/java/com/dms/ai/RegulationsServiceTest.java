@@ -102,6 +102,21 @@ class RegulationsServiceTest {
         verify(embeddingService, never()).trim(eq(EmbeddingKind.REGULATION_PASSAGE), org.mockito.ArgumentMatchers.anyLong());
     }
 
+    @Test
+    void theBackgroundIndexWaitsOutTheQuotaAndCarriesOn() {
+        when(corpus.passages()).thenReturn(PASSAGES);
+        when(embeddingService.embedAndStoreAll(eq(EmbeddingKind.REGULATION_PASSAGE), anyMap()))
+                .thenThrow(new AiUnavailableException("429 quota"))
+                .thenReturn(2);
+        service.retryDelayMillis = 0;
+
+        service.indexWithRetries();
+
+        assertTrue(service.indexed());
+        verify(embeddingService, org.mockito.Mockito.times(2))
+                .embedAndStoreAll(eq(EmbeddingKind.REGULATION_PASSAGE), anyMap());
+    }
+
     private void loaded() {
         when(corpus.isLoaded()).thenReturn(true);
         when(corpus.passages()).thenReturn(PASSAGES);
