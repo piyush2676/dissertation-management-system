@@ -1,5 +1,7 @@
 package com.dms.submission;
 
+import com.dms.ai.AiUnavailableException;
+import com.dms.ai.ChapterSummaryService;
 import com.dms.common.InvalidStateTransitionException;
 import com.dms.review.ReviewCommentForm;
 import com.dms.review.ReviewService;
@@ -26,6 +28,7 @@ public class SupervisorSubmissionController {
 
     private final SubmissionService submissionService;
     private final ReviewService reviewService;
+    private final ChapterSummaryService summaryService;
 
     @ModelAttribute("decisions")
     public List<SubmissionStatus> decisions() {
@@ -49,10 +52,13 @@ public class SupervisorSubmissionController {
             model.addAttribute("comments", reviewService.commentsOn(
                     detail.latest().versionId(), authentication.getName(), false));
             model.addAttribute("latestVersionId", detail.latest().versionId());
+            model.addAttribute("summary", summaryService.existing(detail.latest().versionId()).orElse(null));
+            model.addAttribute("latestIsPdf", "application/pdf".equals(detail.latest().contentType()));
         }
         if (!model.containsAttribute("commentForm")) {
             model.addAttribute("commentForm", new ReviewCommentForm());
         }
+        model.addAttribute("summaryAvailable", summaryService.isAvailable());
         model.addAttribute("canComment", true);
         model.addAttribute("canResolve", false);
         model.addAttribute("returnTo", "/supervisor/submissions/" + submissionId);
@@ -86,6 +92,21 @@ public class SupervisorSubmissionController {
                         ? "Similarity report recorded: within the guideline thresholds."
                         : "Similarity report recorded: outside the guideline thresholds (under 10% similarity, 0% AI).");
         return "redirect:/supervisor/submissions/" + submissionId;
+    }
+
+    /** An AI reading aid for the guide: a summary of the version and questions to ask. */
+    @PostMapping("/{submissionId}/versions/{versionId}/summary")
+    public String summarise(@PathVariable Long submissionId,
+                            @PathVariable Long versionId,
+                            Authentication authentication,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            summaryService.summarise(authentication.getName(), submissionId, versionId);
+            redirectAttributes.addFlashAttribute("success", "Summary ready. It is a reading aid, not an assessment.");
+        } catch (AiUnavailableException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/supervisor/submissions/" + submissionId + "#summary";
     }
 
     /** Picking the work up. Separate from deciding so the student can see it was read. */
