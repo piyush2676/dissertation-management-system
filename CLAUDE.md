@@ -35,7 +35,7 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 338 tests green, 176 commits, pushed to `origin/main`. Flyway at V20.
+Phases 0–16 complete, 349 tests green, 176 commits, pushed to `origin/main`. Flyway at V20.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -209,6 +209,14 @@ banner; the flow itself is unchanged. V20 leaves `audit_log.actor_email` alone (
 certificates issued before it verify CHANGED, because the marks fact seals examiner addresses —
 the coordinator reissues. The footer now shows the NIET logo on a white plate.
 
+2026-09-24, **dissertation report** at `/reports` for COORDINATOR and ADMIN (head of the cell,
+head of department): one row per scholar, placed or not, 24 columns, as CSV, Excel and PDF from one
+`DissertationReport` (`DissertationReportService`). Excel is hand-written OOXML (`XlsxWriter`, inline
+strings, frozen filterable header) -- no POI; PDF is PDFBox landscape with the 24 columns folded into
+10. `ExportService.csv` now prefixes `=`/`+`/`-`/`@` cells with an apostrophe (CSV injection), which
+also covers Format 4/5. Rows sort by roll number. The report reads marks, readiness and the verdict
+from the mark sheet and readiness ledger rather than recomputing them.
+
 Deliberately not on this list: anything the guidelines mandate. Section 13 of `docs/guide.md`
 maps every mandate to the phase that carries it, and all sixteen are done.
 
@@ -217,7 +225,7 @@ maps every mandate to the phase that carries it, and all sixteen are done.
 ## Commands
 
 ```powershell
-.\mvnw.cmd -o test              # full suite, needs the DB up (338 tests)
+.\mvnw.cmd -o test              # full suite, needs the DB up (349 tests)
 .\mvnw.cmd -o -q compile        # fast syntax check
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
@@ -233,8 +241,9 @@ idempotent — a roll number already on record is skipped.
 - **The data never enters git.** `/data/` and `*.xlsx` are gitignored, and the property lives in
   the gitignored `application-local.properties`. The importer is committed; the list is not.
 - **No contact details are read from the sheet.** It carries mail ids and mobile numbers; none
-  are read. Sign-in addresses are *derived* on the institute's ERP domain — `<rollNo>@niet.co.in`
-  for scholars, `firstname.lastname@niet.co.in` for faculty (`InstituteMail`, decided
+  are read. Sign-in addresses are *derived* on the institute's ERP domain — `<erpId>@niet.co.in`
+  for scholars (lower-cased; sign-in ignores case, so `0221MCSD006@NIET.CO.IN` works; roll number
+  if a row has no ERP ID), `firstname.lastname@niet.co.in` for faculty (`InstituteMail`, decided
   2026-09-24; it used to be the placeholder `@college.edu`, so nothing was a real address).
   **Derived addresses may now be real ERP mailboxes**: with SMTP configured, password resets and
   alerts from this system can reach real people. Keep mail off on any demonstration database.
@@ -244,8 +253,18 @@ idempotent — a roll number already on record is skipped.
   space; matching on the raw string split them into two accounts. `CohortImporterTest` pins it.
 - The sheet has **no thesis titles** despite its filename, so no topics are created — scholars
   propose those in the app, which is the workflow anyway.
-- Regenerate the CSV from a new workbook with the scratchpad scripts, or hand-write it: the
-  header is `thesisId,studentName,rollNo,supervisor,coSupervisor,titleFormReceived`.
+- **"NP" and "LEFT" in the supervisor column mean nobody**, not a faculty member: the importer
+  treats them (and blank, N/A, TBD, -) as no guide. Taken as names they became accounts "Np" and
+  "Left" offered to every student. The 2022-27 sheet has one of each, so 56 of 58 are placed.
+- The source workbook is *Dissertation-1 [AMICSE0959] Thesis Title Proposal Form 2022-2027.xlsx*
+  on the coordinator's SharePoint; sheet *guide list 2022-27 batch*, with *Title approval form
+  hardcopy* from the *progress* sheet. Converted 2026-09-24 to `data/cohort-2022-27.csv`: header
+  `thesisId,studentName,rollNo,supervisor,coSupervisor,titleFormReceived,erpId` (`erpId` optional).
+  42 faculty: 21 supervisors and 21 who only co-supervise. Every supervisor profile is selectable
+  by a student, so all 42 appear in the topic and guide pickers.
+- **The test suite runs the importer too**: a context-loading test reads
+  `application-local.properties`, so with `dms.import.cohort-file` set, `mvnw test` imports into
+  the `dms` database. Idempotent, but know it happens.
 
 ### Demo accounts
 

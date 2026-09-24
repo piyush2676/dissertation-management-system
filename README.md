@@ -103,7 +103,7 @@ Seeded only when the users table is empty. **Demo credentials — never for a re
 ## Testing
 
 ```powershell
-.\mvnw.cmd test                      # 338 tests
+.\mvnw.cmd test                      # 349 tests
 bash scripts/acceptance.sh 8081      # 20 end-to-end assertions against a running app
 ```
 
