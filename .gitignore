@@ -53,3 +53,7 @@ application-local.properties
 # The institute's own guidelines document. Kept locally because the design
 # cites it section by section; not mirrored to a public repo.
 docs/*guidelines_v3.md
+
+# /brag launch-video output — includes a 150MB+ local ffmpeg binary and
+# rendered assets; not project source.
+/brag-output/

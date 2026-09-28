@@ -10,6 +10,16 @@ Built for the dissertation cell at **Noida Institute of Engineering and Technolo
 
 ---
 
+## Demo
+
+![Demo: topic proposal, guide review, immutable version history, weighted evaluation, the readiness ledger, and a tamper-evident certificate that catches a changed record live](docs/media/brag.gif)
+
+*40 seconds: topic proposal → guide review → immutable version history → weighted evaluation
+→ the readiness ledger → a tamper-evident certificate that catches a changed record live.
+[Watch with sound &rarr;](docs/media/brag.mp4)*
+
+---
+
 ## The problem
 
 Dissertation work is usually run by hand: topics by email, guide allocation in a spreadsheet,
