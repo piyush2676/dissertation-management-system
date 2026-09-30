@@ -35,7 +35,10 @@ tutorials blindly.
 
 ## Current state (2026-09-23) — the guideline roadmap is complete
 
-Phases 0–16 complete, 351 tests green, 176 commits, pushed to `origin/main`. Flyway at V20.
+Phases 0–16 complete, 351 tests (last green run 2026-09-24; not re-run since, the local Postgres was
+down on 2026-09-30), 203 commits as of 2026-09-28, on `origin/main`. Flyway at V20.
+Since 2026-09-24 only two commits landed, both non-behavioural: dashboard cards now link the viva,
+evaluation and report pages, and the README gained a 40s demo.
 The end-to-end chain is scripted: `bash scripts/acceptance.sh 8081` — 20 assertions, all green.
 
 **Phases 12–16 follow the institute guidelines** in
@@ -234,6 +237,10 @@ maps every mandate to the phase that carries it, and all sixteen are done.
 .\mvnw.cmd -o spring-boot:run   # runs on 8080
 ```
 
+On macOS use `./mvnw` in place of `.\mvnw.cmd`. Postgres there is Postgres.app (18), not a Windows
+service: start it from the app first, or `mvnw test` fails at context load. `psql` is inside
+`~/Applications/Postgres.app/Contents/Versions/18/bin/`. macOS has no `timeout` command.
+
 `-o` (offline) is safe and much faster — dependencies are already in the local repo.
 
 ### Real cohort import
@@ -287,7 +294,9 @@ Seeded by `DataSeeder` only when the users table is empty. Demo credentials, nev
 
 ## Environment traps on this machine
 
-These cost real time in past sessions. Read before running anything.
+These cost real time in past sessions. Read before running anything. Most were written on the
+Windows machine (Git Bash, `taskkill`, cp1252); the project now also runs on macOS, where the
+shell, path and psql traps below do not apply.
 
 - **Port 8080 is often already taken** by the user's own instance. Start test runs elsewhere:
   `./mvnw.cmd -o spring-boot:run "-Dspring-boot.run.arguments=--server.port=8081"`.
@@ -312,8 +321,10 @@ These cost real time in past sessions. Read before running anything.
   file must detect: `NL = '\r\n' if '\r\n' in s else '\n'`.
 - **Local DB predates the M.Tech migration** — some roll numbers read `21CSE001` where the
   current seeder writes `24MCS001`. Not a bug.
-- **psql emits CRLF.** Splitting a multi-row `psql -t -A` result leaves `` glued to every
-  value but the last, and the terminal hides it. Always pipe through `tr -d ''`.
+- **psql emits CRLF.** Splitting a multi-row `psql -t -A` result leaves `
+` glued to every
+  value but the last, and the terminal hides it. Always pipe through `tr -d '
+'`.
 - **`grep -oP` fails here** — "supports only unibyte and UTF-8 locales". Use `sed -n 's/x//p'`.
   Silent empty output from it once left `psql` waiting on stdin forever; pass `-w` so a missing
   password fails instead of hanging.
@@ -324,6 +335,9 @@ These cost real time in past sessions. Read before running anything.
 
 ```
 com.dms
+├── account/      AccountService, AuthTokenService, Mailer (SmtpMailer / LoggingMailer): email confirm, password reset
+├── provenance/   ProvenanceService, CertificateService, CertificatePdfRenderer, timeline, public verify
+├── search/       SearchService, SearchController (global search)
 ├── audit/        AuditLog, DomainEvent(s), AuditLogListener, AuditLogController
 ├── notification/ Notification, NotificationService, NotificationListener, controller
 ├── allocation/   Allocation, AllocationStatus, AllocationService, AllocationBoard, controllers
@@ -335,7 +349,7 @@ com.dms
 ├── outcome/      Outcome, OutcomeKind/Indexing/Status, OutcomeService, OutcomeBoard, controllers
 ├── attainment/   AttainmentReport, AttainmentService, CoordinatorAttainmentController
 ├── change/       ChangeRequest, ChangeKind, ChangeRequestStatus, ChangeRequestService, controllers
-├── export/       ExportService (Format 4/5 CSV), CoordinatorExportController
+├── export/       ExportService (Format 4/5 CSV), DissertationReportService, XlsxWriter, ReportPdfWriter, ReportController (/reports)
 ├── panel/        PanelMember, PanelService, PanelBoard, CoordinatorPanelController, PanelReviewController
 ├── titlebank/    BankedTitle, Complexity, TitleBankService, controllers
 ├── recommendation/ Recommendation, Verdict, RecommendationService, controllers
@@ -344,7 +358,8 @@ com.dms
 ├── storage/      StorageService, LocalDiskStorageService, StoredFile
 ├── submission/   Submission, SubmissionVersion, SubmissionStatus, SubmissionService, controllers
 ├── ai/           Embedding, SimilarityProvider, CosineSimilarityProvider, EmbeddingService,
-│                TopicNoveltyService, SupervisorMatchingService, AiIndexingListener
+│                TopicNoveltyService, SupervisorMatchingService, AiIndexingListener,
+│                ChapterSummaryService, RegulationCorpus, RegulationsService, AiArchiveBackfill
 ├── topic/        Topic, TopicStatus, TopicService, controllers
 ├── user/         User, Role, Programme, profiles, DataSeeder, AdminUserController
 ├── viva/         VivaSchedule, VivaStatus, VivaService, CoordinatorVivaController
