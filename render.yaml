@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: dissertation-management-system
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: DB_HOST
+        fromDatabase: { name: dms-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: dms-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: dms-db, property: database }
+      - key: DB_USER
+        fromDatabase: { name: dms-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: dms-db, property: password }
+
+databases:
+  - name: dms-db
+    plan: free
+    databaseName: dms
