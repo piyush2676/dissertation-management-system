@@ -1,3 +1,5 @@
+# The database lives outside Render (Neon, free Postgres that does not expire).
+# Fill the DB_* values in the Render dashboard; they are deliberately not in git.
 services:
   - type: web
     name: dissertation-management-system
@@ -6,17 +8,14 @@ services:
     healthCheckPath: /
     envVars:
       - key: DB_HOST
-        fromDatabase: { name: dms-db, property: host }
-      - key: DB_PORT
-        fromDatabase: { name: dms-db, property: port }
+        sync: false
       - key: DB_NAME
-        fromDatabase: { name: dms-db, property: database }
+        sync: false
       - key: DB_USER
-        fromDatabase: { name: dms-db, property: user }
+        sync: false
       - key: DB_PASSWORD
-        fromDatabase: { name: dms-db, property: password }
-
-databases:
-  - name: dms-db
-    plan: free
-    databaseName: dms
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_SSLMODE
+        value: require

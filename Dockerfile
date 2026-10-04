@@ -20,7 +20,7 @@ ENV JAVA_OPTS="-Xmx380m -XX:+UseSerialGC"
 EXPOSE 8080
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS \
   -Dserver.port=${PORT:-8080} \
-  -Dspring.datasource.url=jdbc:postgresql://${DB_HOST}:${DB_PORT:-5432}/${DB_NAME} \
+  -Dspring.datasource.url=jdbc:postgresql://${DB_HOST}:${DB_PORT:-5432}/${DB_NAME}?sslmode=${DB_SSLMODE:-prefer} \
   -Dspring.datasource.username=${DB_USER} \
   -Dspring.datasource.password=${DB_PASSWORD} \
   -Ddms.base-url=${DMS_BASE_URL:-${RENDER_EXTERNAL_URL:-http://localhost:8080}} \
