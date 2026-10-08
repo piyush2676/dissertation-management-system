@@ -22,6 +22,9 @@
 </head>
 <body>
 
+<!-- First thing a keyboard or screen-reader user reaches: jump past the header and navigation. -->
+<a class="skip-link" href="#main">Skip to main content</a>
+
 <!-- The red rail down the left edge, as on the institute site. -->
 <div class="niet-rail">
     <button type="button" class="rail-menu" data-rail-menu aria-label="Menu">
@@ -42,7 +45,7 @@
 
     <div th:replace="~{layout/_navbar :: navbar}"></div>
 
-    <main class="container">
+    <main id="main" class="container" tabindex="-1">
         <div th:replace="~{layout/_flash :: flash}"></div>
 
         <!-- Shown until the address is confirmed. Notifications are in-app, so an

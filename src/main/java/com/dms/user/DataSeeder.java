@@ -10,6 +10,7 @@ import com.dms.session.Milestone;
 import com.dms.session.MilestoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import static com.dms.user.Role.*;
 
 @Component
 @RequiredArgsConstructor
+@Order(10) // before CohortImporter (20): the import fills users, and this only seeds into an empty table
 public class DataSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;

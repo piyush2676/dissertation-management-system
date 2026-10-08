@@ -70,6 +70,9 @@ public class LocalDiskStorageService implements StorageService {
         if (!ALLOWED_CONTENT_TYPES.contains(contentType)) {
             throw new StorageException("That file type is not accepted: " + contentType);
         }
+        // The extension and the content type are both claims made by the browser. The first
+        // bytes are the file's own account of itself, and they have to agree with the claim.
+        contentType = verifiedContentType(file, extension);
 
         // The stored name is generated, never taken from the client, so a crafted
         // filename cannot escape the root or overwrite an existing version.
@@ -109,6 +112,50 @@ public class LocalDiskStorageService implements StorageService {
                 contentType,
                 HexFormat.of().formatHex(digest.digest()),
                 sizeBytes);
+    }
+
+    private static final byte[] PDF_MAGIC = {'%', 'P', 'D', 'F', '-'};
+    /** A .docx is a zip archive. */
+    private static final byte[] ZIP_MAGIC = {'P', 'K', 3, 4};
+    /** A legacy .doc is an OLE2 compound file. */
+    private static final byte[] OLE_MAGIC = {(byte) 0xD0, (byte) 0xCF, 0x11, (byte) 0xE0,
+            (byte) 0xA1, (byte) 0xB1, 0x1A, (byte) 0xE1};
+
+    /** The content type the file's own header supports for this extension, or a rejection. */
+    private static String verifiedContentType(MultipartFile file, String extension) {
+        byte[] head = new byte[8];
+        int read;
+        try (InputStream in = file.getInputStream()) {
+            read = in.readNBytes(head, 0, head.length);
+        } catch (IOException ex) {
+            throw new StorageException("Could not read the uploaded file.", ex);
+        }
+        return switch (extension) {
+            case "pdf" -> startsWith(head, read, PDF_MAGIC)
+                    ? "application/pdf" : notA("PDF");
+            case "docx" -> startsWith(head, read, ZIP_MAGIC)
+                    ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : notA("Word (.docx)");
+            case "doc" -> startsWith(head, read, OLE_MAGIC)
+                    ? "application/msword" : notA("Word (.doc)");
+            default -> throw new StorageException("Upload a PDF or Word document. Received: ." + extension);
+        };
+    }
+
+    private static boolean startsWith(byte[] head, int read, byte[] magic) {
+        if (read < magic.length) {
+            return false;
+        }
+        for (int i = 0; i < magic.length; i++) {
+            if (head[i] != magic[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static String notA(String kind) {
+        throw new StorageException("That file is not a real " + kind
+                + " document, whatever its name says. Export it again and upload the result.");
     }
 
     @Override

@@ -3,8 +3,10 @@ package com.dms.common;
 import com.dms.allocation.CapacityExceededException;
 import com.dms.storage.StorageException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -40,6 +42,33 @@ public class GlobalExceptionHandler {
     public String storage(StorageException ex, Model model){
         log.warn("409 storage: {}", ex.getMessage());
         model.addAttribute("reason", ex.getMessage());
+        return "error/409";
+    }
+
+    /**
+     * Past the multipart limit the request can fail before any controller is chosen, in which case
+     * Boot renders templates/error/413.html by status code instead; both say the same thing.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    public String tooLarge(MaxUploadSizeExceededException ex, Model model){
+        log.warn("413 upload over the size limit");
+        return "error/413";
+    }
+
+    /**
+     * The database is the last line for rules the services check first, such as a guide's seat
+     * count: two requests for the last seat can both pass the service check, and the second then
+     * trips the trigger here.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String integrity(DataIntegrityViolationException ex, Model model){
+        String detail = String.valueOf(ex.getMostSpecificCause().getMessage());
+        log.warn("409 integrity: {}", detail);
+        model.addAttribute("reason", detail.contains("supervisor capacity")
+                ? "That guide has just taken their last seat. Choose another guide, or ask the coordinator."
+                : "That change conflicts with something that was saved a moment ago. Reload the page and try again.");
         return "error/409";
     }
 

@@ -47,7 +47,10 @@ if [ -z "$SID" ]; then
   exit 1
 fi
 
-q "delete from review_comments where submission_version_id in (
+# submission_versions is append-only (V21). Switch that one trigger off for this transaction
+# only (needs the table owner or a superuser); foreign-key cascades still run.
+q "alter table submission_versions disable trigger submission_versions_append_only;
+   delete from review_comments where submission_version_id in (
      select v.id from submission_versions v
      join submissions s on s.id = v.submission_id
      join allocations a on a.id = s.allocation_id
@@ -69,7 +72,8 @@ q "delete from review_comments where submission_version_id in (
      (select id from topics where student_id = $SID);
    delete from topics where student_id = $SID;
    delete from notifications where recipient_id =
-     (select id from users where email = '$STUDENT');" > /dev/null
+     (select id from users where email = '$STUDENT');
+   alter table submission_versions enable trigger submission_versions_append_only;" > /dev/null
 
 if [ "$UNCONFIRMED" = 1 ]; then
   q "delete from auth_tokens where purpose = 'EMAIL_VERIFICATION' and user_id = (select id from users where email = '$STUDENT');
