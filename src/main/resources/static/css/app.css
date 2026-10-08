@@ -796,12 +796,16 @@ code {
     border: 1px solid var(--line-strong);
     border-top: 4px solid var(--ink);
     padding: 20px 22px;
+    container-type: inline-size;
 }
 
 .stat-value {
     display: block;
     font-family: var(--font-mono);
-    font-size: 38px;
+    /* Follows the card, not the viewport: a nine-letter value such as SCHEDULED spilled out
+       of a card a third of a tablet screen wide at a fixed 38px. */
+    font-size: clamp(16px, 12cqi, 38px);
+    overflow-wrap: anywhere;
     font-weight: 700;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
