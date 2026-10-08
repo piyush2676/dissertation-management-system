@@ -73,7 +73,10 @@ echo
 
 # --- fresh slate for this student ------------------------------------------
 SID=$(q "select sp.id from student_profiles sp join users u on u.id=sp.user_id where u.email='$STUDENT'")
-q "delete from review_comments where submission_version_id in (
+# submission_versions is append-only (V21). Switch that one trigger off for this transaction
+# only (needs the table owner or a superuser); foreign-key cascades still run.
+q "alter table submission_versions disable trigger submission_versions_append_only;
+   delete from review_comments where submission_version_id in (
      select v.id from submission_versions v join submissions s on s.id=v.submission_id
      join allocations a on a.id=s.allocation_id where a.student_id=$SID);
    delete from submission_versions where submission_id in (
@@ -82,7 +85,8 @@ q "delete from review_comments where submission_version_id in (
    delete from evaluations where allocation_id in (select id from allocations where student_id=$SID);
    delete from viva_schedules where allocation_id in (select id from allocations where student_id=$SID);
    delete from allocations where student_id=$SID;
-   delete from topics where student_id=$SID;" > /dev/null
+   delete from topics where student_id=$SID;
+   alter table submission_versions enable trigger submission_versions_append_only;" > /dev/null
 
 AUDIT_BEFORE=$(q "select count(*) from audit_log")
 
