@@ -819,6 +819,21 @@ code {
 
 .stat-grid + .card-grid { margin-top: 22px; }
 
+/* Off-screen until it takes focus, then the first stop on the page (WCAG 2.4.1). */
+.skip-link {
+    position: absolute;
+    left: 12px;
+    top: -60px;
+    z-index: 1000;
+    padding: 10px 16px;
+    background: var(--ink);
+    color: var(--paper-2);
+    font-weight: 700;
+    text-decoration: none;
+}
+.skip-link:focus { top: 12px; outline: 3px solid var(--warn); outline-offset: 2px; }
+#main:focus { outline: none; }
+
 .cta {
     text-align: center;
     padding: 56px 24px;
