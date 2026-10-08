@@ -14,9 +14,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final LoginAttemptService loginAttempts;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // Checked before the account is looked up, so a locked address answers the same way
+        // whether or not it exists and whether or not the password offered is right. Returned as
+        // a locked account rather than thrown: the provider turns that into LockedException before
+        // it compares any password, and wraps anything thrown from here as an internal error.
+        if (loginAttempts.isLocked(email)) {
+            return org.springframework.security.core.userdetails.User
+                    .withUsername(email == null ? "" : email.strip().toLowerCase(java.util.Locale.ROOT))
+                    .password("{noop}locked")
+                    .authorities(List.of())
+                    .accountLocked(true)
+                    .build();
+        }
         // Addresses are stored lower-case, and an ERP ID is usually typed in capitals
         // (0221MCSD006@niet.co.in), so sign-in ignores case.
         User user = userRepository.findByEmail(email == null ? "" : email.strip().toLowerCase(java.util.Locale.ROOT))
