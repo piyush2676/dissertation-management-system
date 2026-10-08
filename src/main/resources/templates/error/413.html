@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(~{::title}, ~{::section})}">
+<head>
+    <title>File too large</title>
+</head>
+<body>
+<section>
+
+    <div class="hero-wash">
+        <span class="eyebrow">Nothing was uploaded</span>
+
+        <h1 class="display">
+            <span class="error-code">413</span>
+            <span class="display-hi" lang="hi">फ़ाइल बहुत बड़ी है</span>
+            <span class="display-sub" lang="en">File too large</span>
+        </h1>
+
+        <p class="lead">
+            That file is larger than the 25 MB limit, so it was not saved. Your earlier
+            versions are untouched.
+        </p>
+
+        <div class="btn-row">
+            <a th:href="@{/student/submissions}" class="btn btn-primary btn-lg">Back to submissions</a>
+            <a th:href="@{/dashboard}" class="btn btn-ghost btn-lg">Dashboard</a>
+        </div>
+    </div>
+
+    <div class="hero">
+        <h2>How to make it smaller</h2>
+
+        <ul class="steps">
+            <li class="step">
+                <h3>Compress the images</h3>
+                <p>Scanned pages and screenshots are usually most of the size. Export the PDF
+                    again at a lower image quality, or resize the pictures before inserting them.</p>
+            </li>
+            <li class="step">
+                <h3>Export, do not scan</h3>
+                <p>A PDF saved straight from Word or LaTeX is far smaller than a scan of a
+                    printout.</p>
+            </li>
+            <li class="step">
+                <h3>Still too big?</h3>
+                <p>Ask the project coordinator. Large appendices such as datasets can be
+                    submitted separately.</p>
+            </li>
+        </ul>
+    </div>
+
+</section>
+</body>
+</html>
