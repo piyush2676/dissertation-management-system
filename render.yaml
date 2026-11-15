@@ -1,5 +1,7 @@
-# The database lives outside Render (Neon, free Postgres that does not expire).
-# Fill the DB_* values in the Render dashboard; they are deliberately not in git.
+# The database lives outside Render (Neon, free Postgres that does not expire), and so
+# do the uploads (Cloudflare R2), because the free plan's disk is wiped on every restart
+# and redeploy. Fill the DB_* and R2_* values in the Render dashboard; they are
+# deliberately not in git.
 services:
   - type: web
     name: dissertation-management-system
@@ -19,3 +21,15 @@ services:
         value: "5432"
       - key: DB_SSLMODE
         value: require
+      # With r2 the app will not start until all four R2_* values are set; the deploy
+      # log names any that are missing. Steps: application-local.properties.example.
+      - key: DMS_STORAGE_TYPE
+        value: r2
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
