@@ -224,6 +224,15 @@ numbered heading, so list items ("1. Request Submission:") stay inside their sec
 tier embeds **100 texts a minute**, fewer than the passages, so `embedAndStoreAll` commits row by
 row (no transaction) and the background indexer retries up to six times, 65 s apart.
 
+2026-11-15, **uploads can live in Cloudflare R2.** Render's free plan wipes the disk on every
+restart and redeploy, so `R2StorageService` (AWS S3 SDK pointed at R2) runs when
+`dms.storage.type=r2`; local disk stays the default. Both backends run the same
+`UploadChecks` and return the same `StoredFile`, and R2 keys have the shape of local paths
+(`12/3/<uuid>.pdf`), so a database moves between backends once the files are copied across.
+`render.yaml` sets `DMS_STORAGE_TYPE=r2`; the app refuses to start until the four `R2_*` values
+are in the Render dashboard. Verified against S3Mock (unit tests, a live check and the
+acceptance chain 20/20 with R2 storage); **not yet against real R2 credentials.**
+
 Deliberately not on this list: anything the guidelines mandate. Section 13 of `docs/guide.md`
 maps every mandate to the phase that carries it, and all sixteen are done.
 
@@ -328,6 +337,10 @@ shell, path and psql traps below do not apply.
 - **`grep -oP` fails here** — "supports only unibyte and UTF-8 locales". Use `sed -n 's/x//p'`.
   Silent empty output from it once left `psql` waiting on stdin forever; pass `-w` so a missing
   password fails instead of hanging.
+- **MinIO cannot be pulled any more** (Docker Hub and quay.io both refuse, 2026-11-15). For a
+  local S3 server use `adobe/s3mock:4.0.0` on `127.0.0.1:9090`; it accepts any credentials, so
+  it does not test the R2 token. The dev database is the `dms-postgres` container on 5432 — run
+  the acceptance chain against a throwaway Postgres on another port, not that one.
 
 ---
 
@@ -355,7 +368,8 @@ com.dms
 ├── recommendation/ Recommendation, Verdict, RecommendationService, controllers
 ├── readiness/    ReadinessLedger, ReadinessService, controllers
 ├── session/      AcademicSession, Milestone, DissertationPhase, DeliverableType
-├── storage/      StorageService, LocalDiskStorageService, StoredFile
+├── storage/      StorageService, LocalDiskStorageService (default), R2StorageService (dms.storage.type=r2),
+│                UploadChecks (the gate both run), StoredFile
 ├── submission/   Submission, SubmissionVersion, SubmissionStatus, SubmissionService, controllers
 ├── ai/           Embedding, SimilarityProvider, CosineSimilarityProvider, EmbeddingService,
 │                TopicNoveltyService, SupervisorMatchingService, AiIndexingListener,
@@ -396,8 +410,8 @@ These are load-bearing. Violating one produces a runtime failure, not a compile 
    (a student with no topic yet). `.equals()` on a null receiver NPEs — this shipped once.
 7. **CSRF stays on.** Thymeleaf injects the token into `th:action` forms. Do not switch a form
    to a plain `action=`.
-8. **`uploads/` is never a static resource directory.** Every read goes through
-   `SubmissionDownloadController`, which re-checks ownership.
+8. **`uploads/` is never a static resource directory, and the R2 bucket is never public.** Every
+   read goes through `SubmissionDownloadController`, which re-checks ownership.
 9. **`/files/**` and `/review/**` sit outside the role prefixes on purpose.** A submission file
    and a comment thread are legitimately touched by student, guide, coordinator and admin, so
    they authorise by **ownership in the service**, not by URL prefix.

@@ -140,7 +140,7 @@ Thymeleaf templates
    |
 PostgreSQL 18  +  pgvector (Phase 7)
    |
-StorageService -> local disk (uploads/)
+StorageService -> local disk (uploads/), or Cloudflare R2 when dms.storage.type=r2
 ```
 
 Cross-cutting: Spring Security filter chain, `@ControllerAdvice` for global errors, `AuditLog`
@@ -163,7 +163,8 @@ com.dms
 ├── review/          ReviewComment, ReviewService, ReviewCommentController
 ├── security/        SecurityConfig, CustomUserDetailsService, AuthzService
 ├── session/         AcademicSession, Milestone
-├── storage/         StorageService, LocalDiskStorageService, StoredFile
+├── storage/         StorageService, LocalDiskStorageService, R2StorageService, UploadChecks,
+│                    StoredFile
 ├── submission/      Submission, SubmissionVersion, SubmissionStatus, SubmissionService,
 │                    student / supervisor / download controllers
 ├── topic/           Topic, TopicStatus, TopicService, TopicForm, controllers
@@ -349,6 +350,7 @@ The flow will keep moving. Seven mechanisms so that costs an edit, not a rewrite
    > which is the whole reason corrections go forward instead of backward.
 5. **Interface seams at every external dependency.** `StorageService`, `NotificationSender`,
    `SimilarityProvider`, `AiAdvisor`. One impl today, another later, callers untouched.
+   `StorageService` has had its second: R2 joined local disk with no caller changed.
 6. **Domain events for side effects.** `TopicApprovedEvent`, `SubmissionUploadedEvent`. Audit,
    notification, and vector indexing are `@EventListener`s. New side effect = new listener,
    never an edit to `TopicService`.
@@ -377,7 +379,7 @@ not supervise. Two layers:
 
 Passwords BCrypt. CSRF on — Thymeleaf injects the token into `th:action` forms automatically.
 File downloads go through a controller that re-checks ownership; `uploads/` is **never** exposed
-as a static resource directory.
+as a static resource directory, and the R2 bucket is never made public.
 
 ---
 

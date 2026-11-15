@@ -178,7 +178,7 @@ Thymeleaf templates
    |
 PostgreSQL 18
    |
-StorageService -> local disk (uploads/, never served statically)
+StorageService -> local disk (uploads/) or a private Cloudflare R2 bucket; never served statically
 ```
 
 Packages are organised **by feature, not by layer** — `com.dms.topic` holds its own controller,
