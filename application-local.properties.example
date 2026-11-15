@@ -23,3 +23,19 @@ spring.datasource.password=your-postgres-password
 # spring.ai.model.chat=google-genai
 # spring.ai.model.embedding.text=google-genai
 # spring.autoconfigure.exclude=org.springframework.ai.model.google.genai.autoconfigure.image.GoogleGenAiImageConnectionAutoConfiguration
+
+# Uploads on Cloudflare R2 instead of local disk -- optional.
+# Local disk is the default and is right on your own machine. R2 is for a host that
+# wipes its disk on restart. In the Cloudflare dashboard:
+#   1. R2 > Create bucket. Leave public access off; the app is the only way in.
+#   2. R2 > Manage API tokens > Create API token, permission "Object Read & Write",
+#      applied to that one bucket only.
+#   3. The token page shows the access key id, the secret access key (once -- copy it
+#      then) and the S3 endpoint for your account.
+# On a host, set the same values as environment variables instead: DMS_STORAGE_TYPE,
+# R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY.
+# dms.storage.type=r2
+# dms.storage.r2.endpoint=https://your-account-id.r2.cloudflarestorage.com
+# dms.storage.r2.bucket=dms-uploads
+# dms.storage.r2.access-key-id=your-access-key-id
+# dms.storage.r2.secret-access-key=your-secret-access-key

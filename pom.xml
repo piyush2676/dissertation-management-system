@@ -94,6 +94,21 @@
 			<version>3.5.4</version>
 		</dependency>
 
+		<!-- Uploads on Cloudflare R2 (dms.storage.type=r2). R2 speaks the S3 API, so
+		     this is the AWS S3 client. Only the blocking client is used, so the Netty
+		     transport that the async client needs is left out. -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>2.57.8</version>
+			<exclusions>
+				<exclusion>
+					<groupId>software.amazon.awssdk</groupId>
+					<artifactId>netty-nio-client</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
