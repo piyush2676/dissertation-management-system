@@ -2,6 +2,7 @@ package com.dms.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,11 @@ import java.util.UUID;
  * <p>The upload root is deliberately not a static resource directory. Every read
  * goes back through a controller that re-checks ownership, so knowing a storage
  * path is not enough to fetch a file.
+ *
+ * <p>The default backend: it runs unless {@code dms.storage.type} names another one.
  */
 @Service
+@ConditionalOnProperty(name = "dms.storage.type", havingValue = "local", matchIfMissing = true)
 @Slf4j
 public class LocalDiskStorageService implements StorageService {
 
